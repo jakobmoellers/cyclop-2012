@@ -44,9 +44,9 @@ class BarThread : public Thread
 public:
     BarThread(int id);
 protected:
-  bool loop();
+    bool loop();
 private:
-  int id;
+    int id;
 };
 
 FooThread::FooThread(int id)
@@ -91,15 +91,15 @@ bool BarThread::loop()
 
     // Sleep for one second:
     sleep(1);
-    
+
     digitalWrite(13, HIGH);   // set the LED on
-  sleep(1);             // wait for a second
-  digitalWrite(13, LOW);    // set the LED off
-  sleep(1);     
-  
+    sleep(1);             // wait for a second
+    digitalWrite(13, LOW);    // set the LED off
+    sleep(1);
+
     return true;
-    
-    
+
+
 
 }
 
@@ -108,7 +108,7 @@ void setup()
 
     pinMode(13, OUTPUT);
     // Create five threads and add them to the main ThreadList:
-    for(int i = 1; i <= 5; i++){
+    for(int i = 1; i <= 5; i++) {
         main_thread_list->add_thread(new FooThread(i));
         main_thread_list->add_thread(new BarThread(i));
     }
