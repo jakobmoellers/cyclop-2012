@@ -71,6 +71,105 @@ $app->get('/measurements(/:bikeId)', function ($bikeId=null) {
 	echo json_encode($json);
 });
 
+$app->get('/measurements/after/:timeafter(/:bikeId)', function ($timeafter,$bikeId=null) {
+	if($bikeId != null){
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
+	}else{
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where timestamp>'".$timeafter."'");
+	}
+
+	$json = array();
+	$json['type'] = 'FeatureCollection';
+	$json['features'] = array();
+		
+		while($row = pg_fetch_assoc($result)){
+			$point = array();
+			$point['type'] = 'Feature';
+			$point['properties'] = array();
+			$point['properties']['measurementId'] = $row['measurementId'];
+			$point['properties']['temperature'] = $row['temperature'];
+			$point['properties']['humidity'] = $row['humidity'];
+			$point['properties']['noise'] = $row['noise'];
+			$point['properties']['light'] = $row['light'];
+			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['geometry'] = array();
+			$point['geometry']['type'] = 'Point';
+			$point['geometry']['coordinates'] = array();
+			array_push($point['geometry']['coordinates'],floatval($row['lon']));
+			array_push($point['geometry']['coordinates'],floatval($row['lat']));
+			array_push($point['geometry']['coordinates'],floatval($row['height']));
+			array_push($json['features'],$point); 	
+		}	
+	header('Content-Type: application/json');
+	echo json_encode($json);
+});
+
+$app->get('/measurements/before/:timebefore(/:bikeId)', function ($timebefore,$bikeId=null) {
+	if($bikeId != null){
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (\"deviceId\" = ".$bikeId.")");
+	}else{
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where timestamp<'".$timebefore."'");
+	}
+
+	$json = array();
+	$json['type'] = 'FeatureCollection';
+	$json['features'] = array();
+		
+		while($row = pg_fetch_assoc($result)){
+			$point = array();
+			$point['type'] = 'Feature';
+			$point['properties'] = array();
+			$point['properties']['measurementId'] = $row['measurementId'];
+			$point['properties']['temperature'] = $row['temperature'];
+			$point['properties']['humidity'] = $row['humidity'];
+			$point['properties']['noise'] = $row['noise'];
+			$point['properties']['light'] = $row['light'];
+			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['geometry'] = array();
+			$point['geometry']['type'] = 'Point';
+			$point['geometry']['coordinates'] = array();
+			array_push($point['geometry']['coordinates'],floatval($row['lon']));
+			array_push($point['geometry']['coordinates'],floatval($row['lat']));
+			array_push($point['geometry']['coordinates'],floatval($row['height']));
+			array_push($json['features'],$point); 	
+		}	
+	header('Content-Type: application/json');
+	echo json_encode($json);
+});
+
+$app->get('/measurements/interval/:timeafter/:timebefore(/:bikeId)', function ($timeafter,$timebefore,$bikeId=null) {
+	if($bikeId != null){
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
+	}else{
+		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."')");
+	}
+
+	$json = array();
+	$json['type'] = 'FeatureCollection';
+	$json['features'] = array();
+		
+		while($row = pg_fetch_assoc($result)){
+			$point = array();
+			$point['type'] = 'Feature';
+			$point['properties'] = array();
+			$point['properties']['measurementId'] = $row['measurementId'];
+			$point['properties']['temperature'] = $row['temperature'];
+			$point['properties']['humidity'] = $row['humidity'];
+			$point['properties']['noise'] = $row['noise'];
+			$point['properties']['light'] = $row['light'];
+			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['geometry'] = array();
+			$point['geometry']['type'] = 'Point';
+			$point['geometry']['coordinates'] = array();
+			array_push($point['geometry']['coordinates'],floatval($row['lon']));
+			array_push($point['geometry']['coordinates'],floatval($row['lat']));
+			array_push($point['geometry']['coordinates'],floatval($row['height']));
+			array_push($json['features'],$point); 	
+		}	
+	header('Content-Type: application/json');
+	echo json_encode($json);
+});
+
 $app->get('/last_position/:bikeId', function ($bikeId) {
 	
 	$result = query("select \"measurementId\", ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where \"deviceId\" = ".$bikeId." order by \"measurementId\" DESC Limit 1");
