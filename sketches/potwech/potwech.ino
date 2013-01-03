@@ -47,8 +47,9 @@ float temperature = 0;    // current temperaure value
 float humidity = 0;       // current humidity value
 int light = 0;            // current light value
 int cellid;
-int accelerationData[3];
-int compassData[3];
+double accelerationData[3];
+boolean opened= false;
+boolean crashed = false;
 
 //sum variables for averaging function:
 float sumTemp = 0;
@@ -64,8 +65,6 @@ int loopcounter = 0;    // number of measurements for computing the averages
 //Accelerometerstuff
 double g;
 double go=2000;
-
-//String json = "{\"device_id\": 123456,\"measurements\": [{\"timestamp\": 1355230205,\"cellid\": 109128739432,\"mcc\": 123456,\"mnc\": 123456,\"temperature\": 29,\"humidity\": 80,\"light\": 1,\"acceleration\": {\"x\": 0,\"y\": 0,\"z\": 0},\"compass\": {\"x\": 0,\"y\": 0,\"z\": 0},\"battery\": 78}]}";
 
 void setup()
 {
@@ -85,7 +84,7 @@ void setup()
   }
   Serial.print("Let's start");
   pinMode(10, OUTPUT);
-  if (!SD.begin(4)) {
+  if (!SD.begin(10)) {
     Serial.println("initialization SD CARD failed!");
   }
   delay(500);
@@ -101,75 +100,36 @@ boolean timeDifferenceBiggerOrEqualThan(DateTime a, DateTime b, long timeDiff){
   return (c >= timeDiff);
 }
 
+void printlnSD(String str){
+  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  // if the file is available, write to it:
+  if (dataFile) {
+    dataFile.println(str);
+    dataFile.close();
+  }  
+  // if the file isn't open, pop up an error:
+  else {
+    Serial.println("error opening datalog.txt");
+  }
+} 
+
 void loop()
 {
   // reading event-triggering sensordata:
   light = analogRead(A3);
-  /**
   compass.read();
-  accelerationData[0] = (int)compass.a.x;
-  accelerationData[1] = (int)compass.a.y;
-  accelerationData[2] = (int)compass.a.z;
-  */
+  accelerationData[0] = (double) compass.a.x;
+  accelerationData[1] = (double) compass.a.y;
+  accelerationData[2] = (double) compass.a.z;
   
   //now running on millis; should run with RTC time
   DateTime time = RTC.now();
-  
   // Lightvalue Threshold reached? / parcel opened?
-  if (light > 150) {
+  if ((light > 200) && (!opened)) {
+    opened = true;
     Serial.println("EVENT OCCURED: Parcel opened!");
     // TODO: SD CARD Schreiben
-    String blub = ""; // TODO: Change Device_ID   
-  }
-  
-  // Accelerometer
-   compass.read();
-   double x = (double)compass.a.x;
-   double y = (double)compass.a.y;
-   double z = (double)compass.a.z;
-   g=sqrt(x*x+y*y+z*z)/1000;
-   if ((go!=g) &&(g>2.5)){
-     go=g;
-     Serial.println("EVENT OCCURED: Parcel crashed!");
-     //TODO: Event auf SD Karte schreiben (Variablenname: "g")
-     
-   }
-  
-  if (timeDifferenceBiggerOrEqualThan(time,timeOld,samplingIntervall)) //sampling every 1 seconds (according to intervall variable)
-  {
-    Serial.println();
-    Serial.print("Sampling at ");
-    DateTime time = RTC.now();
-    Serial.print(time.year(), DEC);
-    Serial.print('/');
-    Serial.print(time.month(), DEC);
-    Serial.print('/');
-    Serial.print(time.day(), DEC);
-    Serial.print(' ');
-    Serial.print(time.hour(), DEC);
-    Serial.print(':');
-    Serial.print(time.minute(), DEC);
-    Serial.print(':');
-    Serial.println(time.second(), DEC);
-  
-    //read the sensor values over here (change the following lines):
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature();
-  
-    // Output for testing issues:
-    Serial.print("Temperature: ");
-    Serial.println(temperature);
-    Serial.print("Humidity: ");
-    Serial.println(humidity);
-    Serial.print("Lightvalue: ");
-    Serial.println(light); /**
-    Serial.println("Acceleration: ");
-    Serial.println("        x: " + String(accelerationData[0]));
-    Serial.println("        y: " + String(accelerationData[1]));
-    Serial.println("        z: " + String(accelerationData[2]));*/ 
-    
-    String blub = "data=";
-    blub += "1232234";  // TODO: Change device_id
+    String blub = "1232234";  // TODO: Change device_id
     blub += ";";
     blub += time.unixtime();
     blub += ";";
@@ -179,22 +139,57 @@ void loop()
     blub += ";";
     blub += "23423";  // TODO: Change mnc
     blub += ";";
-    blub += String((int)temperature);
+    blub += String(light);
     blub += ";";
-    blub += String((int)humidity);
+    printlnSD(blub);
+  }
+  if ((opened) && (light<160))
+  {
+    opened = false;
+  }
+  // Acceleration Threshold reached? / parcel crashed?
+  g=sqrt(accelerationData[0]*accelerationData[0]+accelerationData[1]*accelerationData[1]+accelerationData[2]*accelerationData[2])/1000;
+  if ((go!=g) &&(g>2.5) && (!crashed))
+  {
+    crashed = true;
+    go=g;
+    Serial.println("EVENT OCCURED: Parcel crashed!");
+    // TODO: SD CARD Schreiben
+    String blub = "1232234";  // TODO: Change device_id
     blub += ";";
-    blub += "75";  // TODO: Change Battery
+    blub += time.unixtime();
     blub += ";";
-    Serial.println(blub);
+    blub += "1232142"; // TODO: Change cell_id
+    blub += ";";
+    blub += "234"; // TODO: Change mcc
+    blub += ";";
+    blub += "23423";  // TODO: Change mnc
+    blub += ";";
+    g = g * 10;
+    blub += String((int)g);
+    blub += ";";
+    printlnSD(blub);
+  }
+  
+  if (timeDifferenceBiggerOrEqualThan(time,timeOld,samplingIntervall)) //sampling every 1 seconds (according to intervall variable)
+  {
+    crashed = false;
+    Serial.println("S A M P L I N G");
+    DateTime time = RTC.now();
+  
+    //read the sensor values over here (change the following lines):
+    humidity = dht.readHumidity();
+    temperature = dht.readTemperature();
  
     // add measured values to the sum variables for computing the average
     sumTemp = sumTemp + temperature;
     sumHumi = sumHumi + humidity;
     loopcounter++;
-  
+    
     // time for new Measurement? (every 5seconds)
     if (timeDifferenceBiggerOrEqualThan(time, lastMeasurement, measurementIntervall))
     {
+      Serial.println("C O M P U T I N G  A V E R A G E S ");
       //compute the average
       avgTemp = sumTemp / loopcounter;
       avgHum = sumHumi / loopcounter;
@@ -204,8 +199,30 @@ void loop()
       // setting the sum's to zero
       sumTemp = 0;
       sumHumi = 0;
+      
+      String blub = "data=";
+      blub += "1232234";  // TODO: Change device_id
+      blub += ";";
+      blub += time.unixtime();
+      blub += ";";
+      blub += "1232142"; // TODO: Change cell_id
+      blub += ";";
+      blub += "234"; // TODO: Change mcc
+      blub += ";";
+      blub += "23423";  // TODO: Change mnc
+      blub += ";";
+      blub += String((int)avgTemp);
+      blub += ";";
+      blub += String((int)avgHum);
+      blub += ";";
+      blub += "75";  // TODO: Change Battery
+      blub += ";";
+      Serial.println(blub);
+      printlnSD(blub);
+      
       if (timeDifferenceBiggerOrEqualThan(time, lastUpload, uploadIntervall))
       {
+          Serial.println("U P L O A D   S H I T    Y O O ");
           // TODO: LOAD der Sachen von der SD Card und UPLOAD an den Server
           lastUpload = time;
       }
