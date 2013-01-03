@@ -98,7 +98,7 @@ $app->get('/last_position/:bikeId', function ($bikeId) {
 
 $app->get('/mobile_devices/:userId', function ($userId) {
 	
-	$result = query("select \"deviceId\" from mobile_devices where owner = ".$userId);
+	$result = query("select \"deviceId\",devicename from mobile_devices where owner = ".$userId);
 	
 	$json = array();
 	$json['devices'] = array();
@@ -106,6 +106,7 @@ $app->get('/mobile_devices/:userId', function ($userId) {
 		while($row = pg_fetch_assoc($result)){
 			$id = array();
 			$id['id'] = $row['deviceId'];
+			$id['devicename'] = $row['devicename'];
 			array_push($json['devices'],$id); 	
 		}	
 	header('Content-Type: application/json');
@@ -224,10 +225,43 @@ $app->post('/analysis_return', function () use ($app) {
    
 });
 
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'uid=2&mobile_device=2&name=test' http://giv-cyclop.uni-muenster.de/rest/index.php/change_device_name 
+*/
+
+$app->post('/change_device_name', function () use ($app) {
+	$uid = utf8_encode($app->request()->post('uid'));
+	$mobile_device = utf8_encode($app->request()->post('mobile_device'));
+	$name = utf8_encode($app->request()->post('name'));
+
+	if($uid && $mobile_device && $name){
+		$query = "update mobile_devices set devicename='$name' where ((\"deviceId\"=$mobile_device) AND (owner=$uid))";
+		query($query);
+	}else{
+		echo 'missing data';
+	}
+});
+
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'uid=2&secret_key=5647&name=test' http://giv-cyclop.uni-muenster.de/rest/index.php/add_new_device
+*/
+
+$app->post('/add_new_device', function () use ($app) {
+	$uid = utf8_encode($app->request()->post('uid'));
+	$secret_key = utf8_encode($app->request()->post('secret_key'));
+	$name = utf8_encode($app->request()->post('name'));
+
+	if($uid && $secret_key && $name){
+		$query = "insert into mobile_devices (\"secretKey\",\"owner\",devicename) values ($secret_key,$uid,'$name')";
+		query($query);
+	}else{
+		echo 'missing data';
+	}
+});
+
 /*TODOs: 
 -Posts für measurements
--Posts für hazards
--Get für aktuelle Position*/
+-Posts für hazards*/
 
 $app->post('/post_measurements', function () use ($app) {
 
