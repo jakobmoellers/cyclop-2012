@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="accesspoints" defaction="main" level="3" group="sumo">
+
+	<menu>
+		<tab name="AccessPointsMenu" action="main" actions="main,list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=accesspoints"></tab>
+	</menu>
+	
+	<table name="list">
+		<default>
+			<order col="4" mode="ASC"></order>
+			<rows>20</rows>			
+		</default>		
+		<col id="4" name="Name"></col>
+		<col id="2" name="Node"></col>
+		<col id="3" name="Path"></col>
+		<col id="5" name="Groups"></col>
+		<col id="6" name="HTTPAuth" visible="false"></col>
+		<col id="7" name="Filtering" visible="false"></col>
+		<col id="8" name="PwdEncrypt" visible="false"></col>
+		<col id="9" name="CanRegister" visible="false"></col>
+		<col id="10" name="RegGroup" visible="false"></col>
+		<col id="11" name="PwdChange" visible="false"></col>
+		<col id="12" name="Theme" visible="false"></col>
+		<col id="13" name="Created" visible="false"></col>
+		<col id="14" name="Updated" visible="false"></col>
+	</table>					
+								
+	<table name="stats">
+		<default>
+			<order col="6" mode="DESC"></order>
+			<rows>20</rows>			
+		</default>		
+		<col id="3" name="Name"></col>
+		<col id="1" name="Node"></col>
+		<col id="4" name="Path" visible="false"></col>
+		<col id="5" name="Accesses" attributes="colspan='2'"></col>
+		<col id="6" name="Activity" attributes="colspan='2'"></col>
+		<col id="7" name="LastLogin" visible="false"></col>
+		<col id="8" name="LastRequest" visible="false"></col>
+	</table>
+	
+	<action name="list" level="3" group="sumo"></action>
+	<action name="export" level="3" group="sumo"></action>
+	<action name="stats" level="3" group="sumo"></action>
+	<action name="view" level="3" group="sumo"></action>
+	<action name="edit" level="4" group="sumo"></action>
+	<action name="modify" level="4" group="sumo" template="edit"></action>
+	<action name="deletegroup" level="4" group="sumo" template="edit"></action>
+	<action name="add" level="5" group="sumo"></action>
+	<action name="new" level="5" group="sumo" template="add"></action>
+	<action name="delete" level="5" group="sumo" template="list"></action>
+		
+</module>

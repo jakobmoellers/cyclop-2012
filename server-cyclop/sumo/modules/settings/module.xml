@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<module name="settings" defaction="view" level="3" group="sumo">
+
+	<menu>
+		<tab name="Settings" action="view" actions="view,edit"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=settings"></tab>
+	</menu>
+		
+	<action name="view" level="3" group="sumo"></action>
+	<action name="edit" level="7" group="sumo"></action>
+	<action name="modify" level="7" group="sumo" template="edit"></action>
+	<action name="viewclock"></action>
+	
+</module>

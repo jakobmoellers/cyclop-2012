@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module name="sessions" defaction="slist" level="3" group="sumo">
+
+	<menu>
+		<tab name="SessionsList" action="slist"></tab>
+		<tab name="ConnectionsList" action="clist"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=sessions"></tab>
+	</menu>
+	
+	<table name="slist">
+		<default>
+			<order col="12" mode="DESC"></order>
+			<rows>20</rows>			
+		</default>										
+		<col id="1" name="ID" attributes="align='right'"></col>
+		<col id="4" name="User"></col>
+		<col id="2" name="Node" visible="false" attributes="width='100%'"></col>
+		<col id="7" name="IPClient"></col>
+		<col id="8" name="Hostname"></col>
+		<col id="9" name="CountryNetwork" visible="false"></col>
+		<col id="5" name="Connected" visible="false"></col>
+		<col id="6" name="Expire"></col>
+		<col id="10" name="WhereIs"></col>
+		<col id="11" name="Client" visible="false"></col>
+		<col id="12" name="Activity"></col>
+	</table>						
+											
+	<table name="clist">
+		<default>
+			<order col="3" mode="DESC"></order>
+			<rows>20</rows>			
+		</default>		
+		<col id="1" name="Node"></col>
+		<col id="2" name="IPClient" attributes="width='100%'"></col>
+		<col id="3" name="Requests"></col>
+		<col id="4" name="Connected"></col>
+	</table>
+	
+	<action name="slist" level="3" group="sumo"></action>
+	<action name="clist" level="3" group="sumo"></action>
+	
+</module>

@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module name="relationship" defaction="group2users" level="3" group="sumo">
+	
+	<menu>
+		<tab name="Group2Users" action="group2users" ></tab>
+		<tab name="AccessPoint2Users" action="accesspoint2users"></tab>
+		<tab name="AccessPoint2Group" action="accesspoint2groups"></tab>
+		<tab name="Group2AccessPoint" action="group2accesspoints"></tab>
+		<tab name="User2AccessPoint" action="user2accesspoints"></tab>
+		<!--<tab name="Help" module="manpages" action="view" query="mod=usersgroups"></tab>-->
+	</menu>
+	
+	<table name="group2users">
+		<default>
+			<order col="2"></order>
+			<rows>1</rows>			
+		</default>
+	
+		<col id="2" name="GroupName"></col>
+		<col id="100" name="UsersList" sortable="false"></col>
+		<col id="101" name="Diagram" sortable="false" attributes="width='100%'"></col>
+	</table>
+	
+	<table name="accesspoint2users">
+		<default>
+			<order col="4"></order>
+			<rows>1</rows>			
+		</default>
+	
+		<col id="4" name="AccessPoint"></col>
+		<col id="100" name="UsersList" sortable="false"></col>
+		<col id="101" name="Diagram" sortable="false" attributes="width='100%'"></col>
+	</table>
+	
+	<table name="accesspoint2groups">
+		<default>
+			<order col="4"></order>
+			<rows>1</rows>			
+		</default>
+	
+		<col id="4" name="AccessPoint"></col>
+		<col id="100" name="GroupsList" sortable="false"></col>
+		<col id="101" name="Diagram" sortable="false" attributes="width='100%'"></col>
+	</table>
+	
+	<table name="group2accesspoints">
+		<default>
+			<order col="2"></order>
+			<rows>1</rows>			
+		</default>
+	
+		<col id="2" name="GroupName"></col>
+		<col id="100" name="AccessPointsList" sortable="false"></col>
+		<col id="101" name="Diagram" sortable="false" attributes="width='100%'"></col>
+	</table>
+	
+	<table name="user2accesspoints">
+		<default>
+			<order col="2"></order>
+			<rows>1</rows>			
+		</default>
+	
+		<col id="2" name="User"></col>
+		<col id="100" name="AccessPointsList" sortable="false" attributes="width='100%'"></col>
+		<!--<col id="101" name="Diagram" sortable="false" attributes="width='100%'"></col>-->
+	</table>
+	
+	
+	<action name="export" level="3" group="sumo"></action>
+	<action name="group2users" level="3" group="sumo" template="list"></action>
+	<action name="accesspoint2users" level="3" group="sumo" template="list"></action>
+	<action name="accesspoint2groups" level="3" group="sumo" template="list"></action>
+	<action name="group2accesspoints" level="3" group="sumo" template="list"></action>
+	<action name="user2accesspoints" level="3" group="sumo" template="list"></action>
+	
+	<service name='relationship'>
+		<command name='GET_GROUP2USERS'></command>
+		<command name='GET_GROUP2ACCESSPOINTS'></command>
+		<command name='GET_ACCESSPOINT2USERS'></command>
+		<command name='GET_ACCESSPOINT2GROUPS'></command>
+		<command name='GET_USER2ACCESSPOINTS'></command>
+	</service>
+	
+</module>

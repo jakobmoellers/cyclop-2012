@@ -1,0 +1,72 @@
+<?php
+
+$module['language'] = array(
+
+'AccessPoints'	    => 'Points d&rsquo;Access',
+'AccessPointsMenu'  => 'Menu principal',
+
+'add'    => 'Ajouter',
+'edit'   => '&Eacute;diter',
+'remove' => 'Enlever',
+
+'AccessPointsStats'      => 'Points d&rsquo;Access Statistiques',
+'Statistics'	         => 'Statistiques',
+'StatisticsDisabled'	 => 'Statistiques non permises',
+'EnableStatistics'	 => 'Enable statistics',
+'ID'			 => 'ID',
+"HTTPAuth"		 => "Authentif. HTTP",
+'Activity'		 => 'Activit&eacute;',
+'LastLogin'		 => 'Derni&egrave;re ouverture',
+'LastRequest'		 => 'Derni&egrave;re demande',
+'Accesses'		 => 'Acc&egrave;s',
+'AddGroup'		 => 'Ajouter le groupe',
+'RegGroup'		 => 'Groupe d&rsquo;enregistrement d&rsquo;utilisateurs',
+'Name'			 => 'Nom',
+'Node'			 => 'Noeud',
+'Path'			 => 'Path',
+'Theme'			 => 'Th&egrave;me d&rsquo;ouverture',
+'Groups'		 => 'Groupes',
+'Created'		 => 'Cr&eacute;&eacute; ',
+'Updated'		 => 'Mis &agrave; jour',
+'Description'		 => 'Description',
+'SecurityOptions'	 => 'Options de s&eacute;curit&eacute;',
+'PwdEncrypt'		 => 'Permettre le mot de passe chiffr&eacute;',
+'Filtering'		 => 'Filtrage',
+'ChangePwd'		 => 'Permettre le mot de passe de changement',
+'Registration'		 => 'Permettre l&rsquo;enregistrement',
+'LayoutOptions'		 => 'Disposition',
+'Theme'			 => 'Th&egrave;me',
+'PwdEncrypt'		 => 'Mot de passe chiffr&eacute;',
+'PwdChange'		 => 'Changer le mot de passe',
+'CanRegister'		 => 'Enregistrement',
+'GroupNotAvailable'	 => ',mais le groupe "{{DATA}}" n&#39;est pas disponible!',
+'CannotDeleteGroup'	 => 'Ne peut pas supprimer ce groupe',
+'AccessPointNotExist'	 => 'Point d&rsquo;Access unknow!',
+'AccessPointUpdated'	 => 'Point d&rsquo;Access mis &agrave; jour',
+'AccessPointNotUpdated'  => 'Point d&rsquo;Access non mis &agrave; jour',
+'AccessPointAdded'	 => 'Point d&rsquo;Access cr&eacute;&eacute;',
+'AccessPointNotAdded'	 => 'Point d&rsquo;Access non cr&eacute;&eacute;',
+'AccessPointGroupRemoved' => 'Le groupe a supprim&eacute;',
+'AccessPointGroupNotRemoved' => 'Groupe non supprim&eacute;',
+'AreYouSureDelete'		 => '&Ecirc;tes vous s&ucirc;r de supprimer ce point d&rsquo;acc&egrave;s: "{{DATA1}}" ({{DATA0}}) ?',
+'AccessPointDeleted'		 => 'Point d&rsquo;Access supprim&eacute;',
+'AccessPointNotDeleted'		 => 'AccessPoint not deleted',
+'AccesspointsNotFound'		 => 'Il n&rsquo;y a pas point d&rsquo;acc&egrave;s d&eacute;fini!',
+'NoStatsForAccesspoints'	 => 'Aucunes statistiques pour des points d&rsquo;acc&egrave;s!',
+'StatisticsDisabled'		 => 'Statistiques non permises, les informations mises &agrave; jour &agrave;: {{DATA0}}<br><br>{{DATA1}}',
+'CannotDeleteThis'		 => 'You cannot delete this AccessPoint',
+
+"W07002C" => "Nom de groupe inadmissible!",
+"W07003C" => "Inadmissible URL de point d'acc&egrave;s!",
+"W07004C" => "Noeud inadmissible!",
+"W07005C" => "Nom de groupe inadmissible pour l&rsquo;enregistrement!",
+
+"I07000X" => "Point d&rsquo;Access ID{{DATA0}} \"{{DATA1}}\" sur le noeud {{DATA2}} mis &agrave; jour pr&egrave;s {{DATA3}}",
+"I07001X" => "Groupe mis &agrave; jour pour l&rsquo;identification de point d'acc&egrave;s: {{DATA0}} de \"{{DATA1}}\" &agrave; \"{{DATA2}}\" par {{DATA3}}",
+"I07002C" => "Point d&rsquo;Access {{DATA}} exister d&eacute;j&agrave;!",
+"I07003X" => "Le nouveau point d'acc&egrave;s s'est ajout&eacute; pr&egrave;s {{DATA3}}, Noeud: {{DATA1}} Nom: \"{{DATA0}}\" URL: {{DATA2}}",
+"I07004X" => "Point d&rsquo;Access \"{{DATA0}}\" Noeud: {{DATA1}}, URL: {{DATA2}} supprim&eacute; pr&egrave;s {{DATA3}}"
+
+);
+
+?>

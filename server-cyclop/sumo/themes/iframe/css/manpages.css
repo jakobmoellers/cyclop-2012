@@ -1,0 +1,31 @@
+<!--
+
+DIV.man-title { 
+	color: #3D598B; 
+	font-weight: bold; 
+	font-size: 14px; 
+	white-space: nowrap; 
+	padding: 5px; 
+}
+
+DIV.man-content { 
+	width: 500px; 
+	color: #333333; 
+	font-size: 11px; 
+	padding-top: 20px;
+	padding-bottom: 20px;
+}
+
+DIV.man-note { 
+	padding: 10px; 
+	background-color: #FFFFCC; 
+	border: 1px solid #DD2211; 
+	color: #333333; 
+	font-size: 11px; 
+}
+
+UL.man-content { 
+	list-style-image: url('../images/arrow.gif'); 
+}
+
+-->

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="help" defaction="info">
+
+	<menu>
+		<tab name="Info" action="info"></tab>
+		<tab name="Author" action="author"></tab>
+		<!-- <tab name="Support" action="support"></tab> -->
+		<tab name="Credits" action="credits"></tab>
+		<tab name="Licence" action="licence"></tab>
+	</menu>
+
+</module>

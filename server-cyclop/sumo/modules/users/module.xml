@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module name="users" defaction="list">
+
+	<menu>
+		<tab name="UsersList" action="list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=users"></tab>
+	</menu>
+	
+	<table name="list">
+		<default>
+			<order col="4" mode="ASC"></order>
+			<rows>20</rows>			
+		</default>
+		<col id="6" name="IMG:User"></col>
+		<col id="1" name="ID" visible="false"></col>
+		<col id="2" name="User"></col>
+		<col id="4" name="UserName"></col>
+		<col id="8" name="GroupLevel" attributes="style='width:100%'"></col>
+		<col id="9" name="DataSource" visible="false"></col>
+		<col id="13" name="Email" visible="false"></col>
+		<col id="12" name="Language" visible="false"></col>
+		<col id="10" name="LastLogin" visible="false"></col>	
+		<col id="15" name="Created" visible="false"></col>	
+		<col id="11" name="Expire" visible="false"></col>	
+	</table>
+	
+	<action name="add"></action>	
+	<action name="new" template="add"></action>	
+	<action name="delete" template="list"></action>
+	<action name="editimg"></action>	
+	<action name="edit_password"></action>
+	<action name="modify_password" template="edit_password"></action>
+	<action name="deleteimg" template="editimg"></action>
+	<action name="modify" template="edit"></action>	
+	<action name="deletegroup" template="edit"></action>	
+	
+</module>

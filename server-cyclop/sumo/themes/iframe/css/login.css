@@ -1,0 +1,54 @@
+<!--                  
+
+BODY {			
+        background-color: #FFFFFF;
+        color: #000000;
+        font-family: "Trebuchet MS", Tahoma, Arial, Helvetica, sans-serif;
+        font-size: 12px;	
+		text-align: right;	
+		margin: 0px;
+		padding: 0px;
+}
+
+TABLE  { border-spacing: 0px; border-collapse: collapse; }
+TD	   { padding: 0px; margin: 0px; }
+IMG	   { border: none; }
+FORM   { padding: 0px; margin: 0px; }
+SELECT { font-size: 12px; }
+BR	   { font-size: 7px; }
+INPUT  { background-color: #FFFFFF; border: 1px solid #777777; font-size: 13px; }
+
+INPUT.username {
+	padding-left: 18px;
+	background-image: url('../images/person.gif');
+	background-repeat: no-repeat;
+}
+
+INPUT.password {
+	padding-left: 18px;
+	background-image: url('../images/keyring.gif');
+	background-repeat: no-repeat;
+	color: #BB0000;
+}
+
+INPUT.button {
+		background: url('../images/bg-button.png') repeat-x;
+		color: #000000;
+		font-size: 11px;
+		font-weight: bold;
+		border: 1px solid #666666;
+		padding-left: 5px; 
+		padding-right: 5px;
+}
+
+A:link    { color: #FFA500; text-decoration: none; }
+A:hover   { color: #FFA500; text-decoration: none; }
+A:visited { color: #FFA500; text-decoration: none; }
+
+DIV.login { padding: 5px; }
+
+.title { color: #3D598B; font-size: 14px; font-weight: bold; }
+.error { color: #CC0000; font-size: 12px; font-weight: bold; }
+.note  { color: #DEDEDE; font-size: 10px; text-align: left; }
+
+-->

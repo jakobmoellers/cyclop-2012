@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="messages" defaction="main">
+	
+	<service name='getmessages'>
+		<command name='GET_ERRORS_MESSAGES' template='message_h'></command>
+		<command name='GET_BANNED_USERS' template='message_h'></command>
+		<command name='GET_SQLITE_ERROR' template='message_h'></command>
+		<command name='GET_PASSWORD_UNCHANGED' template='message_h'></command>
+		<command name='GET_IP2COUNTRY' template='message_m'></command>
+		<command name='GET_INSTALL_DIR_EXIST' template='message_m'></command>
+		<command name='GET_EXAMPLES_DIR_EXIST' template='message_m'></command>
+		<command name='GET_USERS_LOGIN' template='message_l'></command>
+		<command name='GET_USERS_LOGOUT' template='message_l'></command>
+	</service>
+
+</module>
