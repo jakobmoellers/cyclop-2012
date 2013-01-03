@@ -1,0 +1,40 @@
+<!--
+
+TABLE.paging { 
+	border: 1px solid #CCCCCC;
+	background: url('../images/box_bg_title.gif') repeat-x;
+	white-space: nowrap;
+	height: 18px;
+}
+
+TD.paging { 
+	 color: #3D598B;
+	 font-size: 11px; 
+	 border-right: 1px solid #CDCDCD;
+	 text-align: center;
+}
+
+TD.paging-on { 
+   color: #334477;
+   font-weight: bold;
+   background: url('../images/box_bg_title_on.gif') repeat-x;   
+   padding-left: 5px; 
+   padding-right: 5px;
+}
+
+TD.paging A { 
+	color: #3D598B;
+	text-decoration: none; 	
+	padding-left: 5px; 
+	padding-right: 5px;
+}
+
+TD.paging A:hover   { 
+   color: #FFFFFF;
+   background: url('../images/box_bg_title_on.gif') repeat-x;
+   text-decoration: none;   
+   padding-left: 5px; 
+   padding-right: 5px;
+}
+
+-->

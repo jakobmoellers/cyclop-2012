@@ -1,0 +1,24 @@
+<!--
+
+.window-top	{ background: url('../images/wx_top.png') repeat-x; height: 23px; }
+
+.window-title {
+    width: 100%;
+    text-align: left;
+    font-size: 11px;
+	color: #333333;
+	font-weight: bold;
+	white-space: nowrap;
+    cursor: default;
+}
+
+.window-top-sx	{ background: url('../images/wx_top_sx.png') no-repeat; }
+.window-top-dx	{ background: url('../images/wx_top_dx.png') no-repeat; }
+
+.window-middle 	  { background: url('../images/bg_window.png'); padding: 0px; vertical-align: top; }
+.window-middle-sx { background: url('../images/wx_middle_sx.png') repeat-y; }
+.window-middle-dx { background: url('../images/wx_middle_dx.png') repeat-y; }
+
+.window-bottom	{ background: url('../images/wx_bottom.png') repeat-x; }
+
+-->

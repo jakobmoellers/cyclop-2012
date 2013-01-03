@@ -1,0 +1,55 @@
+<!--  
+#menu-module {
+    float:left; 
+    background: url("../images/bg_tab_off.png") repeat-x top;      
+    line-height: normal;
+	font-size: 11px;	
+	width: 100%;	
+}
+
+#menu-module ul {
+	margin: 0px;
+    padding: 0px;
+    list-style: none;
+	width: 100%;
+	display: inline;
+}
+
+#menu-module li {
+	float: left;
+    background: url("../images/tab_right_off.png") no-repeat right top;
+    margin: 0px;
+    padding: 0px;
+	display: inline;
+}
+
+#menu-module a {
+	display: block;
+    background: url("../images/tab_left_off.png") no-repeat left top;
+    padding:4px 15px 0px;
+	color: #999999;
+	white-space: nowrap;
+	text-decoration: none;
+}
+
+#menu-module a:hover {
+	text-decoration: none;
+	color: #333333;
+}
+
+#menu-module a:active {
+	text-decoration: none;
+	color: #333333;
+}
+
+#menu-module #current-tab {
+    background-image: url("../images/tab_right_on.png");
+	color: #333333;
+}
+
+#menu-module #current-tab a {
+	background-image: url("../images/tab_left_on.png");
+    padding-top: 4px;
+	color: #333333;
+}	
+-->

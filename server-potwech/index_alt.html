@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+ <link rel="stylesheet" href="includes/leaflet/leaflet.css" />
+ <!--[if lte IE 8]>
+     <link rel="stylesheet" href="includes/leaflet/leaflet.ie.css" />
+ <![endif]-->
+<style>
+
+	
+	li
+	{
+		border: 1px solid;
+		padding: .4em;
+		margin: .2em;
+		width: 200px;
+		background-color: green;
+		list-style-type: none;
+	}
+	
+	li:hover
+	{
+		background-color: orange;
+	}
+</style>
+ 
+<script src="includes/jquery/jquery-1.8.3.min.js"></script>
+<script src="includes/leaflet/leaflet-src.js"></script>
+
+	<script>
+		function initMap(){
+			map = L.map('map').setView([51.966667, 7.633333], 13);
+
+			L.tileLayer('http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png', {
+				maxZoom: 18,
+				attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
+			}).addTo(map);
+		}
+		
+		function fetchGeoJson(parcelid){
+			var parcelPathLatLngs = new Array();
+		
+			$.getJSON("rest/index.php/parcel_measurements/"+parcelid, function(json) {
+			   L.geoJson(json,{
+					pointToLayer: function (feature, latlng) {
+						parcelPathLatLngs.push(latlng);
+						return L.circleMarker(latlng);
+					}});
+			});
+			L.polyline(parcelPathLatLngs, {color: 'red'}).addTo(map);
+		}
+		
+		
+		
+		function loadAllParcels(){
+			$.getJSON("rest/index.php/current_parcels/", function(json) {
+			   populateListOfParcels(json);
+			});				
+		}
+		
+		function populateListOfParcels(data){
+			var items = [];
+
+		  $.each(data.parcels, function(key, val) {
+			items.push('<li id="' + key + '" onclick="fetchGeoJson('+val.parcel_process+');">Parcel ' + val.parcel_process + '</li>');
+		  });
+		 
+		  $('<ul/>', {
+			'class': 'parcel_list',
+			html: items.join('')
+		  }).appendTo('#parcel_list_container');
+		}
+		
+		$(document).ready(function () {
+			initMap();
+			loadAllParcels();
+		});
+
+		
+		
+		initMap();
+
+	</script>
+
+
+</head>
+<body>
+	<div id="map" style="width: 600px; height: 400px"></div>
+	<div id="parcel_list_container">
+		<ul id="parcel_list">
+		</ul>
+	</div>
+</body>
+</html>

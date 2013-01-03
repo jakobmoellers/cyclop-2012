@@ -1,0 +1,103 @@
+<!--  
+
+.menu {
+	position: absolute;
+	visibility: hidden;
+	border-left: 1px solid #888888;  
+	border-right: 1px solid #666666;
+	border-bottom: 1px solid #666666; 
+	line-height: 18px;
+	z-index: 100000;
+	background-color: #FFFFFF;
+	width: 150px;
+	font-size: 11px;
+	padding-top: 10px;
+	padding-right: 2px;
+}
+
+.menu A {
+	width: 100%;
+	display: block;
+	border-bottom: 1px solid #EFEFEF;
+	/*
+	 padding: 1px 0px;
+	 margin: 1px 0px;
+	*/
+	padding: 1px 0px 1px 3px;
+	text-decoration: none;
+	font-weight: bold;
+	text-indent: 5px;
+	color: #222222;
+}
+
+.menu A:hover { 
+	background-color: #444444;
+	color: white;
+}
+
+TD.datetime A, A:hover {
+	color: #333333;
+}
+
+TD.datetime { 
+	vertical-align: top; 
+	padding-top: 4px; 
+	text-align: right; 
+	padding-right: 15px; 
+	white-space: nowrap; 
+	font-size:11px; 
+	font-weight: normal; 
+}
+INPUT.clock { 
+	font-size: 11px; 
+	border: none; 
+	background: url('../images/menu_top.png') repeat-x;
+ } 
+
+TABLE.menu-top { 
+	width: 100%;                
+	font-weight: bold;
+	font-size: 12px;
+	height: 32px;
+	background: url('../images/menu_top.png') repeat-x;
+    z-index: 100000;
+}
+
+#menu-top {
+   white-space : nowrap;  
+   float : left;
+   color : white; 
+}
+#menu-top UL {
+   padding : 0;
+   margin : 0;
+   float : left;
+   font-size: 11px;
+}
+#menu-top UL LI {
+   display : inline;
+}
+#menu-top UL LI A {
+   padding-left : 1em;
+   padding-right : 1em;
+   color: #000000;
+   text-decoration : none;
+   float: left;
+   border-right: 1px solid #DDDDDD;
+}
+#menu-top UL LI A:hover {
+   color: #FFFFFF;    
+   background-color: #333333;
+}
+
+IMG.menu-top-icon {
+	vertical-align:middle;
+	padding-left:5px;
+	padding-right:5px;
+}
+
+TD.clean { padding-right: 10px; padding-top: 3px; vertical-align: top; z-index: 100000; }
+TD.flags { padding-right: 10px; padding-top: 5px; vertical-align: top; z-index: 100000; }
+IMG.flag { width: 16px; height: 11px; }
+
+-->

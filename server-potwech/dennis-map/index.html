@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <title>POTWECH</title>
+        <meta charset="utf-8" />
+        <link rel="stylesheet" href="../includes/leaflet/leaflet.css" />
+        <!--[if lte IE 8]>
+            <link rel="stylesheet" href="../includes/leaflet/leaflet.ie.css" />
+        <![endif]-->
+        <link rel="stylesheet" href="http://code.jquery.com/ui/1.9.2/themes/base/jquery-ui.css"
+        type="text/css">
+        <script src="../includes/jquery/jquery-1.8.3.min.js"></script>
+        <script src="http://code.jquery.com/ui/1.9.2/jquery-ui.js"></script>
+        <style>
+            #slider {
+				margin-right: 10px;
+            }
+        </style>
+	
+
+    <!-- Fav and touch icons -->
+    <link rel="shortcut icon" href="../assets/ico/favicon.ico">
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="../assets/ico/apple-touch-icon-144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="../assets/ico/apple-touch-icon-114-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
+    </head>
+    
+    <body>
+        <div id="map" style="height:500px"></div>
+ <!--       <div id="slider" style="width:200px">
+            <div class="ui-slider-handle"></div> -->
+        </div>
+        <script src="../includes/leaflet/leaflet-src.js"></script>
+        <script>
+            var marker = new Array();
+			var maxValue = 0;
+
+            function initMap() {
+                map = L.map('map').setView([51.966667, 7.633333], 6);
+
+                L.tileLayer('http://{s}.tile.cloudmade.com/BC9A493B41014CAABB98F0471D759707/997/256/{z}/{x}/{y}.png', {
+                    maxZoom: 18,
+                    attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
+                }).addTo(map);
+				
+				var SliderControl = L.Control.extend({
+					options: {
+						position: 'topright'
+					},
+
+					onAdd: function (map) {
+						// create the control container with a particular class name
+						var container = L.DomUtil.create('div', 'slider');
+						$(container).append('<div id="slider" style="width:200px"><div class="ui-slider-handle"></div></div>');
+						//$(container=
+						$(container).mousedown(function() {map.dragging.disable(); });
+						$(document).mouseup(function() {map.dragging.enable(); });
+
+						// ... initialize other DOM elements, add listeners, etc.
+
+						return container;
+					}
+				});
+
+				map.addControl(new SliderControl());
+				
+				$("#slider").hide();
+             }
+
+            function fetchGeoJson(parcelid) {
+                //$.ajax({url: "rest/index.php/parcel_events/"+parcelid})
+                $.getJSON("../rest/index.php/parcel_measurements/" + parcelid, function (json) {
+                    //L.geoJson(json).addTo(map)
+					
+					if(json.features.length > 0){
+						//var geojsonMarker = L.geoJson(json.features[0],{pointToLayer: callback}).addTo(map);
+						var geojsonMarker = L.geoJson(json.features[json.features.length-1]).addTo(map);
+						map.setView([json.features[json.features.length-1].geometry.coordinates[1],json.features[json.features.length-1].geometry.coordinates[0]], 12);
+						
+						geojsonMarker.bindPopup("Measurement ID: "+json.features[json.features.length-1].properties.measurement_id);
+						maxValue = json.features.length-1;
+						$("#slider").show();
+						$("#slider").slider({
+							value: json.features.length-1,
+							min:0,
+							max:json.features.length-1,
+							step:1,
+							slide: function (e, ui){ 
+								
+								console.log(json.features[ui.value].properties.time);
+								
+								if(ui.value < maxValue){
+									marker[ui.value] = L.geoJson(json.features[ui.value]);
+									marker[ui.value].bindPopup("Measurement ID: "+json.features[ui.value].properties.measurement_id);
+									map.addLayer(marker[ui.value]);
+									maxValue--;
+								}
+								
+								
+								if(ui.value > maxValue){
+									map.removeLayer(marker[maxValue]);
+									maxValue++;
+								}
+
+							}
+						})
+					}
+                });
+            }
+			
+			function callback(feature, latlng){    
+				var myIcon = L.icon({ 
+					iconUrl: 'images/parcel_kleiner.png'
+				});
+
+				marker = L.marker(latlng, {icon: myIcon});
+				return marker; 
+			}  
+
+			
+            function loadAllParcels() {
+                $.getJSON("../rest/index.php/current_parcels/", function (json) {
+                    console.log(json.parcels[0].parcel_process);
+                });
+            }
+
+            $(document).ready(function () {
+                initMap();
+                fetchGeoJson(1);
+                //loadAllParcels();
+            });
+
+        </script>
+    </body>
+
+</html>

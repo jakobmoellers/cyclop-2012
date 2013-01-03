@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 15.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="100px" height="100px" viewBox="0 0 100 100" enable-background="new 0 0 100 100" xml:space="preserve">
+<rect x="-192" width="185" height="99"/>
+<rect y="-36" width="100" height="30"/>
+<text transform="matrix(1 0 0 1 66 -19.5)" font-family="'Helvetica'" font-size="2.4">http://thenounproject.com</text>
+<text transform="matrix(1 0 0 1 7.166 -24.5)" font-family="'Helvetica-Bold'" font-size="6.1578">The Noun Project</text>
+<text transform="matrix(1 0 0 1 8.2861 -19.7002)" font-family="'Helvetica-Bold'" font-size="4">Icon Template</text>
+<text transform="matrix(1 0 0 1 -178.5 10.5)" font-family="'Helvetica-Bold'" font-size="6.1578">Reminders</text>
+<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="8" y1="-14.5" x2="18" y2="-14.5"/>
+<line fill="none" stroke="#FFFFFF" stroke-miterlimit="10" x1="-179" y1="16.5" x2="-162" y2="16.5"/>
+<g>
+	<g>
+		<g>
+			<rect x="-170.802" y="31.318" width="8.721" height="8.642"/>
+			<path d="M-164.455,42.312h4.747v-4.703h-4.747V42.312z M-159.266,42.749h-5.63V37.17h5.63V42.749L-159.266,42.749z
+				 M-166.221,44.062h8.279v-8.203h-8.279V44.062L-166.221,44.062z M-157.5,44.5h-9.163v-9.079h9.163V44.5L-157.5,44.5z"/>
+			<polygon points="-166.149,44.133 -166.292,43.991 -158.013,35.787 -157.871,35.929 			"/>
+		</g>
+	</g>
+</g>
+<rect x="-179" y="58" fill="none" width="35" height="32.5"/>
+<text transform="matrix(1 0 0 1 -179 60.1572)" font-family="'Helvetica-Bold'" font-size="3">Strokes</text>
+<text transform="matrix(1 0 0 1 -179 65.1572)" font-family="'Helvetica'" font-size="2.4">Try to keep strokes at 4px</text>
+<text transform="matrix(1 0 0 1 -179 70.1572)" font-family="'Helvetica'" font-size="2.4">Minimum stroke weight is 2px</text>
+<text transform="matrix(1 0 0 1 -179 74.6572)" font-family="'Helvetica'" font-size="2.4">For thicker strokes use even </text>
+<text transform="matrix(1 0 0 1 -179 77.6572)" font-family="'Helvetica'" font-size="2.4">numbers: 6px, 8px etc.</text>
+<text transform="matrix(1 0 0 1 -179 82.1572)" font-family="'Helvetica-Bold'" font-size="2.4">Remember to expand strokes </text>
+<text transform="matrix(1 0 0 1 -179 85.1572)" font-family="'Helvetica-Bold'" font-size="2.4">before saving as an SVG </text>
+<rect x="-136.5" y="58" fill="none" width="35" height="32.5"/>
+<text transform="matrix(1 0 0 1 -136.5 60.1572)" font-family="'Helvetica-Bold'" font-size="3">Size</text>
+<text transform="matrix(1 0 0 1 -136.5 65.1572)" font-family="'Helvetica'" font-size="2.4">Cannot be wider or taller than </text>
+<text transform="matrix(1 0 0 1 -136.5 68.6572)" font-family="'Helvetica'" font-size="2.4">100px (artboard size)</text>
+<text transform="matrix(1 0 0 1 -136.5 73.6572)" font-family="'Helvetica'" font-size="2.4">Scale your icon to fill as much of </text>
+<text transform="matrix(1 0 0 1 -136.5 76.6572)" font-family="'Helvetica'" font-size="2.4">the artboard as possible</text>
+<rect x="-94" y="58" fill="none" width="35" height="32.5"/>
+<text transform="matrix(1 0 0 1 -94 60.1572)" font-family="'Helvetica-Bold'" font-size="3">Ungroup</text>
+<text transform="matrix(1 0 0 1 -94 65.1572)" font-family="'Helvetica'" font-size="2.4">If your design has more than one </text>
+<text transform="matrix(1 0 0 1 -94 68.1572)" font-family="'Helvetica'" font-size="2.4">shape, make sure to ungroup</text>
+<rect x="-50" y="58" fill="none" width="35" height="32.5"/>
+<text transform="matrix(1 0 0 1 -50 60.1572)" font-family="'Helvetica-Bold'" font-size="3">Save as</text>
+<text transform="matrix(1 0 0 1 -50 65.1572)" font-family="'Helvetica'" font-size="2.4">Save as .SVG and make sure </text>
+<text transform="matrix(1 0 0 1 -50 68.1572)" font-family="'Helvetica'" font-size="2.4">“Use Artboards” is checked</text>
+<text transform="matrix(1.0074 0 0 1 -125.542 30.5938)" font-family="'Helvetica'" font-size="2.5731">100px</text>
+<text transform="matrix(1.0074 0 0 1 -41 39)" font-family="'Helvetica-Bold'" font-size="5.1462">.SVG</text>
+<rect x="-126.514" y="34.815" width="10.261" height="10.185"/>
+<rect x="-126.477" y="31.766" width="0.522" height="2.337"/>
+<rect x="-116.812" y="31.766" width="0.523" height="2.337"/>
+<rect x="-127" y="32.337" width="11.233" height="0.572"/>
+<g>
+	<rect x="-83.805" y="33.844" width="10.305" height="10.156"/>
+	<rect x="-76.809" y="28.707" width="3.308" height="3.261"/>
+</g>
+<rect x="-178.5" y="22.5" stroke="#FFFFFF" stroke-miterlimit="10" width="30" height="30"/>
+<rect x="-136.5" y="22.5" stroke="#FFFFFF" stroke-miterlimit="10" width="30" height="30"/>
+<rect x="-93.5" y="22.5" stroke="#FFFFFF" stroke-miterlimit="10" width="30" height="30"/>
+<rect x="-49.5" y="22.5" stroke="#FFFFFF" stroke-miterlimit="10" width="30" height="30"/>
+<path d="M85.488,27.211l-37.132-6.927L60.729,7.942l37.475,5.068L85.488,27.211z M52.46,19.015l32.288,6.024l9.449-10.552
+	l-32.756-4.43L52.46,19.015z"/>
+<path d="M64.262,50.46L48.494,33.603l36.896-8.567l14.322,12.532L64.262,50.46z M52.322,34.767L64.82,48.128L95.85,36.845
+	l-11.004-9.63L52.322,34.767z"/>
+<path d="M37.051,50.471L0,36.48l15.681-11.434l36.606,8.55L37.051,50.471z M4.168,35.916L36.48,48.117l12.05-13.345l-32.412-7.569
+	L4.168,35.916z"/>
+<path d="M15.683,27.183L0.332,16.92l39.248-5.218l13.531,8.457L15.683,27.183z M5.852,18.203l10.265,6.864l31.589-5.928
+	l-8.574-5.359L5.852,18.203z"/>
+<path d="M15,29.785 M15,36.277 M15,69.01l34.398,20.004L84,68.723v-27.6l-19.223,7.005L52.26,34.767L84,27.405v-1.247l0.632-0.033
+	l-34.328-6.476l-34.668,6.679l-1.762,0.883L15,27.906l1.076-0.703l32.433,7.569L36.428,48.117L15,40.038 M17.574,40.482
+	 M35.681,64.596l-0.305,13.293L29,74.441V61.312l-3.31-2.133l6.226-6.564l7.215,13.621L35.681,64.596z M69.881,51.223l5.737,7.057
+	L72,60.248v13.13l-6,3.938V63.53l-3.557,1.97L69.881,51.223z"/>
+</svg>

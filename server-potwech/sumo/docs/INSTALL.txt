@@ -1,0 +1,56 @@
+--------------------------------------------------------------------------------
+
+   QUICK INSTALL GUIDE
+
+--------------------------------------------------------------------------------
+
+Before beginning this installation, make sure you have the following information
+on hand: name of the database 'host' server, your username for database access,
+and your database password.
+Please also make sure that you have cookies enabled in your browser.
+
+1. Once you have uploaded the files to the server, you will need to configure
+   SUMO with your specific settings.
+   So, edit the file /sumo/configs/config.database.php yourself, is not any more
+   difficult.
+
+
+2. From the directory /sumo/install/ get the database_<your_db_type>.sql file 
+   to create database tables for Sumo.
+   Now run SQL query of this file using your database client, for ex phpMyAdmin.
+   So, login to phpMyAdmin. If you do not know where or how to do this, please
+   consult your hosting service provider.
+   In some cases, you may have to choose which database you want. If this is the
+   case, please choose using the dropdown box.
+   To run a SQL query, click on "SQL" on the navigation bar.
+   Enter the SQL code in the box provided.
+   Click "Go".
+   If all goes well, your SUMO database will now be succesfully entered.
+   
+   NOTE: you must have 18 tables
+   
+   
+3. PHP configuration: register_globals must be OFF (find this option into your
+   php.ini and change it if necessary).
+   
+   
+4. Open your web browser and visit SUMO console at this URL:
+
+   http://localhost/sumo/  if you are on a local server, or:
+   http://<your_server_address>/sumo/   for remote servers.
+   
+   NOTE: remember to specify HTTPS protocol if use it.
+   
+   
+5. Now, to login as administrator use:
+
+   user: sumo
+   password: sumo
+
+   and GO!
+
+   !!! REMEMBER !!!
+   This password is set for you when you first login. Please ensure that you
+   change your administrator password as soon as possible and remember to keep
+   it secure.
+   

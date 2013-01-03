@@ -1,0 +1,72 @@
+<?php
+
+$module['language'] = array(
+
+'AccessPoints'	    => 'AccessPoints',
+'AccessPointsMenu'  => 'Men&ugrave; Principale',
+
+'add'    => 'Aggiungi',
+'edit'   => 'Modifica',
+'remove' => 'Elimina',
+
+'AccessPointsStats'	=> 'Statistiche AccessPoints',
+'Statistics'		=> 'Statistiche',
+'StatisticsDisabled'	=> 'Statistiche disabilitate',
+'EnableStatistics'	=> 'Abilita le statistiche',
+'ID'			=> 'ID',
+'HTTPAuth'		=> 'Autentic. HTTP',
+'Activity'		=> 'Attivit&agrave;',
+'LastLogin'		=> 'Ultimo Login',
+'LastRequest'		=> 'Ultima Richiesta',
+'Accesses'		=> 'Accessi',
+'AddGroup'		=> 'Aggiungi Gruppo',
+'RegGroup'		=> 'Gruppo registrazione utenti',
+'Name'			=> 'Nome',
+'Node'			=> 'Nodo',
+'Path'			=> 'Indirizzo',
+'Theme'			=> 'Tema Login',
+'Groups'		=> 'Gruppi',
+'Created'		=> 'Creato',
+'Updated'		=> 'Aggiornato',
+'Description'		=> 'Descrizione',
+'SecurityOptions'	=> 'Opzioni Sicurezza',
+'PwdEncrypt'		=> 'Abilita password cifrata',
+'Filtering'		=> 'Filtro dati',
+'ChangePwd'		=> 'Abilita cambio password',
+'Registration'		=> 'Abilita registrazione',
+'LayoutOptions'		=> 'Layout',
+'Theme'			=> 'Tema',
+'PwdEncrypt'		=> 'Password cifrata',
+'PwdChange'		=> 'Cambia password',
+'CanRegister'		=> 'Registrazione',
+'GroupNotAvailable'	=> ',ma il gruppo "{{DATA}}" non &egrave; disponibile!',
+'CannotDeleteGroup'	=> 'Non &egrave; possibile eliminare questo gruppo!',
+'AccessPointNotExist'	=> 'AccessPoint inisistente!',
+'AccessPointUpdated'	=> 'AccessPoint aggiornato',
+'AccessPointNotUpdated' => 'AccessPoint non aggiornato',
+'AccessPointAdded'	=> 'AccessPoint creato',
+'AccessPointNotAdded'	=> 'AccessPoint non creato',
+'AccessPointGroupRemoved'    => 'Gruppo eliminato',
+'AccessPointGroupNotRemoved' => 'Gruppo non eliminato',
+'AreYouSureDelete'	     => 'Sei sicuro di voler eliminare quest&rsquo;accesspoint: "{{DATA1}}" ({{DATA0}}) ?',
+'AccessPointDeleted'	     => 'AccessPoint eliminato',
+'AccessPointNotDeleted'	     => 'AccessPoint non eliminato',
+'AccesspointsNotFound'	     => 'Non ci sono accesspoints definiti!',
+'NoStatsForAccesspoints'     => 'Non ci sono statistiche per gli accesspoints!',
+'StatisticsDisabled'	     => 'Le statistiche non sono abilitate, i dati sono aggiornati al: {{DATA0}}<br><br>{{DATA1}}',
+'CannotDeleteThis'	     => 'Non puoi eliminare questo AccessPoint',
+
+"W07002C" => "Nome gruppo non valido!",
+"W07003C" => "Indirizzo accesspoint non valido!",
+"W07004C" => "Nodo non valido!",
+"W07005C" => "Nome gruppo registrazione utenti non valido!",
+
+"I07000X" => "AccessPoint ID{{DATA0}} \"{{DATA1}}\" sul nodo {{DATA2}} aggiornato da {{DATA3}}",
+"I07001X" => "Gruppo aggiornato per accesspoint ID:{{DATA0}} da \"{{DATA1}}\" a \"{{DATA2}}\" da {{DATA3}}",
+"I07002C" => "L'accesspoint {{DATA}} esiste gi&agrave;!",
+"I07003X" => "Nuovo accesspoint aggiunto da {{DATA3}}, Nodo: {{DATA1}} Nome: \"{{DATA0}}\" URL: {{DATA2}}",
+"I07004X" => "AccessPoint \"{{DATA0}}\" Nodo: {{DATA1}}, URL: {{DATA2}} eliminato da {{DATA3}}"
+
+);
+
+?>

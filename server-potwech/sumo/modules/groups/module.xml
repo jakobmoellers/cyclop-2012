@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module name="groups" defaction="list" level="3" group="sumo">
+
+	<menu>
+		<tab name="GroupsList" action="list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=groups"></tab>
+	</menu>
+	
+	<table name="list">
+		<default>
+			<order col="2" mode="DESC"></order>
+			<rows>20</rows>			
+		</default>
+		<col id="2" name="GroupName"></col>
+		<col id="3" name="Description" attributes="width='100%'"></col>
+		<col id="100" name="Users" sortable="false"></col>
+		<col id="4" name="Created" visible="false"></col>
+		<col id="5" name="Updated" visible="false"></col>	
+	</table>
+	
+	<action name="add" level="5" group="sumo"></action>
+	<action name="new" level="5" group="sumo" template="add"></action>	
+	<action name="edit" level="5" group="sumo"></action>
+	<action name="modify" level="5" group="sumo" template="edit"></action>
+	<action name="delete" level="5" group="sumo" template="list"></action>
+	<action name="export" level="3" group="sumo"></action>
+
+</module>

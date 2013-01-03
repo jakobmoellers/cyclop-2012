@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module name="security" defaction="main" level="3" group="sumo">
+
+	<menu name="last_list">
+		<tab name="SecurityMenu" action="main"></tab>
+		<tab name="LastLog" action="last_list"></tab>
+		<tab name="SystemLog" action="system_list"></tab>
+		<tab name="AccessLog" action="access_list"></tab>
+		<tab name="ErrorsLog" action="errors_list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=security"></tab>
+	</menu> 
+	
+	<menu name="system_list">
+		<tab name="SecurityMenu" action="main"></tab>
+		<tab name="LastLog" action="last_list"></tab>
+		<tab name="SystemLog" action="system_list"></tab>
+		<tab name="AccessLog" action="access_list"></tab>
+		<tab name="ErrorsLog" action="errors_list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=security"></tab>
+	</menu> 
+	
+	<menu name="access_list">
+		<tab name="SecurityMenu" action="main"></tab>
+		<tab name="LastLog" action="last_list"></tab>
+		<tab name="SystemLog" action="system_list"></tab>
+		<tab name="AccessLog" action="access_list"></tab>
+		<tab name="ErrorsLog" action="errors_list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=security"></tab>
+	</menu> 
+	
+	<menu name="errors_list">
+		<tab name="SecurityMenu" action="main"></tab>
+		<tab name="LastLog" action="last_list"></tab>
+		<tab name="SystemLog" action="system_list"></tab>
+		<tab name="AccessLog" action="access_list"></tab>
+		<tab name="ErrorsLog" action="errors_list"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=security"></tab>
+	</menu> 
+	
+	<menu name="banned">
+		<tab name="SecurityMenu" action="main"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=security"></tab>
+	</menu>
+	
+	<table name="banned">
+		<default>
+			<order col="3" mode="DESC"></order>
+			<rows>20</rows>			
+		</default>										
+		<col id="2" name="IPAddress"></col>
+		<col id="3" name="BannedTimeout" attributes="width='100%'"></col>
+		<col id="1" name="" attributes="style='width:100%'"></col>
+	</table>						
+
+	<table name="last_list">
+		<default>
+			<order col="8" mode="DESC"></order>
+			<rows>20</rows>
+		</default>										
+		<col id="2" name="IMG:Priority"></col>
+		<col id="3" name="Code" visible="false"></col>
+		<col id="4" name="Node"></col>
+		<col id="5" name="IPClient"></col>
+		<col id="6" name="Country" visible="false"></col>
+		<col id="7" name="LogMessage"></col>
+		<col id="8" name="Date"></col>
+	</table>
+
+	<table name="system_list">
+		<default>
+			<order col="8" mode="DESC"></order>
+			<rows>20</rows>
+		</default>										
+		<col id="2" name="IMG:Priority"></col>
+		<col id="3" name="Code" visible="false"></col>
+		<col id="4" name="Node"></col>
+		<col id="5" name="IPClient"></col>
+		<col id="6" name="Country" visible="false"></col>
+		<col id="7" name="LogMessage"></col>
+		<col id="8" name="Date"></col>
+	</table>
+	
+	<table name="access_list">
+		<default>
+			<order col="8" mode="DESC"></order>
+			<rows>20</rows>
+		</default>										
+		<col id="2" name="IMG:Priority"></col>
+		<col id="3" name="Code" visible="false"></col>
+		<col id="4" name="Node"></col>
+		<col id="5" name="IPClient"></col>
+		<col id="6" name="Country" visible="false"></col>
+		<col id="7" name="LogMessage"></col>
+		<col id="8" name="Date"></col>
+	</table>
+	
+	<table name="errors_list">
+		<default>
+			<order col="8" mode="DESC"></order>
+			<rows>20</rows>
+		</default>										
+		<col id="2" name="IMG:Priority"></col>
+		<col id="3" name="Code" visible="false"></col>
+		<col id="4" name="Node"></col>
+		<col id="5" name="IPClient"></col>
+		<col id="6" name="Country" visible="false"></col>
+		<col id="7" name="LogMessage"></col>
+		<col id="8" name="Date"></col>
+	</table>
+			
+	<action name="banned" level="3" group="sumo"></action>	
+	<action name="last_list" level="3" group="sumo" template="list"></action>	
+	<action name="system_list" level="3" group="sumo" template="list"></action>
+	<action name="access_list" level="3" group="sumo" template="list"></action>
+	<action name="errors_list" level="3" group="sumo" template="list"></action>
+	
+</module>

@@ -1,0 +1,35 @@
+
+SUMO:   0.4.3
+Requirements: PHP 5.0 or later.
+
+---
+
+ADODB:  5.09 (Jun 26 2009)
+Requirements: PHP 5.0 or later.
+
+http://sourceforge.net/project/showfiles.php?group_id=42718
+
+---
+
+IP-TO-COUNTRY:
+
+This application use IP-to-Country Database
+provided by WebHosting.Info (http://www.webhosting.info),
+available from http://ip-to-country.webhosting.info
+
+ip-to-country (September 04 2009)
+
+http://ip-to-country.webhosting.info
+
+---
+
+JavaScript Libraries:
+
+http://www.walterzorn.com/dragdrop/dragdrop_e.htm
+
+wz_dragdrop.js  4.91  (10.10.2008)
+
+http://www.walterzorn.com/tooltip/tooltip_e.htm
+
+wz_tooltip.js   5.31  ( 07.11.2008)
+

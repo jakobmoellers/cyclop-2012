@@ -1,0 +1,68 @@
+<!--     
+
+BODY {	
+	background-color: #01305A;
+	font-family: "Trebuchet MS", Tahoma, Arial, Helvetica, sans-serif;
+	font-size: 11px;	
+	margin: 0px;
+	padding: 0px;
+}
+
+DIV.desktop {
+	background: #01305A url('../images/wallpaper.jpg') no-repeat;
+	width: 100%;
+	height: 100%;
+}
+
+TABLE { border-spacing: 0px; border-collapse: collapse; }
+TD { font-size: 11px; padding: 0px; margin: 0px; }
+
+IMG	     { border: none; }
+FORM     { padding: 0px; margin: 0px; }
+FIELDSET { -moz-border-radius: 8px; border-radius: px; }
+SELECT   { font-size: 11px; }
+BR	     { font-size: 7px; }
+INPUT[type="text"] { 
+	background-color: #FFFFFF; 
+	border: 1px solid #AAAAAA;
+	font-size: 12px; 
+	padding-left: 4px;
+}
+INPUT { 
+	background-color: expression((this.type=="text")?'#FFFFFF':''); 
+	font-size: expression((this.type=="text")?'12px':''); 
+	padding-left: expression((this.type=="text")?'4px':''); 
+	border: expression((this.type=="text")?'1px solid #AAAAAA':'');
+}
+INPUT:disabled { 
+	background-color: #DEDEDE;
+	border: 1px solid #CCCCCC;  
+}
+
+TEXTAREA { background-color: #FFFFFF; border: 1px solid #777777; font-size: 12px; }
+
+A:link    { color: #FF9900; text-decoration: none; }
+A:hover   { color: #FF9900; }
+A:visited { color: #FF9900; }
+
+DIV.IconDesktop { 
+    color: #FFFFFF;
+    white-space: nowrap;
+    text-align: center;
+    cursor: default;
+    position: absolute;
+    outline: none; 
+    padding: 4px; 
+    margin: 4px; 
+}
+
+DIV.IconWindow { 
+    white-space: nowrap;
+    text-align: center;
+    cursor: default;
+    outline: none;
+    padding: 4px; 
+    margin: 4px; 
+}
+       
+-->

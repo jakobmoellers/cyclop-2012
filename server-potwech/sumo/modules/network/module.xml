@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<module name="network" defaction="main" level="3" group="sumo">
+
+	<menu name="nlist">
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu> 
+	    	
+	<menu name="new_node">
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu> 
+	 		  
+	<menu name="dlist">	
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu>
+	
+	<menu name="new_datasource">
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu>
+	
+	<menu name="ilist">
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="AddLocalIP" action="new_localip"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu>	
+						
+	<menu name="new_localip">
+		<tab name="NetworkMenu" action="main"></tab>
+		<tab name="AddLocalIP" action="new_localip"></tab>
+		<tab name="Help" module="manpages" action="view" query="mod=network"></tab>
+	</menu>	
+	
+	<table name="nlist">
+		<default>
+			<order col="5" mode="ASC"></order>
+			<rows>20</rows>			
+		</default>				
+		<col id="100" name="TestConnection" sortable="false" visible="false"></col>
+		<col id="2" name="IMG:Status"></col>
+		<col id="5" name="NodeName" attributes="width='100%'"></col>
+		<col id="3" name="Host"></col>
+		<col id="4" name="Port" visible="false"></col>
+		<col id="6" name="Protocol" visible="false"></col>
+		<col id="7" name="SumoPath" visible="false"></col>
+		<col id="8" name="AccessPoints" sortable="false"></col>
+	</table>						
+									
+	<table name="dlist">
+		<default>
+			<order col="2" mode="ASC"></order>
+			<rows>20</rows>			
+		</default>		
+		<col id="0" name="TestConnection" sortable="false" visible="false"></col>								
+		<col id="2" name="DataSourceName" attributes="style='width:100%'"></col>
+		<col id="3" name="DataSourceType"></col>
+		<col id="4" name="Hostname"></col>
+		<col id="5" name="Port" visible="false"></col>
+		<col id="6" name="User" visible="false"></col>
+		<col id="8" name="DBName" visible="false"></col>
+		<col id="12" name="EncType" visible="false"></col>
+		<col id="13" name="LDAPBase" visible="false"></col>
+	</table>
+	
+	<table name="ilist">
+		<default>
+			<order col="3" mode="ASC"></order>
+			<rows>20</rows>			
+		</default>										
+		<col id="3" name="Type" attributes="style='width:100%'"></col>
+		<col id="2" name="IPAddress"></col>
+	</table>					
+	
+	<action name="export" level="3" group="sumo"></action>
+	
+	<action name="nlist" level="3" group="sumo"></action>
+	<action name="view_node" level="3" group="sumo"></action>
+	<action name="edit_node" level="5" group="sumo"></action>
+	<action name="modify_node" level="5" group="sumo" template="edit_node"></action>
+	<action name="erase_node" level="5" group="sumo" template="nlist"></action>
+	<action name="add_node" level="7" group="sumo"></action>
+	<action name="new_node" level="7" group="sumo" template="add_node"></action>
+	
+	<action name="dlist" level="3" group="sumo"></action>
+	<action name="view_datasource" level="3" group="sumo"></action>
+	<action name="edit_datasource" level="4" group="sumo"></action>
+	<action name="modify_datasource" level="4" group="sumo" template="edit_datasource"></action>
+	<action name="erase_datasource" level="5" group="sumo" template="dlist"></action>
+	<action name="add_datasource" level="5" group="sumo" template="edit_datasource"></action>
+	<action name="new_datasource" level="5" group="sumo" template="edit_datasource"></action>
+	
+	<action name="ilist" level="3" group="sumo"></action>
+	<action name="view_localip" level="3" group="sumo"></action>
+	<action name="edit_localip" level="4" group="sumo"></action>
+	<action name="modify_localip" level="4" group="sumo" template="edit_localip"></action>
+	<action name="erase_localip" level="5" group="sumo" template="ilist"></action>
+	<action name="new_localip" level="5" group="sumo" template="add_localip"></action>
+	<action name="add_localip" level="5" group="sumo"></action>
+	
+	<service name='getmessages'>
+		<command name='GET_NODESTATUS'></command>
+		<command name='CREATE_SSO'></command>
+		<command name='GET_DATASOURCESTATUS'></command>
+	</service>
+	
+</module>
