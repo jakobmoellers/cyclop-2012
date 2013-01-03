@@ -55,8 +55,8 @@ boolean crashed = false;
 float sumTemp = 0;
 float sumHumi = 0;
 //avg variables for temperature and humidity
-float avgTemp = 0;
-float avgHum = 0;
+int avgTemp = 0;
+int avgHum = 0;
 int loopcounter = 0;    // number of measurements for computing the averages
 
 //should acceleration and compass also be averaged? -> no
@@ -167,7 +167,6 @@ void loop()
     blub += ";";
     g = g * 10;
     blub += String((int)g);
-    blub += ";";
     printlnSD(blub);
   }
   
@@ -191,8 +190,8 @@ void loop()
     {
       Serial.println("C O M P U T I N G  A V E R A G E S ");
       //compute the average
-      avgTemp = sumTemp / loopcounter;
-      avgHum = sumHumi / loopcounter;
+      avgTemp = (int)(sumTemp / loopcounter);
+      avgHum = (int)(sumHumi / loopcounter);
   
       lastMeasurement = time;    // update time for last measurement
       loopcounter = 0;           // setting number of measurements to zero
@@ -200,8 +199,7 @@ void loop()
       sumTemp = 0;
       sumHumi = 0;
       
-      String blub = "data=";
-      blub += "1232234";  // TODO: Change device_id
+      String blub = "1232234";  // TODO: Change device_id
       blub += ";";
       blub += time.unixtime();
       blub += ";";
@@ -211,12 +209,11 @@ void loop()
       blub += ";";
       blub += "23423";  // TODO: Change mnc
       blub += ";";
-      blub += String((int)avgTemp);
+      blub += avgTemp;
       blub += ";";
-      blub += String((int)avgHum);
+      blub += avgHum;
       blub += ";";
       blub += "75";  // TODO: Change Battery
-      blub += ";";
       Serial.println(blub);
       printlnSD(blub);
       
