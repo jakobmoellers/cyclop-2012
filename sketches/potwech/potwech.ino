@@ -123,10 +123,10 @@ void loop()
   }
   
   // Accelerometer
-   accelerometer.read();
-   double x = (double)accelerometer.a.x;
-   double y = (double)accelerometer.a.y;
-   double z = (double)accelerometer.a.z;
+   compass.read();
+   double x = (double)compass.a.x;
+   double y = (double)compass.a.y;
+   double z = (double)compass.a.z;
    g=sqrt(x*x+y*y+z*z)/1000;
    if ((go!=g) &&(g>2.5)){
      go=g;
