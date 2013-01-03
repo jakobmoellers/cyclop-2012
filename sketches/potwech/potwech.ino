@@ -61,6 +61,10 @@ int loopcounter = 0;    // number of measurements for computing the averages
 //should acceleration and compass also be averaged? -> no
 //or maybe different kind of sample handling for event sensors. -> yes
 
+//Accelerometerstuff
+double g;
+double go=2000;
+
 //String json = "{\"device_id\": 123456,\"measurements\": [{\"timestamp\": 1355230205,\"cellid\": 109128739432,\"mcc\": 123456,\"mnc\": 123456,\"temperature\": 29,\"humidity\": 80,\"light\": 1,\"acceleration\": {\"x\": 0,\"y\": 0,\"z\": 0},\"compass\": {\"x\": 0,\"y\": 0,\"z\": 0},\"battery\": 78}]}";
 
 void setup()
@@ -117,13 +121,19 @@ void loop()
     // TODO: SD CARD Schreiben
     String blub = ""; // TODO: Change Device_ID   
   }
-  // Acceleration Threshold reached? / parcel crashed?
-  if (/*Jakob mach mal*/false)
-  {
-    Serial.println("EVENT OCCURED: Parcel crashed!");
-    // TODO: SD CARD Schreiben
-    String blub = "";
-  }
+  
+  // Accelerometer
+   accelerometer.read();
+   double x = (double)accelerometer.a.x;
+   double y = (double)accelerometer.a.y;
+   double z = (double)accelerometer.a.z;
+   g=sqrt(x*x+y*y+z*z)/1000;
+   if ((go!=g) &&(g>2.5)){
+     go=g;
+     Serial.println("EVENT OCCURED: Parcel crashed!");
+     //TODO: Event auf SD Karte schreiben (Variablenname: "g")
+     
+   }
   
   if (timeDifferenceBiggerOrEqualThan(time,timeOld,samplingIntervall)) //sampling every 1 seconds (according to intervall variable)
   {
