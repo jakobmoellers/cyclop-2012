@@ -227,7 +227,7 @@ void loop()
       {
           Serial.println("U P L O A D  S H I T  Y O O ");
           // TODO: LOAD der Sachen von der SD Card und UPLOAD an den Server
-          lastUpload = time;
+          lastUpload = time; // update time for last Upload
       }
     }
     timeOld = time; // update time for last sampling
