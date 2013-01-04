@@ -359,7 +359,7 @@ $app->post('/add_new_device', function () use ($app) {
 });
 
 /*TODOs: 
--Posts für measurements
+-Hazard-Infos im Post response body
 -Posts für hazards*/
 
 /*
