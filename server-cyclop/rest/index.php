@@ -362,9 +362,67 @@ $app->post('/add_new_device', function () use ($app) {
 -Posts für measurements
 -Posts für hazards*/
 
-$app->post('/post_measurements', function () use ($app) {
+/*
+curl -i -H "Accept: application/json" -X POST -d 'data=1;2012-01-01;51.1;7.9;5.0;30;50;8;10;1234' http://giv-cyclop.uni-muenster.de/rest/index.php/postMeasurement
+*/
+$app->post('/postMeasurement', function() use ($app){
+	$data = $app -> request()->post('data');
+	error_log("Post Data: ".$data,0);
+	echo 'Stuff: '.$data;
+	if($data){
+		// deviceId, timestamp, lat, lon, height, temperature, humidity, light, noise, secretkey
+		$parsed = explode(";", $data);
+		
+		if(sizeof($parsed) == 10){
+			$deviceId = $parsed[0];
+			$timestamp = $parsed[1];
+			$lat = $parsed[2];
+			$lon = $parsed[3];
+			$height = $parsed[4];
+			$temperature = $parsed[5];
+			$humidity = $parsed[6];
+			$light = $parsed[7];
+			$noise = $parsed[8];
+			$key = $parsed[9];
+			
+			$db_key = null;
+			$result = query('select * from mobile_devices where mobile_devices."deviceId" = '.$deviceId.' limit 1');
+			if(pg_num_rows($result) > 0){
+				while($row = pg_fetch_assoc($result)){
+					$db_key = $row['secretKey'];
+				}
+			}
+			if($key==$db_key){
+				//Convert Cell-ID to LatLon
+				/*$xml = simplexml_load_file('http://www.opencellid.org/cell/get?mnc='.$mnc.'&mcc='.$mcc.'&cellid='.$cellId);
+				
+				$lat = 0;
+				$lon = 0;
+				$lat = $xml->cell['lat'];
+				$lon = $xml->cell['lon'];*/
+				
+				//Insert into database
+				query('insert into measurements(timestamp, geom, "deviceId", temperature, humidity, light, noise) values(\''.$timestamp.'\'::timestamp,ST_SetSRID(ST_MakePoint('.$lat.','.$lon.','.$height.'), 4326),'.$deviceId.','.$temperature.','.$humidity.','.$light.','.$noise.')');
+				
+				//echo $lat.'  '.$lon;
+		
+			}else{
+				echo 'Keys did not match';
+			}	
+		}else{
+			echo 'Incomplete data';
+		}
+		
+	}else{
+		echo 'Missing data';
+	}
+	
 
-	/*require('notifications.php');
+});
+
+/*$app->post('/post_measurements', function () use ($app) {
+
+	require('notifications.php');
 	
 	$data = $app->request()->post('data');
 	error_log("POST", 0);
@@ -413,10 +471,10 @@ $app->post('/post_measurements', function () use ($app) {
    }else{
 	echo 'missing data';
    }
-   */
    
    
-});
+   
+});*/
 
 $app->run();
 
