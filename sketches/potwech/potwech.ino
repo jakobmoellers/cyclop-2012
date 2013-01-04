@@ -1,4 +1,3 @@
-
 /*
 1. Value sampling: 10sec (? maybe faster) -> check sensor constants
 2. Averaging
@@ -13,14 +12,14 @@
 
 LSM303 compass;
 
-#define DHTPIN 2     // what pin we're connected to
+#define DHTPIN 2 // what pin we're connected to
 byte sensorPinLight = A5;
 
 RTC_DS1307 RTC;
 // Uncomment whatever type you're using!
-//#define DHTTYPE DHT11   // DHT 11
-#define DHTTYPE DHT22     // DHT 22
-//#define DHTTYPE DHT21   // DHT 21 (AM2301)
+//#define DHTTYPE DHT11 // DHT 11
+#define DHTTYPE DHT22 // DHT 22
+//#define DHTTYPE DHT21 // DHT 21 (AM2301)
 
 // Connect pin 1 (on the left) of the sensor to +5V
 // Connect pin 2 of the sensor to whatever your DHTPIN is
@@ -29,22 +28,22 @@ RTC_DS1307 RTC;
 
 DHT dht(DHTPIN, DHTTYPE);
 
-File dataLogFile;
+File dataFile;
 
 // intervalls in seconds:
-long samplingIntervall = 1;      // intervall for sampling raw data
-long measurementIntervall = 5;   // intervall for averaging the raw data
-long uploadIntervall = 60;       // intervall for uploading saved averged data and saved events
+long samplingIntervall = 1; // intervall for sampling raw data
+long measurementIntervall = 5; // intervall for averaging the raw data
+long uploadIntervall = 60; // intervall for uploading saved averged data and saved events
 
 int time; //unixtime
-DateTime timeOld = 0;     // last Sampling was made
+DateTime timeOld = 0; // last Sampling was made
 DateTime lastMeasurement; // last Measurement was made
-DateTime lastUpload;      // last Upload was made
+DateTime lastUpload; // last Upload was made
 
 //sensor sample variables:
-float temperature = 0;    // current temperaure value
-float humidity = 0;       // current humidity value
-int light = 0;            // current light value
+float temperature = 0; // current temperaure value
+float humidity = 0; // current humidity value
+int light = 0; // current light value
 int cellid;
 double accelerationData[3];
 boolean opened= false;
@@ -56,7 +55,7 @@ float sumHumi = 0;
 //avg variables for temperature and humidity
 int avgTemp = 0;
 int avgHum = 0;
-int loopcounter = 0;    // number of measurements for computing the averages
+int loopcounter = 0; // number of measurements for computing the averages
 
 //should acceleration and compass also be averaged? -> no
 //or maybe different kind of sample handling for event sensors. -> yes
@@ -99,18 +98,27 @@ boolean timeDifferenceBiggerOrEqualThan(DateTime a, DateTime b, long timeDiff){
   return (c >= timeDiff);
 }
 
-void printlnSD(String str){
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+void printlnSD(String str, int fileName){
+  
+  if (fileName == 1){
+    dataFile = SD.open("logfile.txt", FILE_WRITE);
+  }
+  else if (fileName == 2){
+    dataFile = SD.open("opened.txt", FILE_WRITE);
+  }
+  else if (fileName == 3){
+    dataFile = SD.open("crashed.txt", FILE_WRITE);
+  }
   // if the file is available, write to it:
   if (dataFile) {
     dataFile.println(str);
     dataFile.close();
-  }  
+  }
   // if the file isn't open, pop up an error:
   else {
     Serial.println("error opening datalog.txt");
   }
-} 
+}
 
 void loop()
 {
@@ -128,7 +136,7 @@ void loop()
     opened = true;
     Serial.println("EVENT OCCURED: Parcel opened!");
     // TODO: SD CARD Schreiben
-    String blub = "1232234";  // TODO: Change device_id
+    String blub = "1232234"; // TODO: Change device_id
     blub += ";";
     blub += time.unixtime();
     blub += ";";
@@ -136,11 +144,10 @@ void loop()
     blub += ";";
     blub += "234"; // TODO: Change mcc
     blub += ";";
-    blub += "23423";  // TODO: Change mnc
+    blub += "23423"; // TODO: Change mnc
     blub += ";";
     blub += String(light);
-    blub += ";";
-    printlnSD(blub);
+    printlnSD(blub, 2);
   }
   if ((opened) && (light<160))
   {
@@ -154,7 +161,7 @@ void loop()
     go=g;
     Serial.println("EVENT OCCURED: Parcel crashed!");
     // TODO: SD CARD Schreiben
-    String blub = "1232234";  // TODO: Change device_id
+    String blub = "1232234"; // TODO: Change device_id
     blub += ";";
     blub += time.unixtime();
     blub += ";";
@@ -162,11 +169,11 @@ void loop()
     blub += ";";
     blub += "234"; // TODO: Change mcc
     blub += ";";
-    blub += "23423";  // TODO: Change mnc
+    blub += "23423"; // TODO: Change mnc
     blub += ";";
     g = g * 10;
     blub += String((int)g);
-    printlnSD(blub);
+    printlnSD(blub, 3);
   }
   
   if (timeDifferenceBiggerOrEqualThan(time,timeOld,samplingIntervall)) //sampling every 1 seconds (according to intervall variable)
@@ -192,13 +199,13 @@ void loop()
       avgTemp = (int)(sumTemp / loopcounter);
       avgHum = (int)(sumHumi / loopcounter);
   
-      lastMeasurement = time;    // update time for last measurement
-      loopcounter = 0;           // setting number of measurements to zero
+      lastMeasurement = time; // update time for last measurement
+      loopcounter = 0; // setting number of measurements to zero
       // setting the sum's to zero
       sumTemp = 0;
       sumHumi = 0;
       
-      String blub = "1232234";  // TODO: Change device_id
+      String blub = "1232234"; // TODO: Change device_id
       blub += ";";
       blub += time.unixtime();
       blub += ";";
@@ -206,23 +213,23 @@ void loop()
       blub += ";";
       blub += "234"; // TODO: Change mcc
       blub += ";";
-      blub += "23423";  // TODO: Change mnc
+      blub += "23423"; // TODO: Change mnc
       blub += ";";
       blub += avgTemp;
       blub += ";";
       blub += avgHum;
       blub += ";";
-      blub += "75";  // TODO: Change Battery
+      blub += "75"; // TODO: Change Battery
       Serial.println(blub);
-      printlnSD(blub);
+      printlnSD(blub, 1);
       
       if (timeDifferenceBiggerOrEqualThan(time, lastUpload, uploadIntervall))
       {
-          Serial.println("U P L O A D   S H I T    Y O O ");
+          Serial.println("U P L O A D  S H I T  Y O O ");
           // TODO: LOAD der Sachen von der SD Card und UPLOAD an den Server
-          lastUpload = time;     // update time for last Upload
+          lastUpload = time;
       }
     }
-    timeOld = time;              // update time for last sampling
+    timeOld = time; // update time for last sampling
   }
 }
