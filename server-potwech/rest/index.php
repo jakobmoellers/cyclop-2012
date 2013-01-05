@@ -411,15 +411,16 @@ $app->post('/postMeasurement', function() use ($app){
 		// deviceId, timestamp, cellId, mcc, mnc, temperature, humidity, battery
 		$parsed = explode(";", $data);
 		
-		if(sizeof($parsed) == 8){
-			$deviceId = $parsed[0];
-			$timestamp = $parsed[1];
-			$cellId = hexToStr($parsed[2]);
-			$mcc = $parsed[3];
-			$mnc = $parsed[4];
-			$temperature = $parsed[5];
-			$humidity = $parsed[6];
-			$battery = $parsed[7];
+		if((sizeof($parsed) % 8)==0){
+			for ($i=0;$i<sizeof($parsed);$i=$i+8){
+			$deviceId = $parsed[$i];
+			$timestamp = $parsed[$i+1];
+			$cellId = hexToStr($parsed[$i+2]);
+			$mcc = $parsed[$i+3];
+			$mnc = $parsed[$i+4];
+			$temperature = $parsed[$i+5];
+			$humidity = $parsed[$i+6];
+			$battery = $parsed[$i+7];
 			
 			$parcel_process = null;
 			$result = query('select * from current_parcel_processes where mobile_device_id = '.$deviceId.' limit 1');
@@ -444,11 +445,11 @@ $app->post('/postMeasurement', function() use ($app){
 		
 			}else{
 				echo 'No parcel process';
-			}	
+			}	}
 		}else{
 			echo 'Incomplete data';
 		}
-		
+	
 	}else{
 		echo 'Missing data';
 	}
