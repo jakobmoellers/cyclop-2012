@@ -29,30 +29,24 @@ void loop()
 {  if (Serial.available())
     switch(Serial.read())
    {
-     case 'p':
+     case 'o':
        PowerOnOff();
        break;
      case 'g':
        GSMStatus();
        break;
      case 'c':
-       ConnectAndPost();
+       ConnectToGSM();
        break;     
-//     case 's':
-//       Serial.print("data=");
-//      // Serial.println(json);
-//       Serial.println("Print Test: " + String("12341"));
-//       break;
+     case 'p':
+       TcpPost();
+       break;
      case 'l':
-     // Serial.println(String(sizeof(json)));
+       Serial.println(String(sizeof("Stuff\x1A")));
        Serial.println("Stuff\x1A");
        break;  
-     case 's':
-     // Serial.println(String(sizeof(json)));
-   //    sendData();
-       break;          
-       
-   } 
+   }
+   
   if (mySerial.available())
     Serial.write(mySerial.read());
   //delay(100);
@@ -92,11 +86,13 @@ void GSMStatus(){
 }
 
 //----------Start Task and Activate Wireless Connection--------------
-void ConnectAndPost(){
+
+void ConnectToGSM(){
 //  mySerial.println("AT+CGATT?");
 //  //Query network Status
 //  delay(1000);
 //  ShowSerialData();
+  Serial.println();
 
   mySerial.println("AT+CSTT=\"data.access.de\"");
   //setting the SAPBR, the connection type is using gprs
@@ -117,101 +113,79 @@ void ConnectAndPost(){
 //  //Query current connection status
 //  delay(1000);
 //  ShowSerialData();
-//
-//  mySerial.println("AT+CIPHEAD=1");
-//  //to add an 'IP Header' to receive data
-//  delay(1000);
-//  ShowSerialData();
+}
 
-//  mySerial.println("AT+CIPCSGP=1");
-//  //query the IP address of the given domain name
-//  delay(1000);
-//  ShowSerialData();
 
-  //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
-  mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
-  //start up connection
-  delay(6000);
-  ShowSerialData();
- 
-  mySerial.println("AT+CIPSEND");
-  //send data to remote server, CTRL+Z (0x1a) to send 
-  //  >hello TCP server.
-  //  SEND OK
-  //  hello sim900
-  delay(4000);
-  ShowSerialData();
-
- dataFile = SD.open("logfile.txt"); 
- 
-//   mySerial.println("POST /rest/index.php/post2 HTTP/1.1 ");
-   
-//   mySerial.print("data={\"temperature\":66}");
-//   delay(100);
-//   ShowSerialData();
-   
-
-           if (dataFile) {
-            Serial.println("Reading logfile.txt...");
-            int i = 0;
-            // read from the file until there's nothing else in it:
-            while (dataFile.available()) {
-              //Serial.write(dataFile.read());  
-              if(i%42 == 0){
+void TcpPost(){
               
-                 mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
-                 delay(100);
-                 ShowSerialData();
-              
-                //PRINT DATA TO mySerial
-                 mySerial.println("Host: potwech.uni-muenster.de");
-                 delay(100);
-                 ShowSerialData();
-                 
-                 mySerial.println("Accept: application/json");
-                 delay(100);
-                 ShowSerialData();
-              
-                 mySerial.println("Content-Length: 46");
-                 delay(100);
-                 ShowSerialData();   
-                 
-                 mySerial.println("Content-Type: application/x-www-form-urlencoded");
-                 delay(100);
-                 ShowSerialData();
-                 
-                 mySerial.println();
-                 delay(100);
-                 ShowSerialData();
-                 
-                 mySerial.print("data=");
-                 delay(100);
-                 ShowSerialData();
-              }
+        //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
+        mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
+        //start up connection
+        delay(6000);
+        ShowSerialData(); 
+
+        mySerial.println("AT+CIPSEND");
+        //send data to remote server, CTRL+Z (0x1a) to send 
+        //  >hello TCP server.
+        //  SEND OK
+        //  hello sim900
+        delay(4000);
+        ShowSerialData();
+       
+       mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
+       delay(100);
+       ShowSerialData();
+    
+      //PRINT DATA TO mySerial
+       mySerial.println("Host: potwech.uni-muenster.de");
+       delay(100);
+       ShowSerialData();
+       
+       mySerial.println("Accept: application/json");
+       delay(100);
+       ShowSerialData();
+
+       dataFile = SD.open("logfile.txt"); //open file
+       
+       mySerial.println("Content-Length:" + String(dataFile.size()+4));
+       delay(100);
+       ShowSerialData();   
+       
+       mySerial.println("Content-Type: application/x-www-form-urlencoded");
+       delay(100);
+       ShowSerialData();
+       
+       mySerial.println();
+       delay(100);
+       ShowSerialData();
+       
+       mySerial.print("data=");
+       delay(100);
+       ShowSerialData();
+
+       if (dataFile) {
+          int i = 1;  
+          while (dataFile.available() && i<dataFile.size()) { //send complete logfile  
               mySerial.write(dataFile.read());
               i++;
-              
             }
-            // close the file:
+            delay(500);
+            ShowSerialData();
             
             dataFile.close();
-            Serial.println(" finished!");
+            Serial.println("Ready.");
+            //Serial.println(" finished!");
           } else {
             // if the file didn't open, print an error:
             Serial.println("error opening test.txt");
           }
-   
-  mySerial.println((char)26);//sending
-  delay(1000);//waitting for reply, important! the time is base on the condition of internet 
-  mySerial.println();
-  ShowSerialData(); 
  
-//  //PRINT DATA TO mySerial
-//  mySerial.println((char)26);//sending
-//  delay(5000);//waitting for reply, important! the time is base on the condition of internet 
-//  mySerial.println();
-//  ShowSerialData();
-
+  //PRINT DATA TO mySerial
+  mySerial.println((char)26);//sending
+  delay(2000);//waitting for reply, important! the time is base on the condition of internet 
+  mySerial.println();
+  ShowSerialData();
+  
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
   delay(100);
   ShowSerialData();  
@@ -226,6 +200,5 @@ void ShowSerialData()
   while(mySerial.available()!=0)
     Serial.write(mySerial.read());
     delay(500);
-    Serial.println();
     Serial.println("------");
 }
