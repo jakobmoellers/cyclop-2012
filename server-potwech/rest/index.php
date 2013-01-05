@@ -414,7 +414,7 @@ $app->post('/postMeasurement', function() use ($app){
 		if((sizeof($parsed) % 8)==0){
 			for ($i=0;$i<sizeof($parsed);$i=$i+8){
 			$deviceId = $parsed[$i];
-			$timestamp = $parsed[$i+1];
+			$timestamp = gmdate("Y-m-d H:i:s ",$parsed[$i+1]);
 			$cellId = hexToStr($parsed[$i+2]);
 			$mcc = $parsed[$i+3];
 			$mnc = $parsed[$i+4];
@@ -439,7 +439,7 @@ $app->post('/postMeasurement', function() use ($app){
 				$lon = $xml->cell['lon'];
 				
 				//Insert into database
-				query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
+				query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', \''.$timestamp.'\')');
 				
 				//echo $lat.'  '.$lon;
 		
