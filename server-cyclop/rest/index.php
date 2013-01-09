@@ -197,7 +197,8 @@ $app->get('/last_position/:bikeId', function ($bikeId) {
 
 $app->get('/mobile_devices/:userId', function ($userId) {
 	
-	$result = query("select \"deviceId\",devicename from mobile_devices where owner = ".$userId);
+	//order by reingebaut, damit die ids immer in der gleichen reihenfolge ausgegeben werden (ger)
+	$result = query("select \"deviceId\",devicename from mobile_devices where owner = ".$userId." order by \"deviceId\"");
 	
 	$json = array();
 	$json['devices'] = array();
@@ -357,6 +358,29 @@ $app->post('/add_new_device', function () use ($app) {
 		echo 'missing data';
 	}
 });
+
+
+//Dreisterweise von Gerald hier rein gecodet! ha!
+
+//Leider darf euer user nicht die tabelle mobile_devices updaten.. :(
+
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'mobile_device=2&secret_key=5647' http://cyclop.uni-muenster.de/rest/index.php/unregister_device
+*/
+
+$app->post('/unregister_device', function () use ($app) {
+	$secret_key = utf8_encode($app->request()->post('secret_key'));
+	$device_id = utf8_encode($app->request()->post('mobile_device'));
+
+	if($device_id && $secret_key){
+		$query = "UPDATE mobile_devices SET owner = null WHERE (\"secretKey\" = '$secret_key' AND \"deviceId\" = $device_id)";
+		query($query);
+	}else{
+		echo 'missing data';
+	}
+});
+
+//Dreister code Ende
 
 /*TODOs: 
 -Hazard-Infos im Post response body
