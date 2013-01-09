@@ -12,7 +12,7 @@ void loop()
 {
   //NO2
   //Read values and calculate rs/ro
-  reading0 = analogRead(0);
+  reading0 = analogRead(4);
   sensorValueNo= map(reading0,0,1024,0,500);
   sensorValueNo= sensorValueNo/100;
   double rs_no=(22000/((5-sensorValueNo)*sensorValueNo));
@@ -26,7 +26,7 @@ void loop()
 
   //CO
   //Read values and calculate rs/ro
-  reading1 = analogRead(1);
+  reading1 = analogRead(5);
   sensorValueCo=map(reading1,0,1024,0,500);
   sensorValueCo=sensorValueCo/100;
   double rs_co=(100000/((5-sensorValueCo)))*sensorValueCo;
