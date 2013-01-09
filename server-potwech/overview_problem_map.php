@@ -7,6 +7,7 @@ require 'sumo/sumo.php';
 require 'includes/db_func.php';
 $user_id = $SUMO['user']['id'];
 
+
 ?>
 
 <!DOCTYPE html>
@@ -30,14 +31,13 @@ $user_id = $SUMO['user']['id'];
     <!--[if lte IE 8]>
         <link rel="stylesheet" href="../includes/leaflet/leaflet.ie.css" />
     <![endif]-->
-     <script src="../includes/jquery/jquery-1.8.3.min.js"></script>       
-	 <script src="../includes/leaflet/leaflet-src.js"></script>
-	 <!--
-	 <script src="../includes/leaflet/heatmap.js"></script>
-	 <script src="../includes/leaflet/heatmap-leaflet.js"></script>
-	 -->
+     <script src="../includes/jquery/jquery-1.8.3.min.js"></script>
     <style>
-	 body {
+
+    footer{
+		margin-top: 100px;
+	}
+	body {
         padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
       }
 
@@ -46,10 +46,6 @@ $user_id = $SUMO['user']['id'];
 		height:100%;
 		margin:0;
 	  }
-    footer{
-		margin-top: 100px;
-	}
-	
 	
 	#map{
 		height: 500px;
@@ -91,12 +87,6 @@ $user_id = $SUMO['user']['id'];
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="javascript:history.go(-1)">Back</a></li>
-			  <?
-				if($user_group == "private_customers"){
-					echo '<li><a href="notifications.php?pid='.$parcel_id.'">Alert Settings</a></li>';
-					echo '<li><a href="initializePotwech.php">New POTWECH</a></li>';
-				}
-			  ?>
 			  <li><a href="?sumo_action=logout">Logout</a></li>
 <!--
               <li><a href="#about">About</a></li>
@@ -113,9 +103,9 @@ $user_id = $SUMO['user']['id'];
  <!--       <div id="slider" style="width:200px">
             <div class="ui-slider-handle"></div> -->
         </div>
-
+        <script src="../includes/leaflet/leaflet-src.js"></script>
         <script>
-            var paths = new Array();
+            var marker = new Array();
 			var maxValue = 0;
 
             function initMap() {
@@ -125,8 +115,8 @@ $user_id = $SUMO['user']['id'];
                     maxZoom: 18,
                     attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>'
                 }).addTo(map);
-				
-				
+
+
              }
 
 			
@@ -140,6 +130,7 @@ $user_id = $SUMO['user']['id'];
 			}  
 				
 			function onEachFeature(feature, layer) {
+				// does this feature have a property named popupContent?
 				if (feature.properties) {
 					layer.bindPopup("Measurement ID: "+feature.properties.measurement_id);
 				}
@@ -147,21 +138,20 @@ $user_id = $SUMO['user']['id'];
 
 			
             function loadAllParcels() {
-                $.getJSON("rest/index.php/all_parcels/", function (json) {
+                $.getJSON("rest/index.php/problematic_parcels/", function (json) {
 					for(i = 0; i < json.parcels.length; i++){
-						console.log(JSON.stringify(json.parcels[i].geometry));
-						
-						new L.geoJson(json.parcels[i].geometry,{
-							/*onEachFeature: function (feature, layer){
-								layer.on('click', function(e){
-									$.mobile.changePage('#data','flip',true,true);
-								});
-							}*/
-						}).addTo(map);
+						$.getJSON("rest/index.php/latest_parcel/"+json.parcels[i].parcel_process, function (latest_parcels){
+							L.geoJson(latest_parcels, {
+								onEachFeature: onEachFeature
+							}).addTo(map);
 							
+						});
+					
 					}
+				   
+				   // L.geoJson(json).addTo(map);
                 });
-            };
+            }
 
             $(document).ready(function () {
                 initMap();

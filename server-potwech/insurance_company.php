@@ -27,7 +27,15 @@ $user_id = $SUMO['user']['id'];
     <link href="../assets/css/bootstrap.css" rel="stylesheet">
     <link href="../assets/css/bootstrap-responsive.css" rel="stylesheet">
     <style>
+	  body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
 
+      html{
+		width:100%;
+		height:100%;
+		margin:0;
+	  }
     footer{
 		margin-top: 100px;
 	}
@@ -58,26 +66,34 @@ $user_id = $SUMO['user']['id'];
     <!-- NAVBAR
     ================================================== -->
     <!-- Wrap the .navbar in .container to center it on the page and provide easy way to target it with .navbar-wrapper. -->
-    <div class="container navbar-wrapper">
-
-      <div class="navbar navbar-inverse">
-        <div class="navbar-inner">
-          <!-- Responsive Navbar Part 1: Button for triggering responsive navbar (not covered in tutorial). Include responsive CSS to utilize. -->
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="http://potwech.uni-muenster.de">POTWECH</a>
-          <!-- Responsive Navbar Part 2: Place all navbar contents you want collapsed withing .navbar-collapse.collapse. -->
+          <a class="brand" href="../index.php">POTWECH</a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li><a href="?sumo_action=logout">Logout</a></li>
+              <li><a href="javascript:history.go(-1)">Back</a></li>
+			  <?
+				if($user_group == "private_customers"){
+					echo '<li><a href="notifications.php?pid='.$parcel_id.'">Alert Settings</a></li>';
+					echo '<li><a href="initializePotwech.php">New POTWECH</a></li>';
+				}
+			  ?>
+			  <li><a href="?sumo_action=logout">Logout</a></li>
+<!--
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+-->
             </ul>
           </div><!--/.nav-collapse -->
-        </div><!-- /.navbar-inner -->
-      </div><!-- /.navbar -->
-    </div><!-- /.container -->
+        </div>
+      </div>
+    </div>
 
     <div class="container">
 						
@@ -132,7 +148,7 @@ $user_id = $SUMO['user']['id'];
 			}
 			?>
 			
-			</p><a class="btn" href="#">Show on map &raquo;</a>
+			</p><a class="btn" href="overview_problem_map.php">Show on map &raquo;</a>
         </div>
 		<div class="span4">
           <h2>Route Overview</h2>

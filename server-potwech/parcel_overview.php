@@ -8,16 +8,6 @@ $user_id = $SUMO['user']['id'];
 $user_group = $SUMO['user']['group'][0];
 $parcel_id = $_GET['pid'];
 
-//check if the user with the userid $user_id owns the parcel with the $parcel_id
-/*
-$sql = 'SELECT COUNT(parcel_process_id) as ct FROM parcel_processes WHERE parcel_process_id = '.$parcel_id.' AND user_id_ref = '.$user_id;
-$result = query($sql);
-$data = pg_fetch_assoc($result);
-//todo error msg
-if($data['ct'] != '1'){
-	header('Location: private_customer.php?sumo_action=logout');
-}
-*/
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -246,6 +236,7 @@ if($data['ct'] != '1'){
 					echo '<li><a href="initializePotwech.php">New POTWECH</a></li>';
 				}
 			  ?>
+			  <li><a href="?sumo_action=logout">Logout</a></li>
 <!--
               <li><a href="#about">About</a></li>
               <li><a href="#contact">Contact</a></li>

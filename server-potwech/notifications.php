@@ -1,10 +1,24 @@
 <?
+//Redirects to a page without POST data to avoid annoying confirm resending data messages of your browser.
+if (isset($_POST['sumo_user'])) {
+	$avoidPostback = true;
+}
 require 'sumo/sumo.php';
 require 'includes/db_func.php';
+$user_id = $SUMO['user']['id'];
+$user_group = $SUMO['user']['group'][0];
+$parcel_id = $_GET['pid'];
+
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
+	  <?
+		if ($avoidPostback) {
+			echo '<meta http-equiv="refresh" content="0; URL='.$_SERVER['SCRIPT_NAME'].'">';
+		}
+	  ?>
     <meta charset="utf-8">
     <title>POTWECH — Notifications</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,6 +43,17 @@ require 'includes/db_func.php';
     <link rel="apple-touch-icon-precomposed" sizes="72x72" href="../assets/ico/apple-touch-icon-72-precomposed.png">
     <link rel="apple-touch-icon-precomposed" href="../assets/ico/apple-touch-icon-57-precomposed.png">
   </head>
+  <style>
+  	 body {
+        padding-top: 60px; /* 60px to make the container go all the way to the bottom of the topbar */
+      }
+
+      html, body{
+		width:100%;
+		height:100%;
+		margin:0;
+	  }
+  </style>
 
   <body onLoad="init()">
 
@@ -37,27 +62,30 @@ require 'includes/db_func.php';
     <!-- NAVBAR
     ================================================== -->
     <!-- Wrap the .navbar in .container to center it on the page and provide easy way to target it with .navbar-wrapper. -->
-    <div class="container navbar-wrapper">
-
-      <div class="navbar navbar-inverse">
+      <div class="navbar navbar-inverse navbar-fixed-top">
         <div class="navbar-inner">
-          <!-- Responsive Navbar Part 1: Button for triggering responsive navbar (not covered in tutorial). Include responsive CSS to utilize. -->
+		<div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" href="#">POTWECH</a>
+          <a class="brand" href="../index.php">POTWECH</a>
           <!-- Responsive Navbar Part 2: Place all navbar contents you want collapsed withing .navbar-collapse.collapse. -->
           <div class="nav-collapse collapse">
             <ul class="nav">
-			  <li><a href="javascript:history.go(-1)">Back</a></li>
-              <li><a href="?sumo_action=logout">Logout</a></li>
+              <li><a href="javascript:history.go(-1)">Back</a></li>
+			   <li><a href="initializePotwech.php">New POTWECH</a></li>
+			  <li><a href="?sumo_action=logout">Logout</a></li>
+<!--
+              <li><a href="#about">About</a></li>
+              <li><a href="#contact">Contact</a></li>
+-->
             </ul>
           </div><!--/.nav-collapse -->
         </div><!-- /.navbar-inner -->
       </div><!-- /.navbar -->
-    </div><!-- /.container -->
+	  </div>
 
     <div class="container">
 		<h1>Notifications</h1>

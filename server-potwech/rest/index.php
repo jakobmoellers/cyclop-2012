@@ -38,6 +38,7 @@ $app->get('/parcel_measurements/:id', function ($id) {
 	echo json_encode($json);
 });
 
+
 //get all events of a parcel_process
 $app->get('/parcel_events/:id', function ($id) {
     $result = query("select events_id, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from events where parcel_process = ".$id);
@@ -190,6 +191,7 @@ $app->get('/all_parcels/', function () {
 	header('Content-Type: application/json');
 	echo json_encode($json);
 });
+
 
 //get all parcels which where set as problematic
 $app->get('/problematic_parcels/', function () {
@@ -401,9 +403,12 @@ $app->post('/testPost', function () use ($app) {
 });
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=123;2;3;4;5;6;7;8' http://potwech.uni-muenster.de/rest/index.php/postMeasurement
+curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;02;010E;22;50;70;123;1357660358;02F1;262;02;010E;23;51;71' http://potwech.uni-muenster.de/rest/index.php/postMeasurement
 */
 $app->post('/postMeasurement', function() use ($app){
+	require('Location.php');
+	require('notifications.php');
+	
 	$data = $app -> request()->post('data');
 	error_log("Post Data: ".$data,0);
 	echo 'Stuff: '.$data;
@@ -411,16 +416,17 @@ $app->post('/postMeasurement', function() use ($app){
 		// deviceId, timestamp, cellId, mcc, mnc, temperature, humidity, battery
 		$parsed = explode(";", $data);
 		
-		if((sizeof($parsed) % 8)==0){
-			for ($i=0;$i<sizeof($parsed);$i=$i+8){
+		if((sizeof($parsed) % 9)==0){
+			for ($i=0;$i<sizeof($parsed);$i=$i+9){
 			$deviceId = $parsed[$i];
 			$timestamp = gmdate("Y-m-d H:i:s ",$parsed[$i+1]);
 			$cellId = hexToStr($parsed[$i+2]);
 			$mcc = $parsed[$i+3];
 			$mnc = $parsed[$i+4];
-			$temperature = $parsed[$i+5];
-			$humidity = $parsed[$i+6];
-			$battery = $parsed[$i+7];
+			$lac = hexToStr($parsed[$i+5]);
+			$temperature = $parsed[$i+6];
+			$humidity = $parsed[$i+7];
+			$battery = $parsed[$i+8];
 			
 			$parcel_process = null;
 			$result = query('select * from current_parcel_processes where mobile_device_id = '.$deviceId.' limit 1');
@@ -429,18 +435,26 @@ $app->post('/postMeasurement', function() use ($app){
 					$parcel_process = $row['parcel_process_id'];
 				}
 			}
+			
+			
 			if($parcel_process != null){
 				//Convert Cell-ID to LatLon
-				$xml = simplexml_load_file('http://www.opencellid.org/cell/get?mnc='.$mnc.'&mcc='.$mcc.'&cellid='.$cellId);
+				//$mcc, $mnc, $cellId, $lac
 				
+				//$location = getLocationFromCell(262,02,753,270);
 				$lat = 0;
 				$lon = 0;
-				$lat = $xml->cell['lat'];
-				$lon = $xml->cell['lon'];
+				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
+				$location = json_decode($location, true);
+				$lat = $location['coordinate']['latitude'];
+				$lon = $location['coordinate']['longitude'];
 				
+				if($lat != 0 && $lon !=0){
 				//Insert into database
-				query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', \''.$timestamp.'\')');
-				
+					query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), '.$temperature.', '.$humidity.', \''.$timestamp.'\')');
+				}else{
+					echo 'No location information available';
+				}
 				//echo $lat.'  '.$lon;
 		
 			}else{
@@ -457,29 +471,31 @@ $app->post('/postMeasurement', function() use ($app){
 
 });
 
-// #############################
-//G Wert bei Shocks :10 teilen
-// #############################
 
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=123;2;3;4;5;6' http://potwech.uni-muenster.de/rest/index.php/postLight
+curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;02;010E;500;123;1357660358;02F1;262;02;010E;700' http://potwech.uni-muenster.de/rest/index.php/postLight
 */
 $app->post('/postLight', function() use ($app){
+	require('Location.php');
+	
 	$data = $app -> request()->post('data');
 	error_log("Post Data: ".$data,0);
 	echo 'Stuff: '.$data;
 	if($data){
-		// deviceId, timestamp, cellId, mcc, mnc, temperature, humidity, battery
+		// deviceId, timestamp, cellId, mcc, mnc, lac, light
 		$parsed = explode(";", $data);
 		
-		if(sizeof($parsed) == 6){
-			$deviceId = $parsed[0];
-			$timestamp = $parsed[1];
-			$cellId = hexToStr($parsed[2]);
-			$mcc = $parsed[3];
-			$mnc = $parsed[4];
-			$light = $parsed[5];
+		if((sizeof($parsed) % 7)==0){
+		for ($i=0;$i<sizeof($parsed);$i=$i+7){
+
+			$deviceId = $parsed[$i+0];
+			$timestamp = $parsed[$i+1];
+			$cellId = hexToStr($parsed[$i+2]);
+			$mcc = $parsed[$i+3];
+			$mnc = $parsed[$i+4];
+			$lac = hexToStr($parsed[$i+5]);
+			$light = $parsed[$i+6];
 			
 			
 			$parcel_process = null;
@@ -491,25 +507,28 @@ $app->post('/postLight', function() use ($app){
 			}
 			if($parcel_process != null){
 				//Convert Cell-ID to LatLon
-				$xml = simplexml_load_file('http://www.opencellid.org/cell/get?mnc='.$mnc.'&mcc='.$mcc.'&cellid='.$cellId);
-				
 				$lat = 0;
 				$lon = 0;
-				$lat = $xml->cell['lat'];
-				$lon = $xml->cell['lon'];
+				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
+				$location = json_decode($location, true);
+				$lat = $location['coordinate']['latitude'];
+				$lon = $location['coordinate']['longitude'];
 				
-				//Insert into database
-				//query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
-				$event =  query('insert into events(parcel_process, geom, time_of_event) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), now()) returning events_id');
-				
-				$event_id = pg_fetch_assoc($event);
-				
-				query('insert into light_events(event_id_ref,light) values ('.$event_id['events_id'].','.$light.')');
-				
+				if($lat != 0 && $lon !=0){				
+					//Insert into database
+					//query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
+					$event =  query('insert into events(parcel_process, geom, time_of_event) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), to_timestamp('.$timestamp.')) returning events_id');
+					
+					$event_id = pg_fetch_assoc($event);
+					
+					query('insert into light_events(event_id_ref,light) values ('.$event_id['events_id'].','.$light.')');
+				}else{
+					echo 'No location information available';
+				}
 		
 			}else{
 				echo 'No parcel process';
-			}	
+			}	}
 		}else{
 			echo 'Incomplete data';
 		}
@@ -520,23 +539,28 @@ $app->post('/postLight', function() use ($app){
 });
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=123;2;3;4;5;6' http://potwech.uni-muenster.de/rest/index.php/postShock
+curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;02;010E;2;123;1357660358;02F1;262;02;010E;1.5' http://potwech.uni-muenster.de/rest/index.php/postShock
 */
 $app->post('/postShock', function() use ($app){
+	require('Location.php');
+	
 	$data = $app -> request()->post('data');
 	error_log("Post Data: ".$data,0);
 	echo 'Stuff: '.$data;
 	if($data){
-		// deviceId, timestamp, cellId, mcc, mnc, temperature, humidity, battery
+		// deviceId, timestamp, cellId, mcc, mnc,lac temperature, humidity, battery
 		$parsed = explode(";", $data);
 		
-		if(sizeof($parsed) == 6){
-			$deviceId = $parsed[0];
-			$timestamp = $parsed[1];
-			$cellId = hexToStr($parsed[2]);
-			$mcc = $parsed[3];
-			$mnc = $parsed[4];
-			$shock = ((double)$parsed[5])/10;
+		if((sizeof($parsed) % 7)==0){
+		for ($i=0;$i<sizeof($parsed);$i=$i+7){
+			$deviceId = $parsed[$i+0];
+			$timestamp = $parsed[$i+1];
+			$cellId = hexToStr($parsed[$i+2]);
+			$mcc = $parsed[$i+3];
+			$mnc = $parsed[$i+4];
+			$lac = hexToStr($parsed[$i+5]);
+			//has to be divided by 10
+			$shock = ((double)$parsed[$i+6])/10;
 			
 			
 			$parcel_process = null;
@@ -548,25 +572,29 @@ $app->post('/postShock', function() use ($app){
 			}
 			if($parcel_process != null){
 				//Convert Cell-ID to LatLon
-				$xml = simplexml_load_file('http://www.opencellid.org/cell/get?mnc='.$mnc.'&mcc='.$mcc.'&cellid='.$cellId);
-				
 				$lat = 0;
 				$lon = 0;
-				$lat = $xml->cell['lat'];
-				$lon = $xml->cell['lon'];
+				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
+				$location = json_decode($location, true);
+				$lat = $location['coordinate']['latitude'];
+				$lon = $location['coordinate']['longitude'];
+				
+				if($lat != 0 && $lon !=0){
 				
 				//Insert into database
 				//query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
-				$event =  query('insert into events(parcel_process, geom, time_of_event) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), now()) returning events_id');
-				
-				$event_id = pg_fetch_assoc($event);
-				
-				query('insert into acceleration_events(event_id_ref,acceleration) values ('.$event_id['events_id'].','.$shock.')');
-				
+					$event =  query('insert into events(parcel_process, geom, time_of_event) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), to_timestamp('.$timestamp.')) returning events_id');
+					
+					$event_id = pg_fetch_assoc($event);
+					
+					query('insert into acceleration_events(event_id_ref,acceleration) values ('.$event_id['events_id'].','.$shock.')');
+				}else{
+					echo 'No location information available';
+				}
 		
 			}else{
 				echo 'No parcel process';
-			}	
+			}	}
 		}else{
 			echo 'Incomplete data';
 		}
@@ -700,13 +728,20 @@ $app->post('/post2', function () use ($app) {
 
 function hexToStr($hex)
 {
+/*
     $string='';
     for ($i=0; $i < strlen($hex)-1; $i+=2)
     {
         $string .= chr(hexdec($hex[$i].$hex[$i+1]));
     }
     return $string;
+*/
+	return hexdec($hex);
 }
+
+
+
+
 
 
 $app->run();

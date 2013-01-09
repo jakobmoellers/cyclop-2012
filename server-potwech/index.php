@@ -280,7 +280,7 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="#about">About</a></li>
-              <!-- Read about Bootstrap dropdowns at http://twitter.github.com/bootstrap/javascript.html#dropdowns -->
+			  <!-- Read about Bootstrap dropdowns at http://twitter.github.com/bootstrap/javascript.html#dropdowns -->
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Login <b class="caret"></b></a>
                 <ul class="dropdown-menu">
