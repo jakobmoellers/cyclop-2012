@@ -95,30 +95,19 @@ void loop(){
     //Standard mode
 
       //Take measurements
+    takeMeasurements();
 
-    //Watersensor  
-    int waterSensorValue = digitalRead(WaterPin);
-    if(waterSensorValue==0)
-      rain=true;
 
-    //NO2
-    getNO2();
-
-    //CO
-    getCO();
-
-    //Acc
-    getAcc();
-
-    //DHT
-    humidity = dht.readHumidity();
-    temperature = dht.readTemperature();
 
     //Store measurements on SD Card
 
     //Upload measurements
 
-    //Clean SD-Card
+      //Clean SD-Card
+
+    //Display hazards on display
+
+    //If hazard button is touched, create new harzard. Confirm with sound/blink.
 
   }
 
@@ -128,6 +117,28 @@ void loop(){
 /*
 Help Methods
  */
+
+takeMeasurements(){
+
+  //Watersensor  
+  int waterSensorValue = digitalRead(WaterPin);
+  if(waterSensorValue==0)
+    rain=true;
+
+  //NO2
+  getNO2();
+
+  //CO
+  getCO();
+
+  //Acc
+  getAcc();
+
+  //DHT
+  humidity = dht.readHumidity();
+  temperature = dht.readTemperature();
+
+}
 
 //Accelerometer
 void getAcc(){
@@ -292,6 +303,8 @@ void getCO(){
   //Estimate ppm
   co_ppm=-25*rs_r0_co+20.6;
 }
+
+
 
 
 
