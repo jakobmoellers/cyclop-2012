@@ -118,7 +118,7 @@ void loop(){
 Help Methods
  */
 
-takeMeasurements(){
+void takeMeasurements(){
 
   //Watersensor  
   int waterSensorValue = digitalRead(WaterPin);
