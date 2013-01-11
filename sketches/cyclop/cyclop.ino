@@ -6,6 +6,9 @@ This is the main cyclop application
 #include <string.h>
 #include <ctype.h>
 #include "DHT.h"
+#include <RTClib.h> 
+#include <Wire.h>
+
 
 //PINs
 const int WaterPin=9; //Water sensor
@@ -36,6 +39,8 @@ int conta=0;
 int indices[13]; 
 #define DHTTYPE DHT11 // DHT 11
 DHT dht(DHTPIN, DHTTYPE);
+RTC_DS1307 RTC; //RTC
+DateTime time;
 
 //Measurements
 boolean rain=false;
@@ -70,6 +75,16 @@ void setup(){
 
   //DHT
   dht.begin();
+  
+  //RTC
+  RTC.begin();
+  Serial.println("Initializing RTC...");  
+  if (! RTC.isrunning()) {
+    Serial.println("RTC is NOT running!");
+    //set the RTC to the date & time this sketch was compiled
+    RTC.adjust(DateTime(__DATE__, __TIME__));
+  }
+  time = RTC.now();
 
   Serial.begin(9600);
 
