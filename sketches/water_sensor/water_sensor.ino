@@ -1,4 +1,4 @@
-const int WaterPin=7;//The pin used to detect water
+const int WaterPin=2;//The pin used to detect water
 //const int buzzerPin=12;//The pin used to control the buzzer
  
 void setup() {
