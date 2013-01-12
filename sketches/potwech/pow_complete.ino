@@ -420,3 +420,11 @@ void TcpPost(){
   delay(100);
   ShowSerialData();  
 }
+
+void ShowSerialData()
+{
+  while(mySerial.available()!=0)
+    Serial.write(mySerial.read());
+    delay(500);
+    Serial.println("------");
+}
