@@ -398,6 +398,31 @@ $app->post('/initParcel', function () use ($app) {
 	}
 });
 
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'uid=2&mobile_device=123&parcel_number=555' http://potwech.uni-muenster.de/rest/index.php/endParcel  
+*/
+
+$app->post('/endParcel', function () use ($app) {
+	$uid = utf8_encode($app->request()->post('uid'));
+	$mobile_device = utf8_encode($app->request()->post('mobile_device'));
+	$parcel_number = utf8_encode($app->request()->post('parcel_number'));
+		
+	$result = query('select * from current_parcel_processes where mobile_device_id = '.$mobile_device);
+	if(pg_num_rows($result) > 0){
+		while($row = pg_fetch_assoc($result)){
+			query('update parcel_processes set end_time = now() where parcel_process_id = '.$row['parcel_process_id']);
+		}
+	}
+
+	/*
+	if($uid && $mobile_device && $parcel_number){
+		$query = 'insert into parcel_processes(user_id_ref, mobile_device_id, package_number, start_time) values('.$uid.','.$mobile_device.','.$parcel_number.',now())';
+		query($query);
+	}else{
+		echo 'missing data';
+	}*/
+});
+
 $app->post('/testPost', function () use ($app) {
    echo $app->request()->post('data');
 });
