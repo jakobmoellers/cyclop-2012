@@ -23,10 +23,10 @@ int txPin = 1;
 #define DHTPIN 24 //DHT
 int vibration1=46; //Vibration
 int vibration2=47;
-int buttonLed=38; //Button
-int buttonp51=39;
-int buttonp52=40;
-int buttonp53=41;
+int LEDpin=38; //Button
+int p51=39;
+int p52=40;
+int p53=41;
 int no_pin=4;
 int co_pin=5;
 
@@ -50,6 +50,9 @@ int indices[13];
 DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
 DateTime time;
+int button = 0; //Button
+int ledLevel = 127;
+int onstatus = 0;
 
 //Measurements
 boolean rain=false;
@@ -107,12 +110,22 @@ void setup(){
   SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
   SeeedOled.setHorizontalMode();  
   SeeedOled.putString("Welcome to Cyclop!"); //Print the String
-  
-  //Vibration
+
+    //Vibration
   pinMode(vibration1,OUTPUT);
   pinMode(vibration2,OUTPUT);
   vibrate(1);
-  
+
+  //Button
+  pinMode(LEDpin, OUTPUT);
+  pinMode(p51, INPUT);
+  pinMode(p53, INPUT);
+  pinMode(p52, INPUT);
+  digitalWrite(p51, HIGH);
+  digitalWrite(p52, HIGH);
+  digitalWrite(p53, HIGH);
+  analogWrite(LEDpin, 0);
+
 
 }
 
@@ -126,11 +139,11 @@ void loop(){
     //TODO What about the measurement process? Also every minute? Should be included here
 
     getPosition();
-    
-    //TODO Button does not work
-    
-    //TODO GPS does not work
-    
+
+  //TODO Button does not work
+
+  //TODO GPS does not work
+
   Serial.print("lat: ");
   Serial.print(lat);
   Serial.print(" lon: ");
@@ -167,6 +180,9 @@ void loop(){
     //TODO Display hazards on display
 
     //TODO If hazard button is touched, create new harzard. Confirm with sound/blink.
+
+    checkforHazardButtonPressed();
+
 
   }
 
@@ -388,7 +404,7 @@ void getCO(){
 
 //Vibration
 void vibrate(int secs){
-digitalWrite(vibration1,HIGH);
+  digitalWrite(vibration1,HIGH);
   digitalWrite(vibration2,HIGH);
   delay(secs*1000);
   digitalWrite(vibration1,LOW);
@@ -396,8 +412,56 @@ digitalWrite(vibration1,HIGH);
 
 }
 
+//Button
 
+void checkforHazardButtonPressed(){
+  button = getButtonState();  // Get button status
+  if (button == 0x04)  // FLAME
+  {
+    onstatus = onstatus ^ 1;  // flip on/off status of LED
+    analogWrite(LEDpin, ledLevel);
+    Serial.println("Hazard");
+    delay(1000);
+    digitalWrite(LEDpin, 0);   
+  }
+}
 
+uint8_t getButtonState()
+{
+  // Initially set all buttons as inputs, and pull them up
+  pinMode(p52, INPUT);
+  digitalWrite(p52, HIGH);
+  pinMode(p51, INPUT);
+  digitalWrite(p51, HIGH);
+  pinMode(p53, INPUT);
+  digitalWrite(p53, HIGH);
+
+  // Read the d/u/flame buttons
+  if (!digitalRead(p53))
+    return 0x01;  // Down
+  if (!digitalRead(p52))
+    return 0x02;  // Up
+  if (!digitalRead(p51))
+    return 0x04;  // Flame
+
+  // Read right button
+  pinMode(p52, OUTPUT);  // set p52 to output, set low
+  digitalWrite(p52, LOW);
+  if (!digitalRead(p53))
+    return 0x08;  // Right
+  pinMode(p52, INPUT);  // set p52 back to input and pull-up
+  digitalWrite(p52, HIGH);
+
+  // Read left button
+  pinMode(p51, OUTPUT);  // Set p51 to output and low
+  digitalWrite(p51, LOW);
+  if (!digitalRead(p53))
+    return 0x10;  // Left
+  pinMode(p51, INPUT);  // Set p51 back to input and pull-up
+  pinMode(p51, HIGH);
+
+  return 0;
+}
 
 
 
