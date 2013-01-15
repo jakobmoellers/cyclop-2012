@@ -7,6 +7,7 @@
 -> AT+CENG=1 has to be called once on every new device!!
 
 TODO: LOGFILE.TXT, CRASHED.TXT, OPENED.TXT bei Start löschen falls vorhanden
+TODO: 
 */
 
 #include <SD.h>
@@ -103,12 +104,12 @@ void setup()
   Serial.println(":");
   delay(500);  
   Serial.println("Removing existing files.");
-  if (SD.exists("logfile.txt"))
-    SD.remove("logfile.txt");
-  if (SD.exists("opened.txt"))
-    SD.remove("opened.txt");
-  if (SD.exists("crashed.txt")) 
-    SD.remove("crashed.txt");
+  if (SD.exists("logfile"))
+    SD.remove("logfile");
+  if (SD.exists("opened"))
+    SD.remove("opened");
+  if (SD.exists("crashed")) 
+    SD.remove("crashed");
   Serial.println("Powering on GPRS Shield.");  
   PowerOnOff();
   delay(10000); // Waiting for GSM Signal
@@ -116,6 +117,8 @@ void setup()
   Serial.println("Connecting to GSM Network."); 
   ConnectToGSM();
   delay(2000);
+  GetMccMncCid();
+  GetLac();
 }
 
 void loop()
@@ -225,7 +228,7 @@ void loop()
       blub += ";";
       blub += avgHum;
       blub += ";";
-      blub += "75"; // TODO: Change Battery
+      blub += "75;"; // TODO: Change Battery
       Serial.println(blub);
       printlnSD(blub, 1);
       
@@ -236,9 +239,17 @@ void loop()
         //if (!connectionStatus)
         //  ConnectToGsm());
         //if (IsConnected()){
-          if (SD.exists("logfile.txt"))
-            TcpPost();
-          
+          TcpPost();
+//            if (SD.exists("logfile"))
+//              TcpPost("logfile");
+//            if (SD.exists("opened")){
+//              delay(3000);  
+//              TcpPost("opened");
+//            }
+//            if (SD.exists("crashed")){
+//              delay(3000);
+//              TcpPost("crashed");
+//            }            
          //}
          //else{
          //  connectionStatus = false;
@@ -260,14 +271,14 @@ void printlnSD(String str, int fileName){
     dataFile = SD.open("logfile.txt", FILE_WRITE);
   }
   else if (fileName == 2){
-    dataFile = SD.open("opened.txt", FILE_WRITE);
+    dataFile = SD.open("opened", FILE_WRITE);
   }
   else if (fileName == 3){
-    dataFile = SD.open("crashed.txt", FILE_WRITE);
+    dataFile = SD.open("crashed", FILE_WRITE);
   }
   // if the file is available, write to it:
   if (dataFile) {
-    dataFile.println(str);
+    dataFile.print(str);
     dataFile.close();
   }
   // if the file isn't open, pop up an error:
@@ -375,8 +386,10 @@ void PowerOnOff()
   digitalWrite(9,LOW);
   delay(3000);
 }
-void TcpPost(){
-
+//void TcpPost(String nameOfFile){
+  void TcpPost(){
+//        char nameChar[sizeof(nameOfFile)];
+//        nameOfFile.toCharArray(nameChar, sizeof(nameOfFile)+1);
 
         //TODO: Catch different cases of URIs for Events 
         //TODO: Include case of no connection
@@ -386,7 +399,7 @@ void TcpPost(){
         //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
         mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
         //start up connection
-        delay(6000);
+        delay(5000);
         ShowSerialData(); 
 
         mySerial.println("AT+CIPSEND");
@@ -394,10 +407,15 @@ void TcpPost(){
         //  >hello TCP server.
         //  SEND OK
         //  hello sim900
-        delay(4000);
+        delay(6000);
         ShowSerialData();
        
-       mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
+//       if(nameOfFile=="logfile")
+         mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
+//       else if(nameOfFile=="opened")
+//         mySerial.println("POST /rest/index.php/postLight HTTP/1.1 ");
+//       else if(nameOfFile=="crashed")
+//         mySerial.println("POST /rest/index.php/postShock HTTP/1.1 ");
        delay(100);
        ShowSerialData();
     
@@ -410,9 +428,10 @@ void TcpPost(){
        delay(100);
        ShowSerialData();
 
-       dataFile = SD.open("logfile.txt"); //open file
+//      dataFile = SD.open(nameChar); //open file
+       dataFile = SD.open("logfile.txt");
        
-       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data='
+       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' at the end of file
        delay(100);
        ShowSerialData();   
        
@@ -434,7 +453,7 @@ void TcpPost(){
           //Read SD File and send Data to Serial Port
           while (dataFile.available() && i<dataFile.size()) {   
               in = dataFile.read();
-              if(in =='\n') in = ';'; // Replace line break with ';'
+              //if(in =='\n') in = ';'; // Replace line break with ';'
               mySerial.write(in);
               i++;
             }
@@ -442,17 +461,18 @@ void TcpPost(){
             ShowSerialData();
             
             dataFile.close();
+//            SD.remove(nameChar);
             SD.remove("logfile.txt");
             Serial.println("Ready.");
             //Serial.println(" finished!");
           } else {
             // if the file didn't open, print an error:
-            Serial.println("error opening logfile.txt");
+            Serial.println("error opening ");
           }
  
   //PRINT DATA TO mySerial
-  mySerial.println((char)26);//sending ich bin ein homo, gez.: Jan Wirwahn
-  delay(4000);//waitting for reply, important! the time is base on the condition of internet 
+  mySerial.println((char)26);//sending
+  delay(5000);//waitting for reply, important! the time is base on the condition of internet 
   mySerial.println();
   ShowSerialData();
   
