@@ -76,7 +76,7 @@ void setup(){
 
   //DHT
   dht.begin();
-  
+
   //RTC
   RTC.begin();
   Serial.println("Initializing RTC...");  
@@ -97,10 +97,10 @@ void loop(){
   rain=false;
 
   //TODO Download new hazards in a time interval of 1 minute
-  
-  //TODO What about the measurement process? Also every minute? Should be included here
-  
-  getPosition();
+
+    //TODO What about the measurement process? Also every minute? Should be included here
+
+    getPosition();
   Serial.print("lat: ");
   Serial.print(lat);
   Serial.print(" lon: ");
@@ -108,27 +108,25 @@ void loop(){
 
   //TODO Determine whether in alarm mode or standard mode
   determineAlertMode();
-    
+
   if(alarm==true){
     //Alarm mode
-    
-    getAcc();
-    
+
+      getAcc();
+
     if (gValue!=1.0){
-      
+
       //TODO Send theft alert to server
       Serial.println("Theft detected");     
     }
-    
-    
+
+
 
   } 
   else {
     //Standard mode
 
-    takeMeasurements();
-
-
+      takeMeasurements();
 
     //TODO Store measurements on SD Card
 
@@ -178,18 +176,18 @@ void takeMeasurements(){
   temperature = dht.readTemperature();
   Serial.print(" temp: ");
   Serial.print(temperature);
-  
+
   Serial.println("");
 
 }
 
 void determineAlertMode(){
-  
+
   //TODO Read alert value and determin alert mode
-  
-  //TODO delete the following test mode
+
+    //TODO delete the following test mode
   alarm=false;
-  
+
 }
 
 //Accelerometer
@@ -355,6 +353,7 @@ void getCO(){
   //Estimate ppm
   co_ppm=-25*rs_r0_co+20.6;
 }
+
 
 
 
