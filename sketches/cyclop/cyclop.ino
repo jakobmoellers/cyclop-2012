@@ -8,18 +8,27 @@ This is the main cyclop application
 #include "DHT.h"
 #include <RTClib.h> 
 #include <Wire.h>
+#include <SeeedOLED.h>
 
 
 //PINs
-const int WaterPin=9; //Water sensor
-int xPin = 3; //MMA7361L Three Axis Accelerometer
-int yPin = 2;
+const int WaterPin=42; //Water sensor
+int xPin = 2; //MMA7361L Three Axis Accelerometer
+int yPin = 3;
 int zPin = 4; 
 int selPin = 6;
 int sleepPin = 5;
 int rxPin = 0; //GPS
 int txPin = 1;  
-#define DHTPIN 10 //DHT
+#define DHTPIN 24 //DHT
+int vibration1=46; //Vibration
+int vibration2=47;
+int buttonLed=38; //Button
+int buttonp51=39;
+int buttonp52=40;
+int buttonp53=41;
+int no_pin=4;
+int co_pin=5;
 
 //Variables
 boolean alarm=false; //True if alarm is armed
@@ -88,6 +97,18 @@ void setup(){
   time = RTC.now();
 
   Serial.begin(9600);
+
+  //Display
+  Wire.begin();
+  SeeedOled.init();  //initialze SEEED OLED display
+  DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
+  PORTB |= 0x21;
+  SeeedOled.clearDisplay();          //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
+  SeeedOled.setPageMode();           //Set addressing mode to Page Mode
+  SeeedOled.setTextXY(0,0);          //Set the cursor to Xth Page, Yth Column  
+  SeeedOled.putString("Hello World!"); //Print the String
+
 
 }
 
@@ -329,7 +350,7 @@ void getPosition(){
 
 void getNO2(){
   //Read values and calculate rs/ro
-  double reading0 = analogRead(4);
+  double reading0 = analogRead(no_pin);
   double sensorValueNo= map(reading0,0,1024,0,500);
   sensorValueNo= sensorValueNo/100;
   double rs_no=(22000/((5-sensorValueNo)*sensorValueNo));
@@ -343,7 +364,7 @@ void getNO2(){
 //CO
 void getCO(){
   //Read values and calculate rs/ro
-  double reading1 = analogRead(5);
+  double reading1 = analogRead(co_pin);
   double sensorValueCo=map(reading1,0,1024,0,500);
   sensorValueCo=sensorValueCo/100;
   double rs_co=(100000/((5-sensorValueCo)))*sensorValueCo;
@@ -353,6 +374,7 @@ void getCO(){
   //Estimate ppm
   co_ppm=-25*rs_r0_co+20.6;
 }
+
 
 
 
