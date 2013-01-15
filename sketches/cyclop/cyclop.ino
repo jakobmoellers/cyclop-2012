@@ -51,6 +51,7 @@ double lat;
 double lon;
 float temperature;
 float humidity;
+int secretKey=986743;
 
 /*
 Main methods
@@ -95,34 +96,49 @@ void loop(){
   //Reset variables
   rain=false;
 
-  //Download new hazards in a time interval of 1 minute
-  //What about the measurement process? Also every minute? Should be included here
-
-    //Get current GPS coordinates
+  //TODO Download new hazards in a time interval of 1 minute
+  
+  //TODO What about the measurement process? Also every minute? Should be included here
+  
   getPosition();
+  Serial.print("lat: ");
+  Serial.print(lat);
+  Serial.print(" lon: ");
+  Serial.println(lon);
 
-  //Determine whether in alarm mode or standard mode
+  //TODO Determine whether in alarm mode or standard mode
+  determineAlertMode();
+    
   if(alarm==true){
     //Alarm mode
+    
+    getAcc();
+    
+    if (gValue!=1.0){
+      
+      //TODO Send theft alert to server
+      Serial.println("Theft detected");     
+    }
+    
+    
 
   } 
   else {
     //Standard mode
 
-      //Take measurements
     takeMeasurements();
 
 
 
-    //Store measurements on SD Card
+    //TODO Store measurements on SD Card
 
-    //Upload measurements
+    //TODO Upload measurements //Remember to upload secret key
 
-      //Clean SD-Card
+    //TODO Clean SD-Card
 
-    //Display hazards on display
+    //TODO Display hazards on display
 
-    //If hazard button is touched, create new harzard. Confirm with sound/blink.
+    //TODO If hazard button is touched, create new harzard. Confirm with sound/blink.
 
   }
 
@@ -142,17 +158,38 @@ void takeMeasurements(){
 
   //NO2
   getNO2();
+  Serial.print("NO2: ");
+  Serial.print(no2_ppm);
 
   //CO
   getCO();
+  Serial.print(" CO: ");
+  Serial.print(co_ppm);
 
   //Acc
   getAcc();
+  Serial.print(" g: ");
+  Serial.print(gValue);
 
   //DHT
   humidity = dht.readHumidity();
+  Serial.print(" hum: ");
+  Serial.print(humidity);
   temperature = dht.readTemperature();
+  Serial.print(" temp: ");
+  Serial.print(temperature);
+  
+  Serial.println("");
 
+}
+
+void determineAlertMode(){
+  
+  //TODO Read alert value and determin alert mode
+  
+  //TODO delete the following test mode
+  alarm=false;
+  
 }
 
 //Accelerometer
