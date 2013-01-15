@@ -44,8 +44,9 @@ DHT dht(DHTPIN, DHTTYPE);
 
 File dataFile;
 
+int batteryValue = 0;
 // intervalls in seconds:
-long sampleInterval = 5; // intervall for sampling raw data
+long sampleInterval = 1; // intervall for sampling raw data
 long measureInterval = 5; // intervall for averaging the raw data
 long uploadInterval = 60; // intervall for uploading saved averged data and saved events
 
@@ -104,19 +105,19 @@ void setup()
   Serial.println(":");
   delay(500);  
   Serial.println("Removing existing files.");
-  if (SD.exists("logfile"))
-    SD.remove("logfile");
-  if (SD.exists("opened"))
-    SD.remove("opened");
-  if (SD.exists("crashed")) 
-    SD.remove("crashed");
+  if (SD.exists("logfile.txt"))
+    SD.remove("logfile.txt");
+  //if (SD.exists("opened.txt"))
+    //SD.remove("opened.txt");
+  //if (SD.exists("crashed.txt")) 
+    //SD.remove("crashed.txt");
   Serial.println("Powering on GPRS Shield.");  
   PowerOnOff();
-  delay(10000); // Waiting for GSM Signal
+  delay(15000); // Waiting for GSM Signal
   //TODO: Test if signal is availible
   Serial.println("Connecting to GSM Network."); 
   ConnectToGSM();
-  delay(2000);
+  delay(5000);
   GetMccMncCid();
   GetLac();
 }
@@ -141,15 +142,16 @@ void loop()
     blub += ";";
     blub += time.unixtime();
     blub += ";";
-    blub += cid; // TODO: Change cell_id
+    blub += cid;
     blub += ";";
-    blub += mcc; // TODO: Change mcc
+    blub += mcc;
     blub += ";";
-    blub += mnc; // TODO: Change mnc
+    blub += mnc; 
     blub += ";";
-    blub += lac; // TODO: Change mnc
+    blub += lac; 
     blub += ";";
     blub += String(light);
+    blub += ";";
     printlnSD(blub, 2);
   }
   if ((opened) && (light<160))
@@ -178,6 +180,7 @@ void loop()
     blub += ";";
     g = g * 10;
     blub += String((int)g);
+    blub += ";";
     printlnSD(blub, 3);
   }
   
@@ -212,6 +215,8 @@ void loop()
       sumTemp = 0;
       sumHumi = 0;
       
+      batteryValue = map(analogRead(A4), 0, 1023, 0, 100);
+      
       String blub = "123"; // TODO: Change device_id
       blub += ";";
       blub += time.unixtime();
@@ -228,7 +233,8 @@ void loop()
       blub += ";";
       blub += avgHum;
       blub += ";";
-      blub += "75;"; // TODO: Change Battery
+      blub += batteryValue;
+      blub += ";";
       Serial.println(blub);
       printlnSD(blub, 1);
       
@@ -239,17 +245,17 @@ void loop()
         //if (!connectionStatus)
         //  ConnectToGsm());
         //if (IsConnected()){
-          TcpPost();
-//            if (SD.exists("logfile"))
-//              TcpPost("logfile");
-//            if (SD.exists("opened")){
-//              delay(3000);  
-//              TcpPost("opened");
-//            }
-//            if (SD.exists("crashed")){
-//              delay(3000);
-//              TcpPost("crashed");
-//            }            
+            if (SD.exists("logfile.txt"))
+              delay(2000);
+              TcpPost(1);
+            if (SD.exists("opened.txt")){
+              delay(2000);  
+              TcpPost(2);
+            }
+            if (SD.exists("crashed.txt")){
+              delay(2000);
+              TcpPost(3);
+            }            
          //}
          //else{
          //  connectionStatus = false;
@@ -271,10 +277,10 @@ void printlnSD(String str, int fileName){
     dataFile = SD.open("logfile.txt", FILE_WRITE);
   }
   else if (fileName == 2){
-    dataFile = SD.open("opened", FILE_WRITE);
+    dataFile = SD.open("opened.txt", FILE_WRITE);
   }
   else if (fileName == 3){
-    dataFile = SD.open("crashed", FILE_WRITE);
+    dataFile = SD.open("crashed.txt", FILE_WRITE);
   }
   // if the file is available, write to it:
   if (dataFile) {
@@ -386,8 +392,7 @@ void PowerOnOff()
   digitalWrite(9,LOW);
   delay(3000);
 }
-//void TcpPost(String nameOfFile){
-  void TcpPost(){
+void TcpPost(int postOption){
 //        char nameChar[sizeof(nameOfFile)];
 //        nameOfFile.toCharArray(nameChar, sizeof(nameOfFile)+1);
 
@@ -399,7 +404,7 @@ void PowerOnOff()
         //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
         mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
         //start up connection
-        delay(5000);
+        delay(6000);
         ShowSerialData(); 
 
         mySerial.println("AT+CIPSEND");
@@ -410,12 +415,12 @@ void PowerOnOff()
         delay(6000);
         ShowSerialData();
        
-//       if(nameOfFile=="logfile")
+       if(postOption==1)
          mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
-//       else if(nameOfFile=="opened")
-//         mySerial.println("POST /rest/index.php/postLight HTTP/1.1 ");
-//       else if(nameOfFile=="crashed")
-//         mySerial.println("POST /rest/index.php/postShock HTTP/1.1 ");
+       else if(postOption==2)
+         mySerial.println("POST /rest/index.php/postLight HTTP/1.1 ");
+       else if(postOption==3)
+         mySerial.println("POST /rest/index.php/postShock HTTP/1.1 ");
        delay(100);
        ShowSerialData();
     
@@ -429,7 +434,12 @@ void PowerOnOff()
        ShowSerialData();
 
 //      dataFile = SD.open(nameChar); //open file
-       dataFile = SD.open("logfile.txt");
+       if(postOption == 1)
+         dataFile = SD.open("logfile.txt");
+       else if(postOption==2)
+         dataFile = SD.open("opened.txt");
+       else if(postOption==3)
+         dataFile = SD.open("crashed.txt");
        
        mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' at the end of file
        delay(100);
@@ -462,7 +472,12 @@ void PowerOnOff()
             
             dataFile.close();
 //            SD.remove(nameChar);
-            SD.remove("logfile.txt");
+            if(postOption==1)
+              SD.remove("logfile.txt");
+            else if(postOption==2)
+              SD.remove("opened.txt");
+            else if(postOption==3)
+              SD.remove("crashed.txt");              
             Serial.println("Ready.");
             //Serial.println(" finished!");
           } else {
