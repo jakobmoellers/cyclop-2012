@@ -29,6 +29,7 @@ int p52=40;
 int p53=41;
 int no_pin=4;
 int co_pin=5;
+int alarmPin=48;
 
 //Variables
 boolean alarm=false; //True if alarm is armed
@@ -125,6 +126,9 @@ void setup(){
   digitalWrite(p52, HIGH);
   digitalWrite(p53, HIGH);
   analogWrite(LEDpin, 0);
+
+  //Alarm
+  pinMode(alarmPin,INPUT);
 
 
 }
@@ -231,10 +235,15 @@ void takeMeasurements(){
 
 void determineAlertMode(){
 
-  //TODO Read alert value and determin alert mode
-
-    //TODO delete the following test mode
-  alarm=false;
+  int alarmInput = digitalRead(alarmPin);
+  if (alarmInput==0){
+    alarm=true;
+    Serial.println("Alarm activated");
+  } 
+  else {
+    alarm=false;
+    Serial.println("Alarm deactivated");
+  }
 
 }
 
@@ -462,6 +471,7 @@ uint8_t getButtonState()
 
   return 0;
 }
+
 
 
 
