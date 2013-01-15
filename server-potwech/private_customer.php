@@ -118,17 +118,17 @@ $user_group = $SUMO['user']['group'][0];
 		?>
 		</div>
 		
-		        <div class="span4">
+		<div class="span4">
 		<h2>Historic Parcels</h2>
 		<?php
-			//active parcels
-			$sql = 'SELECT * FROM parcel_processes WHERE user_id_ref = '.$user_id.' AND end_time != null';
+			//inactive parcels
+			$sql = 'SELECT * FROM parcel_processes WHERE user_id_ref = '.$user_id.' AND end_time is not null';
 			$result = query($sql);
 			$numrows = pg_numrows($result);
 			if($numrows > 0 ){
-				echo $numrows.' active parcel process(es): <br>';
-				echo '<div class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" href="#parcelList">
-        Parcels</a></div><div id="parcelList" class="accordion-body collapse"><div class="accordion-inner">';
+				echo $numrows.' historic parcel process(es): <br>';
+				echo '<div class="accordion-group"><div class="accordion-heading"><a class="accordion-toggle" data-toggle="collapse" href="#historicParcelList">
+        Parcels</a></div><div id="historicParcelList" class="accordion-body collapse"><div class="accordion-inner">';
 				echo '<div style="overflow: auto; height: 200px">';
 				echo '<div class="btn-group btn-group-vertical">';
 				while ($data = pg_fetch_assoc($result)) {
@@ -144,9 +144,8 @@ $user_group = $SUMO['user']['group'][0];
 		
 		<div class="span4">
           <h2>Parcels with problems</h2>
-			<p id="parcelproblems">
 			<?php
-			//active parcels
+			//parcels with problems
 			$sql = 'select distinct parcel_process_id,package_number  from current_parcel_processes inner join problematic_parcels on (current_parcel_processes.parcel_process_id = problematic_parcels.parcel_process) where user_id_ref = '.$user_id;
 			$result = query($sql);
 			$numrows = pg_numrows($result);
@@ -165,8 +164,7 @@ $user_group = $SUMO['user']['group'][0];
 				echo 'There are no problematic parcels';
 			}
 			?>
-			
-			</p>
+
         </div>
 		</div>
 		<br>

@@ -280,6 +280,10 @@
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="#about">About</a></li>
+<<<<<<< HEAD
+=======
+              <li><a href="endPotwech.php">End POTWECH</a></li>
+>>>>>>> Server Changes - final?
 			  <!-- Read about Bootstrap dropdowns at http://twitter.github.com/bootstrap/javascript.html#dropdowns -->
               <li class="dropdown">
                 <a href="#" class="dropdown-toggle" data-toggle="dropdown">Login <b class="caret"></b></a>
@@ -309,7 +313,7 @@
             <div class="carousel-caption">
               <h1>Step 1</h1>
               <p class="lead">Order a POTWECH device.</p>
-              <a class="btn btn-large btn-primary" href="#">Get POTWECH today</a>
+              <a class="btn btn-large btn-primary" href="http://potwech.uni-muenster.de/private_customer.php?sumo_action=registration">Get POTWECH today</a><br /><br />
             </div>
           </div>
         </div>
@@ -318,7 +322,7 @@
           <div class="container">
             <div class="carousel-caption">
               <h1>Step 2</h1>
-              <p class="lead">Put the sticker on your parcel and scan it.</p>
+              <p class="lead">Put the sticker on your parcel and scan it.</p><br />
             </div>
           </div>
         </div>

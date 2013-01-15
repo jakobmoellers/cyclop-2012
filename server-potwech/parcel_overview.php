@@ -120,7 +120,7 @@ $parcel_id = $_GET['pid'];
 
             function fetchGeoJson(parcelid) {
                 //$.ajax({url: "rest/index.php/parcel_events/"+parcelid})
-                $.getJSON("../rest/index.php/parcel_measurements/" + parcelid, function (json) {
+                $.getJSON("../rest/index.php/distinct_parcel_measurements/" + parcelid, function (json) {
                     //L.geoJson(json).addTo(map)
 					
 					if(json.features.length > 0){
@@ -130,7 +130,7 @@ $parcel_id = $_GET['pid'];
 						
 						setParcelOverview(json.features[json.features.length-1]);
 						
-						geojsonMarker.bindPopup("Measurement ID: "+json.features[json.features.length-1].properties.measurement_id);
+						geojsonMarker.bindPopup("Measurement ID: "+json.features[json.features.length-1].properties.measurement_id+"<br>Time: "+json.features[json.features.length-1].properties.time);
 						maxValue = json.features.length-1;
 						$("#slider").show();
 						$("#slider").slider({
@@ -143,7 +143,7 @@ $parcel_id = $_GET['pid'];
 								
 								if(ui.value < maxValue){
 									marker[ui.value] = L.geoJson(json.features[ui.value]);
-									marker[ui.value].bindPopup("Measurement ID: "+json.features[ui.value].properties.measurement_id);
+									marker[ui.value].bindPopup("Measurement ID: "+json.features[ui.value].properties.measurement_id+"<br>Time: "+json.features[ui.value].properties.time);
 									map.addLayer(marker[ui.value]);
 									maxValue--;
 								}
@@ -186,22 +186,29 @@ $parcel_id = $_GET['pid'];
 			//Displays the last measurements (humidity, temperature) and Events (Light, Shock) as overviews
 			function setParcelOverview(feature){
 				$('#tempHumForm').text(feature.properties.temperature+' °C / '+feature.properties.humidity+' %');
+				$('#batteryForm').text("  "+feature.properties.battery+' %');
 				
 				$.getJSON("../rest/index.php/maxValue/"+$_GET(['pid'])+"/light", function (json) {
-					if(json.properties.maxlight){
+					if(json.properties != null){
 						$('#lightForm').text('Opening detected!');
+					}else{
+						$('#light_button').addClass("disabled");
+						$('#light_button').click(function(Event) {
+							Event.preventDefault();
+						});
 					}
                 });				
 				$.getJSON("../rest/index.php/maxValue/"+$_GET(['pid'])+"/acceleration", function (json) {
-					if(json.properties.maxacceleration){
+					if(json.properties != null){
 						$('#shockForm').text("  "+json.properties.maxacceleration+" g");
+					}else{
+						$('#acc_button').addClass("disabled");
+						$('#acc_button').click(function(Event) {
+							Event.preventDefault();
+						});
 					}
                 });
-                $.getJSON("../rest/index.php/maxValue/"+$_GET(['pid'])+"/vibration", function (json) {
-					if(json.properties.maxvibration){
-						$('#vibrationForm').text("  "+json.properties.maxvibration+" g");
-					}
-                });
+
 			}
 			
 			//Javascript function to receive GET variables (Syntax: $_GET(['variableName']) ) 
@@ -252,28 +259,51 @@ $parcel_id = $_GET['pid'];
 	
 
     <div class="container marketing">
+	
+	<div class="container marketing">
       <!-- Three columns of text below the carousel -->
       <div class="row">
-        <div class="span4">
+        <div class="span4 offset2">
           <img class="img-rounded" src="../assets/img/temperature.png" style="width:140px; height:140px;"><h3 style="display:inline;" id="tempHumForm"></h3>
           <h2>Temperature/ Humidity (cur.)</h2>
           <!-- <p>Donec sed odio dui. Etiam porta sem malesuada magna mollis euismod. Nullam id dolor id nibh ultricies vehicula ut id elit. Morbi leo risus, porta ac consectetur ac, vestibulum at eros. Praesent commodo cursus magna, vel scelerisque nisl consectetur et.</p> -->
-          <p><a class="btn" href='graphs.php?pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
+          <p><a class="btn" href='graphs.php?temperature=1&humidity=1&pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
         </div><!-- /.span4 -->
-        <div class="span4">
+		
+		<div class="span4 offset1">
+          <img class="img-rounded" src="../assets/img/battery.svg" style="width:140px; height:140px;"><h3 style="display:inline;" id="batteryForm"></h3>
+          <h2>Battery</h2>
+          <p><a class="btn" href='graphs.php?battery=1&pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
+        </div><!-- /.span4 -->
+		</div>
+	<div class="row">
+        <div class="span4 offset2">
           <img class="img-rounded" src="../assets/img/shake.png" style="width:140px; height:140px;"><h3 style="display:inline;" id="shockForm">  No alert</h3>
           <h2>Acceleration-Detection (max)</h2>
           <!--<p>Duis mollis, est non commodo luctus, nisi erat porttitor ligula, eget lacinia odio sem nec elit. Cras mattis consectetur purus sit amet fermentum. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>-->
-          <p><a class="btn" href='acceleration_events.php?pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
+          <p><a class="btn" id="acc_button" href='acceleration_events.php?pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
         </div><!-- /.span4 -->
    
-        <div class="span4">
+        <div class="span4 offset1">
           <img class="img-rounded" src="../assets/img/sun.svg" style="width:140px; height:140px;"><h3 style="display:inline;" id="lightForm">No alert</h3>
           <h2>Light-Detection</h2>
           <!--<p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget quam. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>-->
-          <p><a class="btn" href='light_events.php?pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
+          <p><a class="btn" id="light_button" href='light_events.php?pid=<?php echo $_GET['pid']?>'>View details &raquo;</a></p>
         </div><!-- /.span4 -->
+		
+
 		   </div><!-- /.row -->
+
+		
+           <!-- FOOTER -->
+         <footer style="margin-top:100px">
+           <p class="pull-right"><a href="#">Back to top</a></p>
+           <p>&copy; 2012 ifgi</p>
+   		<!-- Morin: COPYRIGHT-HINWEISE BITTE NICHT ENTFERNEN !-->
+   		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Temperature</a> designed by <a href="http://thenounproject.com/asher84" target="_blank">Ashley Reinke</a> from The Noun Project</p>
+   		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Shock</a> designed by <a href="http://www.unocha.org/" target="_blank">http://www.unocha.org/</a> from The Noun Project</p>		
+   		<p><a href="http://thenounproject.com/noun/sun/#icon-No2660" target="_blank">Sun</a> designed by <a href="http://thenounproject.com/adamwhitcroft" target="_blank">Adam Whitcroft</a> from The Noun Project</p>
+         </footer>
       </div>
 
     <!-- Le javascript
@@ -293,14 +323,4 @@ $parcel_id = $_GET['pid'];
     <script src="../assets/js/bootstrap-typeahead.js"></script>
 
   </body>
-  
-        <!-- FOOTER -->
-      <footer style="margin-top:100px">
-        <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2012 ifgi</p>
-		<!-- Morin: COPYRIGHT-HINWEISE BITTE NICHT ENTFERNEN !-->
-		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Temperature</a> designed by <a href="http://thenounproject.com/asher84" target="_blank">Ashley Reinke</a> from The Noun Project</p>
-		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Shock</a> designed by <a href="http://www.unocha.org/" target="_blank">http://www.unocha.org/</a> from The Noun Project</p>		
-		<p><a href="http://thenounproject.com/noun/sun/#icon-No2660" target="_blank">Sun</a> designed by <a href="http://thenounproject.com/adamwhitcroft" target="_blank">Adam Whitcroft</a> from The Noun Project</p>
-      </footer>
 </html>

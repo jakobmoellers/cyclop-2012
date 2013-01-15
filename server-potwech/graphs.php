@@ -93,7 +93,14 @@ $parcel_id = $_GET['pid'];
    
     <div class="container">
 
+<<<<<<< HEAD
 	  <div id="chart" style="height:400px;width:800px; "></div>
+=======
+		<div id="chart" style="height: 400px; width: 1000px;"></div>
+		<br />
+		<a class="btn" href="#" onclick="resetZoom(); return false;">Reset Zoom</a>
+		<br /><br /><br />
+>>>>>>> Server Changes - final?
 	  
       <!-- FOOTER -->
       <footer>
@@ -117,12 +124,26 @@ $parcel_id = $_GET['pid'];
     <script src="../assets/js/jquery.jqplot.min.js"></script>
     <script src="../assets/js/jqplot.dateAxisRenderer.min.js"></script>
     <script src="../assets/js/jqplot.json2.min.js"></script>
+	<script src="../assets/js/jqplot.cursor.min.js"></script>
     <!--[if lt IE 9]><script language="javascript" type="text/javascript" src="../assets/js/excanvas.min.js"></script><![endif]-->
     <script>
-	//updateGraphs(1);
+	var sensors = new Array();
+	var jqplot = null;
+	var minDate = null;
+	var maxDate = null;
 
-	function init(){
-		updateGraphs($_GET(['pid']));
+	function init() {
+		if ($_GET(['temperature'])) {
+			sensors.push("temperature");
+		}
+		if ($_GET(['humidity'])) {
+			sensors.push("humidity");
+		}
+		if ($_GET(['battery'])) {
+			sensors.push("battery");
+		}
+		
+		updateGraphs($_GET(['pid']), sensors);
 	}
 	
 	//Javascript function to receive GET variables (Syntax: $_GET(['variableName']) ) 
@@ -137,7 +158,16 @@ $parcel_id = $_GET['pid'];
 		window.$_GET = function(name){return name ? c[name] : c;}
 	}())
 	
-	function updateGraphs(parcelId) {
+	function toTitleCase(str) {
+		if (!str) return "";
+	    return str.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+	}
+	
+	function resetZoom() {
+		updateGraphs($_GET(['pid']), sensors);
+	}
+	
+	function updateGraphs(parcelId, sensors) {
 		/* Diese Funktion holt die in "dataRendererOptions" angegebenen Sensordaten via AJAX
 		   und baut ein jqPlot konformes Array. Außerdem werden der min/max Bereich des Plots justiert.
 		 */
@@ -160,7 +190,8 @@ $parcel_id = $_GET['pid'];
 				  features = data["features"];
 			  
 				  for (var feature in features) {
-					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("."))).replace(/-/g, "/");
+					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("+"))).replace(/-/g, "/");
+					  //dateString = features[feature]["properties"]["time"];
 					  date = Date.parse(dateString);
 					  for (var sensor in options["sensors"]) {
 						  ret[sensor].push([date, parseInt(features[feature]["properties"][options["sensors"][sensor]])]);
@@ -177,7 +208,7 @@ $parcel_id = $_GET['pid'];
 		};
 		
 		$("#chart").empty();
-		$.jqplot("chart", "http://potwech.uni-muenster.de/rest/index.php/parcel_measurements/"+parcelId, {
+		jqplot = $.jqplot("chart", "http://potwech.uni-muenster.de/rest/index.php/parcel_measurements/"+parcelId, {
 		    title: "Your Parcel's Health",
 			legend: {
 				show: true,
@@ -185,22 +216,29 @@ $parcel_id = $_GET['pid'];
 			},
 		    dataRenderer: ajaxDataRenderer,
 			dataRendererOptions: {
-				sensors: [
-					"temperature", "humidity"
-				]
+				sensors: sensors
 			},
 			axes: {
 				xaxis: {
 					renderer: $.jqplot.DateAxisRenderer,
+					numberTicks: 10,
 					tickOptions: {
 						formatString: "%H:%M <br /> %Y-%m-%d"
 					}
 				}
 		 	},
+			cursor: { 
+			        show: true,
+			        zoom: true, 
+					looseZoom: true,
+					clickReset: false,
+					dblClickReset: false,
+			        showTooltip: false
+			},
 			series: [
 				{
 					color: "#FF0000",
-					label: "Temperature",
+					label: toTitleCase(sensors[0]),
 					showMarker: false,
 					rendererOptions: {
 						smooth: true
@@ -208,7 +246,15 @@ $parcel_id = $_GET['pid'];
 				},
 				{
 					color: "#0066FF",
-					label: "Humidity",
+					label: toTitleCase(sensors[1]),
+					showMarker: false,
+					rendererOptions: {
+						smooth: true
+					}
+				},
+				{
+					color: "#006600",
+					label: toTitleCase(sensors[2]),
 					showMarker: false,
 					rendererOptions: {
 						smooth: true

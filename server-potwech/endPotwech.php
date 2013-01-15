@@ -1,25 +1,6 @@
-<?
-require 'sumo/sumo.php';
-require 'includes/db_func.php';
-if (isset($_POST['sumo_user'])) {
-	$avoidPostback = true;
-}
-$user_id = $SUMO['user']['id'];
-
-echo '<script>var uid='.$user_id.'</script>';
-
-$user_group = $SUMO['user']['group'][0];
-
-
-?>
 <!DOCTYPE html>
 <html lang="en">
   <head>
-  	  <?
-		if ($avoidPostback) {
-			echo '<meta http-equiv="refresh" content="0; URL='.$_SERVER['SCRIPT_NAME'].'">';
-		}
-	  ?>
     <meta charset="utf-8">
     <title>POTWECH</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -55,13 +36,13 @@ $user_group = $SUMO['user']['group'][0];
 	
 	<script>
 	
-		function save(){
+		function stopMonitoring(){
 			if($('#mid_form').val() != "" && $('#pid_form').val() != ""){
-				$.post('http://potwech.uni-muenster.de/rest/index.php/initParcel', 
-		data='uid='+uid+'&mobile_device='+$('#mid_form').val()+'&parcel_number='+$('#pid_form').val()).error(function() {
+				$.post('http://potwech.uni-muenster.de/rest/index.php/endParcel', 
+		data='mobile_device='+$('#mid_form').val()+'&parcel_number='+$('#pid_form').val()).error(function() {
 			alert('Invalid input! Please insert only numerical values.'); 
 			}).success(function(){
-				alert('New POTWECH successfully initialized');
+				alert('POTWECH monitoring process has been stopped...');
 				setTimeout(function(){window.location = "http://potwech.uni-muenster.de/private_customer.php"}, 0);
 
 			});
@@ -91,7 +72,6 @@ $user_group = $SUMO['user']['group'][0];
           <div class="nav-collapse collapse">
             <ul class="nav">
               <li><a href="javascript:history.go(-1)">Back</a></li>
-			  <li><a href="?sumo_action=logout">Logout</a></li>
 			  
             </ul>
           </div><!--/.nav-collapse -->
@@ -100,7 +80,7 @@ $user_group = $SUMO['user']['group'][0];
     </div>
 
     <div class="container marketing">
-      	<h3>Start new POTWECH process</h3>
+      	<h3>End a POTWECH process</h3>
 		
 		<label>Mobile Device ID:</label>
 		<input type="text" id="mid_form" placeholder="Insert your mobile device id...">
@@ -108,7 +88,7 @@ $user_group = $SUMO['user']['group'][0];
 		<input type="text" id="pid_form" placeholder="Insert your parcel number...">
 		
 		<div class="form-actions">
-		  <button type="submit" class="btn btn-primary" onclick="javascript:save()">Submit</button>
+		  <button type="submit" class="btn btn-primary" onclick="javascript:stopMonitoring()">Submit</button>
 		  <button type="button" class="btn" onclick="history.go(-1);">Cancel</button>
 		</div>
 		
