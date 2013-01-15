@@ -235,15 +235,17 @@ void takeMeasurements(){
 
 void determineAlertMode(){
 
-  int alarmInput = digitalRead(alarmPin);
-  if (alarmInput==0){
-    alarm=true;
-    Serial.println("Alarm activated");
-  } 
-  else {
-    alarm=false;
-    Serial.println("Alarm deactivated");
-  }
+  //TODO Build working switch
+
+  /*int alarmInput = digitalRead(alarmPin);
+   if (alarmInput==0){
+   alarm=true;
+   Serial.println("Alarm activated");
+   } 
+   else {
+   alarm=false;
+   Serial.println("Alarm deactivated");
+   }*/
 
 }
 
@@ -471,6 +473,7 @@ uint8_t getButtonState()
 
   return 0;
 }
+
 
 
 
