@@ -107,6 +107,12 @@ void setup(){
   SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
   SeeedOled.setHorizontalMode();  
   SeeedOled.putString("Welcome to Cyclop!"); //Print the String
+  
+  //Vibration
+  pinMode(vibration1,OUTPUT);
+  pinMode(vibration2,OUTPUT);
+  vibrate(1);
+  
 
 }
 
@@ -120,10 +126,15 @@ void loop(){
     //TODO What about the measurement process? Also every minute? Should be included here
 
     getPosition();
+    
+    //TODO Button does not work
+    
+    //TODO GPS does not work
+    
   Serial.print("lat: ");
   Serial.print(lat);
   Serial.print(" lon: ");
-  Serial.println(lon);
+  Serial.print(lon);
 
   //TODO Determine whether in alarm mode or standard mode
   determineAlertMode();
@@ -170,12 +181,14 @@ void takeMeasurements(){
 
   //Watersensor  
   int waterSensorValue = digitalRead(WaterPin);
-  if(waterSensorValue==0)
+  if(waterSensorValue==0){
     rain=true;
+    Serial.println(" Water");
+  }
 
   //NO2
   getNO2();
-  Serial.print("NO2: ");
+  Serial.print(" NO2: ");
   Serial.print(no2_ppm);
 
   //CO
@@ -373,12 +386,15 @@ void getCO(){
   co_ppm=-25*rs_r0_co+20.6;
 }
 
+//Vibration
+void vibrate(int secs){
+digitalWrite(vibration1,HIGH);
+  digitalWrite(vibration2,HIGH);
+  delay(secs*1000);
+  digitalWrite(vibration1,LOW);
+  digitalWrite(vibration2,LOW);
 
-
-
-
-
-
+}
 
 
 
