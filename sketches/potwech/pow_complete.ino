@@ -1,24 +1,28 @@
 /*
 1. Value sampling: 10sec (? maybe faster) -> check sensor constants
-2. Averaging
+2. Averaging not less than all 10 mins. Time for getting location parameters is ~3sec
 3. Saving to SD
+4. Tcp send to server ~ 18sec
+
+-> AT+CENG=1 has to be called once on every new device!!
 
 TODO: LOGFILE.TXT, CRASHED.TXT, OPENED.TXT bei Start löschen falls vorhanden
 */
 
 #include <SD.h>
-#include "DHT.h"
+#include <DHT.h>
 #include <Wire.h>
-#include "RTClib.h"
+#include <RTClib.h>
 #include <LSM303.h>
 #include <SoftwareSerial.h>
 
-SoftwareSerial mySerial(10, 11);
-
-String mcc;
-String mnc;
-String lac;
-String cid;
+SoftwareSerial mySerial(10, 11); //Initialize GPRS-Shield
+// Network Variables needed for Position Information 
+String mcc; //Mobile Country Code
+String mnc; //Mobile Network Code
+String lac; //Location Area Code
+String cid; //Cell ID
+boolean connectionStat;
 
 LSM303 accelerometer;
 
@@ -40,7 +44,7 @@ DHT dht(DHTPIN, DHTTYPE);
 File dataFile;
 
 // intervalls in seconds:
-long sampleInterval = 1; // intervall for sampling raw data
+long sampleInterval = 5; // intervall for sampling raw data
 long measureInterval = 5; // intervall for averaging the raw data
 long uploadInterval = 60; // intervall for uploading saved averged data and saved events
 
@@ -75,9 +79,9 @@ double go=2000;
 
 void setup()
 {
-  mySerial.begin(19200);
+  mySerial.begin(19200);  
   Serial.begin(19200);
-  delay(500);
+  delay(500);  
   dht.begin();
   Wire.begin();
   RTC.begin();
@@ -96,42 +100,22 @@ void setup()
   if (!SD.begin(53)) {
     Serial.println("initialization SD CARD failed!");
   }
-  delay(500);
-  Serial.print(" .");
-  delay(500);
-  Serial.print(" .");
-  delay(500);
-  Serial.println(" .");
+  Serial.println(":");
+  delay(500);  
+  Serial.println("Removing existing files.");
+  if (SD.exists("logfile.txt"))
+    SD.remove("logfile.txt");
+  if (SD.exists("opened.txt"))
+    SD.remove("opened.txt");
+  if (SD.exists("crashed.txt")) 
+    SD.remove("crashed.txt");
+  Serial.println("Powering on GPRS Shield.");  
   PowerOnOff();
-  delay(8000);
+  delay(10000); // Waiting for GSM Signal
+  //TODO: Test if signal is availible
+  Serial.println("Connecting to GSM Network."); 
   ConnectToGSM();
-}
-
-boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
-  long c = a.unixtime() - b.unixtime();
-  return (c >= timeDiff);
-}
-
-void printlnSD(String str, int fileName){
-  
-  if (fileName == 1){
-    dataFile = SD.open("logfile.txt", FILE_WRITE);
-  }
-  else if (fileName == 2){
-    dataFile = SD.open("opened.txt", FILE_WRITE);
-  }
-  else if (fileName == 3){
-    dataFile = SD.open("crashed.txt", FILE_WRITE);
-  }
-  // if the file is available, write to it:
-  if (dataFile) {
-    dataFile.println(str);
-    dataFile.close();
-  }
-  // if the file isn't open, pop up an error:
-  else {
-    Serial.println("error opening datalog.txt");
-  }
+  delay(2000);
 }
 
 void loop()
@@ -154,13 +138,13 @@ void loop()
     blub += ";";
     blub += time.unixtime();
     blub += ";";
-    blub += cid; 
+    blub += cid; // TODO: Change cell_id
     blub += ";";
-    blub += mcc; 
+    blub += mcc; // TODO: Change mcc
     blub += ";";
-    blub += mnc; 
+    blub += mnc; // TODO: Change mnc
     blub += ";";
-    blub += lac; 
+    blub += lac; // TODO: Change mnc
     blub += ";";
     blub += String(light);
     printlnSD(blub, 2);
@@ -170,8 +154,8 @@ void loop()
     opened = false;
   }
   // Acceleration Threshold reached? / parcel crashed?
-  g=sqrt(accData[0]*accData[0]+accData[1]*accData[1]+accData[2]*accData[2])/1000;
-  if ((go!=g) &&(g>2.5) && (!crashed))
+  g = sqrt(accData[0]*accData[0]+accData[1]*accData[1]+accData[2]*accData[2])/1000;
+  if ((go!=g) && (g>2.5) && (!crashed))
   {
     crashed = true;
     go=g;
@@ -181,7 +165,7 @@ void loop()
     blub += ";";
     blub += time.unixtime();
     blub += ";";
-    blub += cid; 
+    blub += cid;
     blub += ";";
     blub += mcc; 
     blub += ";";
@@ -212,6 +196,8 @@ void loop()
     // time for new Measurement? (every 5seconds)
     if (DiffBiggerOrEqual(time, lastMeasurement, measureInterval))
     {
+      GetMccMncCid();
+      GetLac();
       Serial.println("C O M P U T I N G  A V E R A G E S ");
       //compute the average
       avgTemp = (int)(sumTemp / loopCounter);
@@ -222,9 +208,6 @@ void loop()
       // setting the sum's to zero
       sumTemp = 0;
       sumHumi = 0;
-      
-      GetLacCid();
-      GetMccMnc();
       
       String blub = "123"; // TODO: Change device_id
       blub += ";";
@@ -242,31 +225,63 @@ void loop()
       blub += ";";
       blub += avgHum;
       blub += ";";
-      blub += "75;"; // TODO: Change Battery
-      Serial.print(blub);
+      blub += "75"; // TODO: Change Battery
+      Serial.println(blub);
       printlnSD(blub, 1);
       
       if (DiffBiggerOrEqual(time, lastUpload, uploadInterval))
       {
-          Serial.println("U P L O A D  S H I T  Y O O ");
-          TcpPost();
-          // TODO: LOAD der Sachen von der SD Card und UPLOAD an den Server
-          lastUpload = time; // update time for last Upload
-      }
+        Serial.println("U P L O A D  D A T A");
+          // If last data transmission failed, try to connect and to send again
+        //if (!connectionStatus)
+        //  ConnectToGsm());
+        //if (IsConnected()){
+          if (SD.exists("logfile.txt"))
+            TcpPost();
+          
+         //}
+         //else{
+         //  connectionStatus = false;
+         //}  
+        lastUpload = time; // update time for last Upload
+       }
     }
     timeOld = time; // update time for last sampling
   }
 }
+boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
+  long c = a.unixtime() - b.unixtime();
+  return (c >= timeDiff);
+}
 
-void PowerOnOff()
+void printlnSD(String str, int fileName){
+  
+  if (fileName == 1){
+    dataFile = SD.open("logfile.txt", FILE_WRITE);
+  }
+  else if (fileName == 2){
+    dataFile = SD.open("opened.txt", FILE_WRITE);
+  }
+  else if (fileName == 3){
+    dataFile = SD.open("crashed.txt", FILE_WRITE);
+  }
+  // if the file is available, write to it:
+  if (dataFile) {
+    dataFile.println(str);
+    dataFile.close();
+  }
+  // if the file isn't open, pop up an error:
+  else {
+    Serial.println("error opening datalog.txt");
+  }
+}
+
+void ShowSerialData()
 {
-  pinMode(9, OUTPUT); 
-  digitalWrite(9,LOW);
-  delay(1000);
-  digitalWrite(9,HIGH);
-  delay(2000);
-  digitalWrite(9,LOW);
-  delay(3000);
+  while(mySerial.available()!=0)
+    Serial.write(mySerial.read());
+    delay(500);
+    Serial.println("------");
 }
 
 void ConnectToGSM(){
@@ -290,12 +305,18 @@ void ConnectToGSM(){
   //get local IP adress (as response)
   delay(5000);
   ShowSerialData();
+  
+  mySerial.println("AT+CENG=1");
+  delay(1000);
+  ShowSerialData();
 }
-void GetMccMnc()
+
+void GetMccMncCid()
 {
   int kommaZaehler = 0;
   mcc = "";
   mnc = "";
+  cid = "";
   
   mySerial.println("AT+CENG=1");
   delay(1000);
@@ -321,10 +342,10 @@ void GetMccMnc()
   Serial.println("mcc:" + mcc + " mnc:"+ mnc + " cell-ID:" + cid);
   delay(500);
 }
-void GetLacCid(){
+
+void GetLac(){
   int kommaZaehler = 0;
   lac = "";
-  cid = "";
   
   mySerial.println("AT+CREG?");
   delay(100);
@@ -336,17 +357,32 @@ void GetLacCid(){
     //input += char(in);
     if ((kommaZaehler==2) && (char(in)!='"') && (char(in)!=','))
       lac += char(in);
-    if ((kommaZaehler==3) && (char(in)!='"'))
-      cid += char(in);
     if (char(in)==','){
       kommaZaehler++;
     }
   }
-  Serial.println("LAC: " + lac + ", CID: " + cid);
+  Serial.println("LAC: " + lac);
   delay(500);
 }
+
+void PowerOnOff()
+{
+  pinMode(9, OUTPUT); 
+  digitalWrite(9,LOW);
+  delay(1000);
+  digitalWrite(9,HIGH);
+  delay(2000);
+  digitalWrite(9,LOW);
+  delay(3000);
+}
 void TcpPost(){
-              
+
+
+        //TODO: Catch different cases of URIs for Events 
+        //TODO: Include case of no connection
+        // .../rest/index.php/postLight
+        // .../rest/index.php/postShock
+        
         //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
         mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
         //start up connection
@@ -376,7 +412,7 @@ void TcpPost(){
 
        dataFile = SD.open("logfile.txt"); //open file
        
-       mySerial.println("Content-Length:" + String(dataFile.size()+4));
+       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data='
        delay(100);
        ShowSerialData();   
        
@@ -394,8 +430,12 @@ void TcpPost(){
 
        if (dataFile) {
           int i = 1;  
-          while (dataFile.available() && i<dataFile.size()) { //send complete logfile  
-              mySerial.write(dataFile.read());
+          char in;
+          //Read SD File and send Data to Serial Port
+          while (dataFile.available() && i<dataFile.size()) {   
+              in = dataFile.read();
+              if(in =='\n') in = ';'; // Replace line break with ';'
+              mySerial.write(in);
               i++;
             }
             delay(500);
@@ -407,24 +447,16 @@ void TcpPost(){
             //Serial.println(" finished!");
           } else {
             // if the file didn't open, print an error:
-            Serial.println("error opening test.txt");
+            Serial.println("error opening logfile.txt");
           }
  
   //PRINT DATA TO mySerial
   mySerial.println((char)26);//sending ich bin ein homo, gez.: Jan Wirwahn
-  delay(2000);//waitting for reply, important! the time is base on the condition of internet 
+  delay(4000);//waitting for reply, important! the time is base on the condition of internet 
   mySerial.println();
   ShowSerialData();
   
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
   delay(100);
   ShowSerialData();  
-}
-
-void ShowSerialData()
-{
-  while(mySerial.available()!=0)
-    Serial.write(mySerial.read());
-    delay(500);
-    Serial.println("------");
 }
