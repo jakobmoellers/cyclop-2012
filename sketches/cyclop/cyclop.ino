@@ -144,8 +144,6 @@ void loop(){
 
     getPosition();
 
-  //TODO Button does not work
-
   //TODO GPS does not work
 
   Serial.print("lat: ");
