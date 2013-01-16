@@ -25,8 +25,8 @@ int vibration1=46; //Vibration
 int vibration2=47;
 int LEDpin=38; //Button
 int p51=39;
-int p52=40;
-int p53=41;
+int p52=41;
+int p53=40;
 int no_pin=4;
 int co_pin=5;
 int alarmPin=48;
@@ -52,7 +52,7 @@ DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
 DateTime time;
 int button = 0; //Button
-int ledLevel = 127;
+int ledLevel = 255;
 int onstatus = 0;
 
 //Measurements
@@ -432,7 +432,11 @@ void checkforHazardButtonPressed(){
     onstatus = onstatus ^ 1;  // flip on/off status of LED
     analogWrite(LEDpin, ledLevel);
     Serial.println("Hazard");
-    delay(1000);
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("Hazard saved and uploaded!");
+    delay(2000);
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("Welcome to Cyclop!");
     digitalWrite(LEDpin, 0);   
   }
 }
