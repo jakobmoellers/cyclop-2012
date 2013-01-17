@@ -5,9 +5,7 @@
 4. Tcp send to server ~ 18sec
 
 -> AT+CENG=1 has to be called once on every new device!!
-
-TODO: LOGFILE.TXT, CRASHED.TXT, OPENED.TXT bei Start löschen falls vorhanden
-TODO: 
+ 
 */
 
 #include <SD.h>
@@ -23,7 +21,9 @@ String mcc; //Mobile Country Code
 String mnc; //Mobile Network Code
 String lac; //Location Area Code
 String cid; //Cell ID
-boolean connectionStat;
+
+
+String connectionStatus;
 
 LSM303 accelerometer;
 
@@ -46,9 +46,9 @@ File dataFile;
 
 int batteryValue = 0;
 // intervalls in seconds:
-long sampleInterval = 1; // intervall for sampling raw data
-long measureInterval = 5; // intervall for averaging the raw data
-long uploadInterval = 60; // intervall for uploading saved averged data and saved events
+long sampleInterval = 5; // intervall for sampling raw data
+long measureInterval = 6; // intervall for averaging the raw data
+long uploadInterval = 30; // intervall for uploading saved averged data and saved events
 
 int time; //unixtime
 DateTime timeOld = 0; // last Sampling was made
@@ -89,9 +89,6 @@ void setup()
   RTC.begin();
   accelerometer.init();
   accelerometer.enableDefault();
-  timeOld = RTC.now();
-  lastMeasurement = RTC.now();
-  lastUpload = RTC.now();
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
      // following line sets the RTC to the date & time this sketch was compiled
@@ -112,14 +109,16 @@ void setup()
   //if (SD.exists("crashed.txt")) 
     //SD.remove("crashed.txt");
   Serial.println("Powering on GPRS Shield.");  
-  PowerOnOff();
-  delay(15000); // Waiting for GSM Signal
+  RestartShield();
+  delay(5000); // Waiting for GSM Signal
   //TODO: Test if signal is availible
   Serial.println("Connecting to GSM Network."); 
-  ConnectToGSM();
+  Reconnect();
+  //ConnectToGSM();
   delay(5000);
-  GetMccMncCid();
-  GetLac();
+  timeOld = RTC.now();
+  lastMeasurement = RTC.now();
+  lastUpload = RTC.now();
 }
 
 void loop()
@@ -186,20 +185,20 @@ void loop()
   
   if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //sampling every 1 seconds (according to intervall variable)
   {
-    crashed = false;
+    crashed = false; // is that correct ?
     Serial.println("S A M P L I N G");
-    DateTime time = RTC.now();
+    time = RTC.now();
   
     //read the sensor values over here (change the following lines):
     humidity = dht.readHumidity();
     temperature = dht.readTemperature();
  
     // add measured values to the sum variables for computing the average
-    sumTemp = sumTemp + temperature;
-    sumHumi = sumHumi + humidity;
+    sumTemp += temperature;
+    sumHumi += humidity;
     loopCounter++;
     
-    // time for new Measurement? (every 5seconds)
+    // time for new Measurement? (every 10seconds)
     if (DiffBiggerOrEqual(time, lastMeasurement, measureInterval))
     {
       GetMccMncCid();
@@ -271,8 +270,8 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
   return (c >= timeDiff);
 }
 
-void printlnSD(String str, int fileName){
-  
+void printlnSD(String str, int fileName)
+{
   if (fileName == 1){
     dataFile = SD.open("logfile.txt", FILE_WRITE);
   }
@@ -326,6 +325,11 @@ void ConnectToGSM(){
   mySerial.println("AT+CENG=1");
   delay(1000);
   ShowSerialData();
+  
+  delay(1000);
+  GetMccMncCid();
+  delay(1000);
+  GetLac();
 }
 
 void GetMccMncCid()
@@ -392,29 +396,25 @@ void PowerOnOff()
   digitalWrite(9,LOW);
   delay(3000);
 }
-void TcpPost(int postOption){
-//        char nameChar[sizeof(nameOfFile)];
-//        nameOfFile.toCharArray(nameChar, sizeof(nameOfFile)+1);
 
-        //TODO: Catch different cases of URIs for Events 
+void TcpPost(int postOption){
         //TODO: Include case of no connection
-        // .../rest/index.php/postLight
-        // .../rest/index.php/postShock
+        byte in;
         
-        //mySerial.println("AT+CIPSTART=\"TCP\",\"http://potwech.uni-muenster.de/rest/index.php/post/\",\"80\"");
+        delay(500);
+        
         mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
         //start up connection
         delay(6000);
-        ShowSerialData(); 
+        ShowSerialData(); //wait for "Connect OK"
+        delay(2000);
 
-        mySerial.println("AT+CIPSEND");
-        //send data to remote server, CTRL+Z (0x1a) to send 
-        //  >hello TCP server.
-        //  SEND OK
-        //  hello sim900
-        delay(6000);
+        mySerial.println("AT+CIPSEND");//wait for '>' 
+        delay(4000); //check if 'CONNECT OK' 
         ShowSerialData();
+          delay(2000);
        
+       //set http headder
        if(postOption==1)
          mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
        else if(postOption==2)
@@ -424,7 +424,6 @@ void TcpPost(int postOption){
        delay(100);
        ShowSerialData();
     
-      //PRINT DATA TO mySerial
        mySerial.println("Host: potwech.uni-muenster.de");
        delay(100);
        ShowSerialData();
@@ -432,8 +431,8 @@ void TcpPost(int postOption){
        mySerial.println("Accept: application/json");
        delay(100);
        ShowSerialData();
-
-//      dataFile = SD.open(nameChar); //open file
+       
+       //open file and check length
        if(postOption == 1)
          dataFile = SD.open("logfile.txt");
        else if(postOption==2)
@@ -441,7 +440,7 @@ void TcpPost(int postOption){
        else if(postOption==3)
          dataFile = SD.open("crashed.txt");
        
-       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' at the end of file
+       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
        delay(100);
        ShowSerialData();   
        
@@ -449,7 +448,7 @@ void TcpPost(int postOption){
        delay(100);
        ShowSerialData();
        
-       mySerial.println();
+       mySerial.println();//do not delete. is part of the headder!
        delay(100);
        ShowSerialData();
        
@@ -463,7 +462,7 @@ void TcpPost(int postOption){
           //Read SD File and send Data to Serial Port
           while (dataFile.available() && i<dataFile.size()) {   
               in = dataFile.read();
-              //if(in =='\n') in = ';'; // Replace line break with ';'
+              //if(in =='\n') in = ';'; // Replace line break in file with ';'
               mySerial.write(in);
               i++;
             }
@@ -485,13 +484,89 @@ void TcpPost(int postOption){
             Serial.println("error opening ");
           }
  
-  //PRINT DATA TO mySerial
+  delay(500);
   mySerial.println((char)26);//sending
   delay(5000);//waitting for reply, important! the time is base on the condition of internet 
   mySerial.println();
   ShowSerialData();
   
+  delay(1000);
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
-  delay(100);
-  ShowSerialData();  
+  delay(1000);
+  ShowSerialData();
+  delay(500);  
+}
+
+//indicates state of GPRS connection
+//returns attached, detached or deactivated;
+String getSignalStatus(){
+   String signalStatus = "";
+   mySerial.println("AT+CGATT?");
+   delay(100);
+   while(mySerial.available()!=0){
+     if(char(mySerial.read())==':'){
+       mySerial.read();
+       signalStatus += char(mySerial.read());
+     }
+   }
+   if(signalStatus=="1")signalStatus = "attached";
+   else if(signalStatus=="0")signalStatus = "detached";
+   else signalStatus = "deactivated";
+   return signalStatus;
+}
+
+String getConnectionStatus(){
+  String cs = "error";
+  byte in;
+  mySerial.println("AT+CIPSTATUS");
+   delay(500);
+   while(mySerial.available()!=0){
+     if(char(mySerial.read())==':'){
+       mySerial.read();
+       while(mySerial.available()!=0){
+         in = mySerial.read();
+         if(char(in)!='\n')
+           cs += char(in);
+       }
+       return cs;
+     }
+   }
+}
+
+void RestartShield(){
+    if(getConnectionStatus()=="error" && getSignalStatus()=="deactivated"){
+      PowerOnOff();
+    }
+    else{
+      PowerOnOff();
+      delay(1000);
+      PowerOnOff();
+    }
+}
+
+void WaitForConnectOk()
+{
+  String data = "";
+  while(mySerial.available()!=0){
+    data += char(mySerial.read());
+  }
+    delay(500);
+    Serial.println("------");
+    if (data.endsWith("CONNECT OK")) Serial.println("true");
+    else Serial.println("false");
+}
+
+void Reconnect(){
+  int retries = 0;
+  String sStatus = getSignalStatus();
+  while(sStatus=="detached"){
+    Serial.println("No Signal. Retrying..");
+    if(retries>10)return;
+    retries++;    
+    delay(1000);
+    sStatus = getSignalStatus();
+  }
+  delay(3000);
+  ConnectToGSM();
+  Serial.println("..done.");  
 }
