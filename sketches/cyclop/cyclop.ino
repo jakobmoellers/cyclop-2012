@@ -12,6 +12,7 @@ This is the main cyclop application
 
 
 //PINs
+int ledPin = 13;
 const int WaterPin=42; //Water sensor
 int xPin = 2; //MMA7361L Three Axis Accelerometer
 int yPin = 3;
@@ -30,6 +31,8 @@ int p53=40;
 int no_pin=4;
 int co_pin=5;
 int alarmPin=48;
+const byte speakerOut = 44; //Speaker
+const char microphone = A10; //Microphone
 
 //Variables
 boolean alarm=false; //True if alarm is armed
@@ -54,6 +57,24 @@ DateTime time;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
+unsigned int timeUpDown[128]; //Speaker
+const byte BPM = 200;
+const char song[]={64,8,64,8,64,4};
+/*
+const char song[] = {	
+  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+  60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
+  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+  60,4,60,4,62,4,64,4,		62,-4,60,8,60,2,
+  62,4,62,4,64,4,60,4,		62,4,64,8,65,8,64,4,60,4,
+  62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
+  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+  60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};*/
+int period, j;
+unsigned int timeUp, beat;
+byte statePin = LOW;
+const float TEMPO_SECONDS = 60.0 / BPM; 
+const unsigned int MAXCOUNT = sizeof(song) / 2;
 
 //Measurements
 boolean rain=false;
@@ -129,6 +150,16 @@ void setup(){
 
   //Alarm
   pinMode(alarmPin,INPUT);
+  
+  //Speaker
+  pinMode(ledPin, OUTPUT); 
+  pinMode(speakerOut, OUTPUT);
+  for (j = 128; j--;)
+    timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
+  playSong();
+  
+  //Microphone
+  testMic();
 
 
 }
@@ -476,10 +507,42 @@ uint8_t getButtonState()
 }
 
 
+void playSong(){
+  digitalWrite(speakerOut, LOW);     
+  for (beat = 0; beat < MAXCOUNT; beat++) {
+    statePin = !statePin;
+    digitalWrite(ledPin, statePin);
 
+    j = song[beat * 2];
+    timeUp = (j < 0) ? 0 : timeUpDown[j];
 
+    period = (timeUp ? (1000000 / timeUp) / 2 : 250) * TEMPO_SECONDS
+      * 4 / song[beat * 2 + 1];
+    if (period < 0)
+      period = period * -3 / 2;
+    for (j = 0; j < period; j++) {
+      digitalWrite(speakerOut, timeUp ? HIGH : LOW);
+      delayMicroseconds(timeUp ? timeUp : 2000);
+      digitalWrite(speakerOut, LOW);
+      delayMicroseconds(timeUp ? timeUp : 2000);
+    }
+    delay(50);
+  }
+  digitalWrite(speakerOut, LOW);
+  //delay(1000);
+  
+}
 
-
+void testMic(){
+  
+  // read the input on analog pin 0:
+  int micro = analogRead(microphone);
+  // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
+  float voltage = micro * (5.0 / 1023.0);
+  // print out the value you read:
+  Serial.println(voltage);
+  
+}
 
 
 
