@@ -173,7 +173,7 @@ void setup(){
 
   //Dust Sensor
   pinMode(ledPowerPin,OUTPUT);
-  
+
   //Alarm
   pinMode(alarmPin,INPUT);
   oldTest = digitalRead(alarmPin);
@@ -286,12 +286,22 @@ void takeMeasurements(){
 void determineAlertMode(){
 
   //TODO Build working switch
-  
+
   int magnetSensor = digitalRead(alarmPin);
   if (magnetSensor!=oldTest){
     Serial.println("Alarm mode changed");
     oldTest=magnetSensor;
     alarm = !alarm;
+    if (alarm==true){
+      SeeedOled.clearDisplay();
+      SeeedOled.putString("Alarm ON");
+    } 
+    else {
+      SeeedOled.clearDisplay();
+      SeeedOled.putString("Alarm OFF");
+    }
+
+
   }
   delay(200);
 
@@ -581,5 +591,6 @@ void getDust(){
   digitalWrite(ledPowerPin,HIGH); // turn the LED off
   delayMicroseconds(offTime);
 }
+
 
 
