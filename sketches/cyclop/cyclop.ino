@@ -14,11 +14,11 @@ This is the main cyclop application
 //PINs
 int ledPin = 13;
 const int WaterPin=42; //Water sensor
-int xPin = 2; //MMA7361L Three Axis Accelerometer
-int yPin = 3;
-int zPin = 4; 
-int selPin = 6;
-int sleepPin = 5;
+int xPin = 25; //MMA7361L Three Axis Accelerometer
+int yPin = 23;
+int zPin = 22; 
+int selPin = 27;
+int sleepPin = 26;
 int rxPin = 0; //GPS
 int txPin = 1;  
 #define DHTPIN 24 //DHT
@@ -28,11 +28,14 @@ int LEDpin=38; //Button
 int p51=39;
 int p52=41;
 int p53=40;
-int no_pin=4;
-int co_pin=5;
+int no_pin=13;
+int co_pin=14;
 int alarmPin=48;
 const byte speakerOut = 44; //Speaker
 const char microphone = A10; //Microphone
+char dustPin=A15; //Dust Sensor
+int ledPowerPin=48;
+
 
 //Variables
 boolean alarm=false; //True if alarm is armed
@@ -59,22 +62,26 @@ int ledLevel = 255;
 int onstatus = 0;
 unsigned int timeUpDown[128]; //Speaker
 const byte BPM = 200;
-const char song[]={64,8,64,8,64,4};
+const char song[]={
+  64,8,64,8,64,4};
 /*
 const char song[] = {	
-  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
-  60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
-  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
-  60,4,60,4,62,4,64,4,		62,-4,60,8,60,2,
-  62,4,62,4,64,4,60,4,		62,4,64,8,65,8,64,4,60,4,
-  62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
-  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
-  60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};*/
+ 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
+ 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4,		62,-4,60,8,60,2,
+ 62,4,62,4,64,4,60,4,		62,4,64,8,65,8,64,4,60,4,
+ 62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
+ 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};*/
 int period, j;
 unsigned int timeUp, beat;
 byte statePin = LOW;
 const float TEMPO_SECONDS = 60.0 / BPM; 
 const unsigned int MAXCOUNT = sizeof(song) / 2;
+int delayTime=280;
+int delayTime2=40;
+float offTime=9680;
 
 //Measurements
 boolean rain=false;
@@ -86,6 +93,7 @@ double lon;
 float temperature;
 float humidity;
 int secretKey=986743;
+int dustVal;
 
 /*
 Main methods
@@ -150,17 +158,19 @@ void setup(){
 
   //Alarm
   pinMode(alarmPin,INPUT);
-  
+
   //Speaker
   pinMode(ledPin, OUTPUT); 
   pinMode(speakerOut, OUTPUT);
   for (j = 128; j--;)
     timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
   playSong();
-  
+
   //Microphone
   testMic();
 
+  //Dust Sensor
+  pinMode(ledPowerPin,OUTPUT);
 
 }
 
@@ -250,6 +260,11 @@ void takeMeasurements(){
   Serial.print(" g: ");
   Serial.print(gValue);
 
+  //Dust;
+  getDust();
+  Serial.print(" du: ");
+  Serial.print(dustVal);
+
   //DHT
   humidity = dht.readHumidity();
   Serial.print(" hum: ");
@@ -314,7 +329,7 @@ void getPosition(){
   if (byteGPS == -1) 
   {           // See if the port is empty yet
     delay(100);
-   //Serial.println("here"); 
+    //Serial.println("here"); 
   } 
   else 
   {
@@ -530,19 +545,27 @@ void playSong(){
   }
   digitalWrite(speakerOut, LOW);
   //delay(1000);
-  
+
 }
 
 void testMic(){
-  
+
   // read the input on analog pin 0:
   int micro = analogRead(microphone);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   float voltage = micro * (5.0 / 1023.0);
   // print out the value you read:
   Serial.println(voltage);
-  
+
 }
 
+void getDust(){
+  digitalWrite(ledPowerPin,LOW); // power on the LED
+  delayMicroseconds(delayTime);
+  dustVal=analogRead(dustPin); // read the dust value via pin 5 on the sensor
+  delayMicroseconds(delayTime2);
+  digitalWrite(ledPowerPin,HIGH); // turn the LED off
+  delayMicroseconds(offTime);
+}
 
 
