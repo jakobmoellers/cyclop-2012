@@ -23,6 +23,8 @@ void setup()
   {       // Initialize a buffer for received data
     linea[i]=' ';
   }   
+  
+  delay(5000);
 
 }
 
@@ -37,17 +39,20 @@ String return_gps_pos()
 
 void loop()
 {
+  
   digitalWrite(ledPin, HIGH);
   byteGPS=Serial.read();         // Read a byte of the serial port
   if (byteGPS == -1) 
   {           // See if the port is empty yet
-    delay(100); 
+    delay(100);
+   //Serial.println("here"); 
   } 
   else 
   {
+    //delay(1000);
     linea[conta]=byteGPS;        // If there is serial port data, it is put in the buffer
     conta++;                      
-    Serial.write(byteGPS); 
+    //Serial.write(byteGPS); 
     if (byteGPS==13)
     {            // If the received byte is = to 13, end of transmission
       digitalWrite(ledPin, LOW); 
