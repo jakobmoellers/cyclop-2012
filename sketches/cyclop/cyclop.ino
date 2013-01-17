@@ -30,7 +30,7 @@ int p52=41;
 int p53=40;
 int no_pin=13;
 int co_pin=14;
-int alarmPin=48;
+int alarmPin=49;
 const byte speakerOut = 44; //Speaker
 const char microphone = A10; //Microphone
 char dustPin=A15; //Dust Sensor
@@ -82,6 +82,8 @@ const unsigned int MAXCOUNT = sizeof(song) / 2;
 int delayTime=280;
 int delayTime2=40;
 float offTime=9680;
+int oldTest;
+int magnetSensor;
 
 //Measurements
 boolean rain=false;
@@ -171,6 +173,11 @@ void setup(){
 
   //Dust Sensor
   pinMode(ledPowerPin,OUTPUT);
+  
+  //Alarm
+  pinMode(alarmPin,INPUT);
+  oldTest = digitalRead(alarmPin);
+  magnetSensor= oldTest;
 
 }
 
@@ -192,7 +199,6 @@ void loop(){
   Serial.print(" lon: ");
   Serial.print(lon);
 
-  //TODO Determine whether in alarm mode or standard mode
   determineAlertMode();
 
   if(alarm==true){
@@ -280,6 +286,14 @@ void takeMeasurements(){
 void determineAlertMode(){
 
   //TODO Build working switch
+  
+  int magnetSensor = digitalRead(alarmPin);
+  if (magnetSensor!=oldTest){
+    Serial.println("Alarm mode changed");
+    oldTest=magnetSensor;
+    alarm = !alarm;
+  }
+  delay(200);
 
   /*int alarmInput = digitalRead(alarmPin);
    if (alarmInput==0){
