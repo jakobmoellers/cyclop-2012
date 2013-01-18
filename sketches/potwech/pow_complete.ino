@@ -48,7 +48,7 @@ int batteryValue = 0;
 // intervalls in seconds:
 long sampleInterval = 5; // intervall for sampling raw data
 long measureInterval = 10; // intervall for averaging the raw data
-long uploadInterval = 30; // intervall for uploading saved averged data and saved events
+long uploadInterval = 20; // intervall for uploading saved averged data and saved events
 
 int time; //unixtime
 DateTime timeOld = 0; // last Sampling was made
@@ -59,11 +59,11 @@ DateTime lastUpload; // last Upload was made
 float temperature = 0; // current temperaure value
 float humidity = 0; // current humidity value
 int light = 0; // current light value
-int cellid;
 double accData[3];
 boolean opened= true;
 boolean crashed = false;
 boolean connectOk;
+boolean serverResponded;
 
 //sum variables for averaging function:
 float sumTemp = 0;
@@ -198,8 +198,9 @@ void loop()
   
   if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //sampling every 1 seconds (according to intervall variable)
   {
+    loopCounter++;
     crashed = false; // is that correct ?
-    Serial.println("S A M P L I N G");
+    Serial.println("S A M P L E  N R. " + String(loopCounter) + ",  T I M E: " + String(millis()/1000) + " S E C");
     time = RTC.now();
   
     //read the sensor values over here (change the following lines):
@@ -209,7 +210,6 @@ void loop()
     // add measured values to the sum variables for computing the average
     sumTemp += temperature;
     sumHumi += humidity;
-    loopCounter++;
     
     // time for new Measurement? (every 10seconds)
     if (DiffBiggerOrEqual(time, lastMeasurement, measureInterval))
@@ -262,6 +262,7 @@ void loop()
       {
         Serial.println("U P L O A D  D A T A");
         if(getSignalStatus()=="attached" && IsIpAvailable()){
+            Serial.println("Attached and connected.");
             if (SD.exists("logfile.txt")){
               delay(2000);
               TcpPost(1);
@@ -273,17 +274,20 @@ void loop()
             if (SD.exists("crashed.txt")){
               delay(2000);
               TcpPost(3);
-            }        
-        }
-        else if(getSignalStatus()=="detached" || !IsIpAvailable()){
-          Reconnect();
+            }
         }
         else if(getSignalStatus()=="deactivated"){
+           Serial.println("GPRS Shield is offline...restarting.");
            RestartShield();
            Reconnect();
+        }
+        else if(getSignalStatus()=="detached" || !IsIpAvailable()){
+          Serial.println("Detached from GPRS or not connected.");
+          Reconnect();
         }     
-        lastUpload = time; // update time for last Upload
-       }
+        lastUpload = RTC.now(); // update time for last Upload
+        lastMeasurement = RTC.now();
+     }
     }
     timeOld = time; // update time for last sampling
   }
@@ -361,10 +365,6 @@ void GetMccMncCid()
   mcc = "";
   mnc = "";
   cid = "";
-  
-  mySerial.println("AT+CENG=1");
-  delay(1000);
-  ShowSerialData();
 
   //Informationen für Cell ID etc abrufen
   mySerial.println("AT+CENG?");
@@ -383,6 +383,9 @@ void GetMccMncCid()
       kommaZaehler++;
     }
   }
+  if(mcc.length()==0) mcc = "0";
+  if(mnc.length()==0) mnc = "0";
+  if(cid.length()==0) cid = "0";
   Serial.println("mcc:" + mcc + " mnc:"+ mnc + " cell-ID:" + cid);
   delay(500);
 }
@@ -406,6 +409,7 @@ void GetLac(){
     }
   }
   Serial.println("LAC: " + lac);
+  if(lac.length()==0 || lac==" ") lac = "0";
   delay(500);
 }
 
@@ -421,112 +425,135 @@ void PowerOnOff()
 }
 
 void TcpPost(int postOption){
-        //TODO: Include case of no connection
-        String test;
-        unsigned long retry = 0;
-        connectOk = false;
-        
-        delay(500);
-        
-        mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
-        //start up connection
-        delay(1000);
-        //wait for the correct response "CONNECT OK"; return after 20 retries
-        while (!connectOk){
-          delay(100);
-          if(retry==200){ 
-            Serial.println("Upload canceled after 20 seconds.");
-            mySerial.println("AT+CIPCLOSE");//close the TCP connection
-            delay(2000);
-            ShowSerialData();            
-            return;
-          }
-          WaitForConnectOk();
-          retry++;
-        }
-        Serial.println("Finished in retry number " + String(retry));
-        delay(2000);
 
-        mySerial.println("AT+CIPSEND");//wait for '>' 
-        delay(4000); //check if 'CONNECT OK' 
-        ShowSerialData();
-          delay(2000);
-       
-       //set http headder
-       if(postOption==1)
-         mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
-       else if(postOption==2)
-         mySerial.println("POST /rest/index.php/postLight HTTP/1.1 ");
-       else if(postOption==3)
-         mySerial.println("POST /rest/index.php/postShock HTTP/1.1 ");
-       delay(100);
-       ShowSerialData();
+  String serverResponse = "";
+  unsigned long retry = 0;
+  connectOk = false;
+  serverResponded = false;
+
+  delay(500);
+  
+  mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
+  //start up connection
+  delay(1000);
+  //wait for the correct response "CONNECT OK"; return after 20 retries
+  while (!connectOk){
+    delay(100);
+    if(retry==200){ 
+      Serial.println("Upload canceled after 20 seconds.");
+      mySerial.println("AT+CIPCLOSE");//close the TCP connection
+      delay(2000);
+      ShowSerialData();            
+      return;
+    }
+    WaitForConnectOk();
+    retry++;
+  }
+  Serial.println("Correct answer after retry number " + String(retry));
+  delay(2000);
+  
+  mySerial.println("AT+CIPSEND");//wait for '>' 
+  delay(4000);
+  ShowSerialData();
+  delay(2000);
+ 
+  //set http headder
+  if(postOption==1)
+    mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
+  else if(postOption==2)
+    mySerial.println("POST /rest/index.php/postLight HTTP/1.1 ");
+  else if(postOption==3)
+    mySerial.println("POST /rest/index.php/postShock HTTP/1.1 ");
+  delay(100);
+  ShowSerialData();
+  
+  mySerial.println("Host: potwech.uni-muenster.de");
+  delay(100);
+  ShowSerialData();
+   
+  mySerial.println("Accept: application/json");
+  delay(100);
+  ShowSerialData();
+   
+   //open file and check length
+  if(postOption == 1)
+    dataFile = SD.open("logfile.txt");
+  else if(postOption==2)
+    dataFile = SD.open("opened.txt");
+  else if(postOption==3)
+    dataFile = SD.open("crashed.txt");
+   
+  mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
+  delay(100);
+  ShowSerialData();   
+   
+  mySerial.println("Content-Type: application/x-www-form-urlencoded");
+  delay(100);
+  ShowSerialData();
+   
+  mySerial.println();//do not delete. is part of the headder!
+  delay(100);
+  ShowSerialData();
+   
+  mySerial.print("data=");
+  delay(100);
+  ShowSerialData();
+  
+  if (dataFile) {
+  int i = 1;  
+  char in;
+  //Read SD File and send Data to Serial Port
+  while (dataFile.available() && i<dataFile.size()) {   
+      in = dataFile.read();
+      //if(in =='\n') in = ';'; // Replace line break in file with ';'
+      mySerial.write(in);
+      i++;
+    }
+    delay(500);
+    ShowSerialData();
     
-       mySerial.println("Host: potwech.uni-muenster.de");
-       delay(100);
-       ShowSerialData();
-       
-       mySerial.println("Accept: application/json");
-       delay(100);
-       ShowSerialData();
-       
-       //open file and check length
-       if(postOption == 1)
-         dataFile = SD.open("logfile.txt");
-       else if(postOption==2)
-         dataFile = SD.open("opened.txt");
-       else if(postOption==3)
-         dataFile = SD.open("crashed.txt");
-       
-       mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
-       delay(100);
-       ShowSerialData();   
-       
-       mySerial.println("Content-Type: application/x-www-form-urlencoded");
-       delay(100);
-       ShowSerialData();
-       
-       mySerial.println();//do not delete. is part of the headder!
-       delay(100);
-       ShowSerialData();
-       
-       mySerial.print("data=");
-       delay(100);
-       ShowSerialData();
-
-       if (dataFile) {
-          int i = 1;  
-          char in;
-          //Read SD File and send Data to Serial Port
-          while (dataFile.available() && i<dataFile.size()) {   
-              in = dataFile.read();
-              //if(in =='\n') in = ';'; // Replace line break in file with ';'
-              mySerial.write(in);
-              i++;
-            }
-            delay(500);
-            ShowSerialData();
-            
-            dataFile.close();
-            if(postOption==1)
-              SD.remove("logfile.txt");
-            else if(postOption==2)
-              SD.remove("opened.txt");
-            else if(postOption==3)
-              SD.remove("crashed.txt");              
-            Serial.println("Ready.");
-            //Serial.println(" finished!");
-          } else {
-            // if the file didn't open, print an error:
-            Serial.println("error opening ");
-          }
+    dataFile.close();            
+    Serial.println("Ready.");
+    //Serial.println(" finished!");
+  } else {
+    // if the file didn't open, print an error:
+    Serial.println("error opening ");
+  }
  
   delay(500);
   mySerial.println((char)26);//sending
   delay(5000);//waitting for reply, important! the time is base on the condition of internet 
-  mySerial.println();
-  ShowSerialData();
+  //mySerial.println();
+  retry = 0;
+  while (!serverResponded){
+  delay(100);
+    if(retry==300){ 
+      Serial.println("Server did not respond after 30 seconds.");
+      mySerial.println("AT+CIPCLOSE");//close the TCP connection
+      delay(2000);
+      ShowSerialData();            
+      return;
+    }
+  WaitForServerResponse();
+  retry++;
+  }
+  Serial.println("Correct answer after retry number " + String(retry));
+
+  if(postOption==1){
+    SD.remove("logfile.txt");
+    Serial.println("logfile.txt removed!");
+  }
+  else if(postOption==2){
+    SD.remove("opened.txt");
+    Serial.println("opened.txt removed!");
+  }
+  else if(postOption==3){
+    SD.remove("crashed.txt");
+    Serial.println("crashed.txt removed!");
+  }  
+
   delay(1000);
+  
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
   delay(2000);
   ShowSerialData();
@@ -595,7 +622,7 @@ void Reconnect(){
   mySerial.println("AT+CIPSHUT");//close the connection
   delay(200);
   ShowSerialData();   
-  delay(4000);
+  delay(3000);
   ConnectToGSM();
   Serial.println("..done.");  
 }
@@ -607,6 +634,18 @@ void WaitForConnectOk(){
     if(conTest.endsWith("CONNECT OK")){
       connectOk = true;
       Serial.println(conTest);
+      return;
+    }
+  }
+}
+
+void WaitForServerResponse(){
+  String response = ""; 
+  while (mySerial.available()!=0){
+    response += char(mySerial.read());
+    if(response.endsWith("200 OK")){
+      serverResponded = true;
+      Serial.println(response);
       return;
     }
   }
