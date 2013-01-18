@@ -47,7 +47,7 @@ File dataFile;
 int batteryValue = 0;
 // intervalls in seconds:
 long sampleInterval = 5; // intervall for sampling raw data
-long measureInterval = 6; // intervall for averaging the raw data
+long measureInterval = 10; // intervall for averaging the raw data
 long uploadInterval = 30; // intervall for uploading saved averged data and saved events
 
 int time; //unixtime
@@ -61,8 +61,9 @@ float humidity = 0; // current humidity value
 int light = 0; // current light value
 int cellid;
 double accData[3];
-boolean opened= false;
+boolean opened= true;
 boolean crashed = false;
+boolean connectOk;
 
 //sum variables for averaging function:
 float sumTemp = 0;
@@ -152,6 +153,13 @@ void loop()
     blub += String(light);
     blub += ";";
     printlnSD(blub, 2);
+    
+    File tempFile = SD.open("logtemp.txt", FILE_WRITE);
+    if(tempFile){
+      tempFile.println(blub);
+      tempFile.close();
+    }
+  
   }
   if ((opened) && (light<160))
   {
@@ -181,6 +189,11 @@ void loop()
     blub += String((int)g);
     blub += ";";
     printlnSD(blub, 3);
+    File tempFile = SD.open("crashtemp.txt", FILE_WRITE);
+    if(tempFile){
+      tempFile.println(blub);
+      tempFile.close();
+  }
   }
   
   if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //sampling every 1 seconds (according to intervall variable)
@@ -214,7 +227,9 @@ void loop()
       sumTemp = 0;
       sumHumi = 0;
       
-      batteryValue = map(analogRead(A4), 0, 1023, 0, 100);
+      batteryValue = analogRead(A4);
+      int mapVal = map(batteryValue, 1, 1024, 1, 500);//convert to voltage
+      int batVal = map(mapVal, 300, 400, 1, 100);//assuming that full charged battery is at 4V and minimum 3V
       
       String blub = "123"; // TODO: Change device_id
       blub += ";";
@@ -232,21 +247,25 @@ void loop()
       blub += ";";
       blub += avgHum;
       blub += ";";
-      blub += batteryValue;
+      blub += batVal;
       blub += ";";
       Serial.println(blub);
       printlnSD(blub, 1);
       
+      File tempFile = SD.open("logtemp.txt", FILE_WRITE);
+      if(tempFile){
+        tempFile.println(blub);
+        tempFile.close();
+      }
+      
       if (DiffBiggerOrEqual(time, lastUpload, uploadInterval))
       {
         Serial.println("U P L O A D  D A T A");
-          // If last data transmission failed, try to connect and to send again
-        //if (!connectionStatus)
-        //  ConnectToGsm());
-        //if (IsConnected()){
-            if (SD.exists("logfile.txt"))
+        if(getSignalStatus()=="attached" && IsIpAvailable()){
+            if (SD.exists("logfile.txt")){
               delay(2000);
               TcpPost(1);
+            }
             if (SD.exists("opened.txt")){
               delay(2000);  
               TcpPost(2);
@@ -254,11 +273,15 @@ void loop()
             if (SD.exists("crashed.txt")){
               delay(2000);
               TcpPost(3);
-            }            
-         //}
-         //else{
-         //  connectionStatus = false;
-         //}  
+            }        
+        }
+        else if(getSignalStatus()=="detached" || !IsIpAvailable()){
+          Reconnect();
+        }
+        else if(getSignalStatus()=="deactivated"){
+           RestartShield();
+           Reconnect();
+        }     
         lastUpload = time; // update time for last Upload
        }
     }
@@ -399,14 +422,29 @@ void PowerOnOff()
 
 void TcpPost(int postOption){
         //TODO: Include case of no connection
-        byte in;
+        String test;
+        unsigned long retry = 0;
+        connectOk = false;
         
         delay(500);
         
         mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
         //start up connection
-        delay(6000);
-        ShowSerialData(); //wait for "Connect OK"
+        delay(1000);
+        //wait for the correct response "CONNECT OK"; return after 20 retries
+        while (!connectOk){
+          delay(100);
+          if(retry==200){ 
+            Serial.println("Upload canceled after 20 seconds.");
+            mySerial.println("AT+CIPCLOSE");//close the TCP connection
+            delay(2000);
+            ShowSerialData();            
+            return;
+          }
+          WaitForConnectOk();
+          retry++;
+        }
+        Serial.println("Finished in retry number " + String(retry));
         delay(2000);
 
         mySerial.println("AT+CIPSEND");//wait for '>' 
@@ -470,7 +508,6 @@ void TcpPost(int postOption){
             ShowSerialData();
             
             dataFile.close();
-//            SD.remove(nameChar);
             if(postOption==1)
               SD.remove("logfile.txt");
             else if(postOption==2)
@@ -489,12 +526,13 @@ void TcpPost(int postOption){
   delay(5000);//waitting for reply, important! the time is base on the condition of internet 
   mySerial.println();
   ShowSerialData();
-  
   delay(1000);
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
-  delay(1000);
+  delay(2000);
   ShowSerialData();
-  delay(500);  
+  delay(500); 
+  
+  Serial.println("Upload Complete!");
 }
 
 //indicates state of GPRS connection
@@ -509,9 +547,9 @@ String getSignalStatus(){
        signalStatus += char(mySerial.read());
      }
    }
-   if(signalStatus=="1")signalStatus = "attached";
-   else if(signalStatus=="0")signalStatus = "detached";
-   else signalStatus = "deactivated";
+   if(signalStatus=="1")signalStatus = "attached"; //ready to connect to APN
+   else if(signalStatus=="0")signalStatus = "detached";//no signal
+   else signalStatus = "deactivated";//shield deactivated
    return signalStatus;
 }
 
@@ -544,29 +582,44 @@ void RestartShield(){
     }
 }
 
-void WaitForConnectOk()
-{
-  String data = "";
-  while(mySerial.available()!=0){
-    data += char(mySerial.read());
-  }
-    delay(500);
-    Serial.println("------");
-    if (data.endsWith("CONNECT OK")) Serial.println("true");
-    else Serial.println("false");
-}
-
 void Reconnect(){
   int retries = 0;
   String sStatus = getSignalStatus();
   while(sStatus=="detached"){
     Serial.println("No Signal. Retrying..");
-    if(retries>10)return;
+    if(retries>20)return;
     retries++;    
     delay(1000);
     sStatus = getSignalStatus();
   }
-  delay(3000);
+  mySerial.println("AT+CIPSHUT");//close the connection
+  delay(200);
+  ShowSerialData();   
+  delay(4000);
   ConnectToGSM();
   Serial.println("..done.");  
+}
+
+void WaitForConnectOk(){
+  String conTest = ""; 
+  while (mySerial.available()!=0){
+    conTest += char(mySerial.read());
+    if(conTest.endsWith("CONNECT OK")){
+      connectOk = true;
+      Serial.println(conTest);
+      return;
+    }
+  }
+}
+
+boolean IsIpAvailable(){
+  int pointCounter = 0;
+  mySerial.println("AT+CIFSR");
+  //get local IP adress (as response)
+  delay(1000);
+    while (mySerial.available()!=0){
+    if(char(mySerial.read())=='.')pointCounter++;
+    if(pointCounter==3) return true; //IP: XXX.XXX.XXX.XXX
+  }
+  return false;
 }
