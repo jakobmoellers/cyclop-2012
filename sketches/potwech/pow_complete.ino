@@ -4,7 +4,8 @@
 3. Saving to SD
 4. Tcp send to server ~ 18sec
 
--> AT+CENG=1 has to be called once on every new device!!
+//should acceleration and accelerometer also be averaged? -> no
+//or maybe different kind of sample handling for event sensors. -> yes
  
 */
 
@@ -15,36 +16,25 @@
 #include <LSM303.h>
 #include <SoftwareSerial.h>
 
+#define DHTPIN 2 // what pin we're connected to
+#define DHTTYPE DHT22 // DHT 22
+DHT dht(DHTPIN, DHTTYPE);
+LSM303 accelerometer;
+RTC_DS1307 RTC;
 SoftwareSerial mySerial(10, 11); //Initialize GPRS-Shield
+
+File dataFile;
+
 // Network Variables needed for Position Information 
 String mcc; //Mobile Country Code
 String mnc; //Mobile Network Code
 String lac; //Location Area Code
 String cid; //Cell ID
-
-
 String connectionStatus;
 
-LSM303 accelerometer;
-
-#define DHTPIN 2 // what pin we're connected to
-
-RTC_DS1307 RTC;
-// Uncomment whatever type you're using!
-//#define DHTTYPE DHT11 // DHT 11
-#define DHTTYPE DHT22 // DHT 22
-//#define DHTTYPE DHT21 // DHT 21 (AM2301)
-
-// Connect pin 1 (on the left) of the sensor to +5V
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 4 (on the right) of the sensor to GROUND
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
-
-DHT dht(DHTPIN, DHTTYPE);
-
-File dataFile;
-
+int batteryPin = A4;
 int batteryValue = 0;
+
 // intervalls in seconds:
 long sampleInterval = 5; // intervall for sampling raw data
 long measureInterval = 10; // intervall for averaging the raw data
@@ -54,6 +44,9 @@ int time; //unixtime
 DateTime timeOld = 0; // last Sampling was made
 DateTime lastMeasurement; // last Measurement was made
 DateTime lastUpload; // last Upload was made
+DateTime crashTime;
+DateTime measureTime;
+DateTime openTime;
 
 //sensor sample variables:
 float temperature = 0; // current temperaure value
@@ -68,13 +61,11 @@ boolean serverResponded;
 //sum variables for averaging function:
 float sumTemp = 0;
 float sumHumi = 0;
+
 //avg variables for temperature and humidity
 int avgTemp = 0;
 int avgHum = 0;
 int loopCounter = 0; // number of measurements for computing the averages
-
-//should acceleration and accelerometer also be averaged? -> no
-//or maybe different kind of sample handling for event sensors. -> yes
 
 //Accelerometerstuff
 double g;
@@ -93,7 +84,8 @@ void setup()
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
      // following line sets the RTC to the date & time this sketch was compiled
-     RTC.adjust(DateTime(__DATE__, __TIME__));
+     //RTC.adjust(DateTime(__DATE__, __TIME__));
+     Serial.println("RTC needs to be adjusted.");
   }
   Serial.print("Let's start");
   pinMode(53, OUTPUT);
@@ -105,10 +97,10 @@ void setup()
   Serial.println("Removing existing files.");
   if (SD.exists("logfile.txt"))
     SD.remove("logfile.txt");
-  //if (SD.exists("opened.txt"))
-    //SD.remove("opened.txt");
-  //if (SD.exists("crashed.txt")) 
-    //SD.remove("crashed.txt");
+  if (SD.exists("opened.txt"))
+    SD.remove("opened.txt");
+  if (SD.exists("crashed.txt")) 
+    SD.remove("crashed.txt");
   Serial.println("Powering on GPRS Shield.");  
   RestartShield();
   delay(5000); // Waiting for GSM Signal
@@ -135,12 +127,13 @@ void loop()
   DateTime time = RTC.now();
   // Lightvalue Threshold reached? / parcel opened?
   if ((light > 200) && (!opened)) {
+    openTime = RTC.now();
     opened = true;
     Serial.println("EVENT OCCURED: Parcel opened!");
     // TODO: SD CARD Schreiben
     String blub = "123"; // TODO: Change device_id
     blub += ";";
-    blub += time.unixtime();
+    blub += openTime.unixtime();
     blub += ";";
     blub += cid;
     blub += ";";
@@ -169,13 +162,13 @@ void loop()
   g = sqrt(accData[0]*accData[0]+accData[1]*accData[1]+accData[2]*accData[2])/1000;
   if ((go!=g) && (g>2.5) && (!crashed))
   {
+    crashTime = RTC.now();
     crashed = true;
     go=g;
     Serial.println("EVENT OCCURED: Parcel crashed!");
-    // TODO: SD CARD Schreiben
     String blub = "123"; // TODO: Change device_id
     blub += ";";
-    blub += time.unixtime();
+    blub += crashTime.unixtime();
     blub += ";";
     blub += cid;
     blub += ";";
@@ -193,7 +186,7 @@ void loop()
     if(tempFile){
       tempFile.println(blub);
       tempFile.close();
-  }
+    }
   }
   
   if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //sampling every 1 seconds (according to intervall variable)
@@ -201,7 +194,7 @@ void loop()
     loopCounter++;
     crashed = false; // is that correct ?
     Serial.println("S A M P L E  N R. " + String(loopCounter) + ",  T I M E: " + String(millis()/1000) + " S E C");
-    time = RTC.now();
+    //time = RTC.now();
   
     //read the sensor values over here (change the following lines):
     humidity = dht.readHumidity();
@@ -227,13 +220,19 @@ void loop()
       sumTemp = 0;
       sumHumi = 0;
       
-      batteryValue = analogRead(A4);
-      int mapVal = map(batteryValue, 1, 1024, 1, 500);//convert to voltage
-      int batVal = map(mapVal, 300, 400, 1, 100);//assuming that full charged battery is at 4V and minimum 3V
+      batteryValue=analogRead(batteryPin);
+      //Serial.println(batteryValue);
+      int mapVal = map(batteryValue, 1, 1024, 1, 100)-2;//2% measurement inaccuracy
+      mapVal = map(mapVal,1, 100, 1, 500);//convert to voltage
+      int batVal = map(mapVal, 300, 400, 1, 100)-2;//assuming that full charged battery is at 4V and minimum 3V
+      if(batVal<1)batVal = 0;
+      else if(batVal>100)batVal = 100;
+      
+      measureTime = RTC.now();
       
       String blub = "123"; // TODO: Change device_id
       blub += ";";
-      blub += time.unixtime();
+      blub += measureTime.unixtime();
       blub += ";";
       blub += cid; 
       blub += ";";
@@ -279,9 +278,8 @@ void loop()
         else if(getSignalStatus()=="deactivated"){
            Serial.println("GPRS Shield is offline...restarting.");
            RestartShield();
-           Reconnect();
         }
-        else if(getSignalStatus()=="detached" || !IsIpAvailable()){
+        else if(!IsIpAvailable() || getSignalStatus()=="detached"){
           Serial.println("Detached from GPRS or not connected.");
           Reconnect();
         }     
@@ -449,7 +447,21 @@ void TcpPost(int postOption){
     WaitForConnectOk();
     retry++;
   }
-  Serial.println("Correct answer after retry number " + String(retry));
+//  String test;
+//       while (mySerial.available()!=0){
+//          test += char(mySerial.read());
+//          if(test.endsWith("CONNECT OK")){
+//            Serial.println(test);
+//            connectOk = true;
+//            break;
+//          }
+//       }
+//  if (!connectOk){
+//    Serial.println(test);
+//    return;
+//  }
+
+  //Serial.println("Correct answer after retry number " + String(retry));
   delay(2000);
   
   mySerial.println("AT+CIPSEND");//wait for '>' 
@@ -527,8 +539,8 @@ void TcpPost(int postOption){
   retry = 0;
   while (!serverResponded){
   delay(100);
-    if(retry==300){ 
-      Serial.println("Server did not respond after 30 seconds.");
+    if(retry==200){ 
+      Serial.println("Server did not respond after 20 seconds.");
       mySerial.println("AT+CIPCLOSE");//close the TCP connection
       delay(2000);
       ShowSerialData();            
