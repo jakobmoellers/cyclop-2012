@@ -3,9 +3,6 @@
 2. Averaging not less than all 10 mins. Time for getting location parameters is ~3sec
 3. Saving to SD
 4. Tcp send to server ~ 18sec
-
-//should acceleration and accelerometer also be averaged? -> no
-//or maybe different kind of sample handling for event sensors. -> yes
  
 */
 
@@ -16,25 +13,36 @@
 #include <LSM303.h>
 #include <SoftwareSerial.h>
 
-#define DHTPIN 2 // what pin we're connected to
-#define DHTTYPE DHT22 // DHT 22
-DHT dht(DHTPIN, DHTTYPE);
-LSM303 accelerometer;
-RTC_DS1307 RTC;
 SoftwareSerial mySerial(10, 11); //Initialize GPRS-Shield
-
-File dataFile;
-
 // Network Variables needed for Position Information 
 String mcc; //Mobile Country Code
 String mnc; //Mobile Network Code
 String lac; //Location Area Code
 String cid; //Cell ID
-String connectionStatus;
 
 int batteryPin = A4;
-int batteryValue = 0;
+String connectionStatus;
 
+LSM303 accelerometer;
+
+#define DHTPIN 2 // what pin we're connected to
+
+RTC_DS1307 RTC;
+// Uncomment whatever type you're using!
+//#define DHTTYPE DHT11 // DHT 11
+#define DHTTYPE DHT22 // DHT 22
+//#define DHTTYPE DHT21 // DHT 21 (AM2301)
+
+// Connect pin 1 (on the left) of the sensor to +5V
+// Connect pin 2 of the sensor to whatever your DHTPIN is
+// Connect pin 4 (on the right) of the sensor to GROUND
+// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
+
+DHT dht(DHTPIN, DHTTYPE);
+
+File dataFile;
+
+int batteryValue = 0;
 // intervalls in seconds:
 long sampleInterval = 5; // intervall for sampling raw data
 long measureInterval = 10; // intervall for averaging the raw data
@@ -61,11 +69,13 @@ boolean serverResponded;
 //sum variables for averaging function:
 float sumTemp = 0;
 float sumHumi = 0;
-
 //avg variables for temperature and humidity
 int avgTemp = 0;
 int avgHum = 0;
 int loopCounter = 0; // number of measurements for computing the averages
+
+//should acceleration and accelerometer also be averaged? -> no
+//or maybe different kind of sample handling for event sensors. -> yes
 
 //Accelerometerstuff
 double g;
@@ -97,10 +107,10 @@ void setup()
   Serial.println("Removing existing files.");
   if (SD.exists("logfile.txt"))
     SD.remove("logfile.txt");
-  if (SD.exists("opened.txt"))
-    SD.remove("opened.txt");
-  if (SD.exists("crashed.txt")) 
-    SD.remove("crashed.txt");
+  //if (SD.exists("opened.txt"))
+    //SD.remove("opened.txt");
+  //if (SD.exists("crashed.txt")) 
+    //SD.remove("crashed.txt");
   Serial.println("Powering on GPRS Shield.");  
   RestartShield();
   delay(5000); // Waiting for GSM Signal
@@ -539,7 +549,7 @@ void TcpPost(int postOption){
   retry = 0;
   while (!serverResponded){
   delay(100);
-    if(retry==200){ 
+    if(retry==300){ 
       Serial.println("Server did not respond after 20 seconds.");
       mySerial.println("AT+CIPCLOSE");//close the TCP connection
       delay(2000);
