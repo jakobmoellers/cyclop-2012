@@ -9,6 +9,7 @@ curl -i -H "Accept: application/json" -X POST -d 'mcc=262&mnc=02&lac=270&cellId=
 
 */
 //echo getLocationFromCell(262,02,753,270);
+//echo getLocationFromCell(0,0,0,0);
 
 
 

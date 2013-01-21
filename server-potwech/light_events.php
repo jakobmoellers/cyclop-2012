@@ -162,11 +162,13 @@ $parcel_id = $_GET['pid'];
 						var res='<p>Occurences when the package was opened:</p>';
 						res=res+'<table border="1">';
 						res=res+'<colgroup><col width="50"><col width="250"><col width="100"></colgroup>';
-						res=res+'<tr><td>Occurrence</td><td>Time of occurrence</td><td>Light intensity</td></tr>';
+						res=res+'<tr><td>Occurrence</td><td>Time of occurrence</td><td>Light intensity (<a href="http://de.wikipedia.org/wiki/Lux_(Einheit)"  target="_blank">Lux</a>)</td></tr>';
 						for (var i=0;i<json.features.length;i++){
 							//console.log(json.features[i].properties.light);
 							//console.log(json.features[i].geometry.coordinates[0]);
-							var timestamp = new Date(json.features[i].properties.time);
+							
+							//var time = ;
+							var timestamp = new Date((json.features[i].properties.time.substring(0, json.features[i].properties.time.indexOf("+"))).replace(/-/g, "/"));
 							//Ugly indexing...
 							res=res+'<tr>'+'<td>'+(i+1)+'</td>'+'<td>'+timestamp.toGMTString()+'</td>'+'<td>'+json.features[i].properties.light+'</td>'+'</tr>';
 							var marker = L.marker([json.features[i].geometry.coordinates[1], json.features[i].geometry.coordinates[0]]).addTo(map);
@@ -235,7 +237,7 @@ $parcel_id = $_GET['pid'];
 				  features = data["features"];
 			  
 				  for (var feature in features) {
-					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("."))).replace(/-/g, "/");
+					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("+"))).replace(/-/g, "/");
 					  date = Date.parse(dateString);
 					  for (var sensor in options["sensors"]) {
 						  ret[sensor].push([date, parseInt(features[feature]["properties"][options["sensors"][sensor]])]);

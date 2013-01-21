@@ -39,11 +39,9 @@ $app->get('/parcel_measurements/:id', function ($id) {
 	echo json_encode($json);
 });
 
-<<<<<<< HEAD
-=======
 //get all measurements of a parcel_process
 $app->get('/distinct_parcel_measurements/:id', function ($id) {
-    $result = query("select measurement_id,temp, humidity,time_of_measurement, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, battery from measurements where parcel_process = ".$id." order by lat,lon, time_of_measurement");
+    $result = query("select measurement_id,temp, humidity,time_of_measurement, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, battery from measurements where parcel_process = ".$id." order by lat,lon,time_of_measurement desc");
 	
 	$json = array();
 	$json['type'] = 'FeatureCollection';
@@ -78,7 +76,8 @@ $app->get('/distinct_parcel_measurements/:id', function ($id) {
 	echo json_encode($json);
 });
 
->>>>>>> Server Changes - final?
+
+
 
 //get all events of a parcel_process
 $app->get('/parcel_events/:id', function ($id) {
@@ -120,7 +119,7 @@ $app->get('/parcel_light-events/:id', function ($id) {
 			$point['type'] = 'Feature';
 			$point['properties'] = array();
 			$point['properties']['events_id'] = $row['events_id'];
-			$point['properties']['light']=$row['light'];
+			$point['properties']['light']= round($row['light'],2);
 			$point['properties']['time']=$row['time'];
 			//$point['properties']['accuracy'] = $row['location_accuracy'];
 			//$point['properties']['type'] = ($row['velocity']!=null ? 'auto' : 'manu');
@@ -297,7 +296,7 @@ $app->get('/parcel/:id', function ($id) {
 
 //get all measurements and events of a parcel_process
 $app->get('/latest_parcel/:id', function ($id) {
-    $result_measurements = query("select measurement_id,temp, humidity,time_of_measurement, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where parcel_process = ".$id." order by time_of_measurement desc limit 1");
+    $result_measurements = query("select measurement_id,temp, humidity,time_of_measurement, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, battery from measurements where parcel_process = ".$id." order by time_of_measurement desc limit 1");
 	
 	$json = array();
 	$json['type'] = 'FeatureCollection';
@@ -310,6 +309,7 @@ $app->get('/latest_parcel/:id', function ($id) {
 			$point['properties']['measurement_id'] = $row['measurement_id'];
 			$point['properties']['temperature'] = $row['temp'];
 			$point['properties']['humidity'] = $row['humidity'];
+			$point['properties']['battery'] = $row['battery'];
 			$point['properties']['time'] = $row['time_of_measurement'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -440,18 +440,10 @@ $app->post('/initParcel', function () use ($app) {
 });
 
 /*
-<<<<<<< HEAD
-	curl -i -H "Accept: application/json" -X POST -d 'uid=2&mobile_device=123&parcel_number=555' http://potwech.uni-muenster.de/rest/index.php/endParcel  
-*/
-
-$app->post('/endParcel', function () use ($app) {
-	$uid = utf8_encode($app->request()->post('uid'));
-=======
 	curl -i -H "Accept: application/json" -X POST -d 'mobile_device=123&parcel_number=555' http://potwech.uni-muenster.de/rest/index.php/endParcel  
 */
 
 $app->post('/endParcel', function () use ($app) {
->>>>>>> Server Changes - final?
 	$mobile_device = utf8_encode($app->request()->post('mobile_device'));
 	$parcel_number = utf8_encode($app->request()->post('parcel_number'));
 		
@@ -476,11 +468,10 @@ $app->post('/testPost', function () use ($app) {
 });
 
 /*
-<<<<<<< HEAD
-curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;02;010E;22;50;70;123;1357660358;02F1;262;02;010E;23;51;71' http://potwech.uni-muenster.de/rest/index.php/postMeasurement
-=======
 curl -i -H "Accept: application/json" -X POST -d 'data=123;1358260818;02f1;262;02;010E;23;27;75;123;1358250823;02f1;262;02;010E;23;27;75;123;1358260818;02f1;262;02;010E;23;27;75;123;1358250823;02f1;262;02;010E;23;27;75' http://potwech.uni-muenster.de/rest/index.php/postMeasurement
->>>>>>> Server Changes - final?
+*/
+/*
+curl -i -H "Accept: application/json" -X POST -d 'data=123;1358260818;0;0;0;0;23;27;75' http://potwech.uni-muenster.de/rest/index.php/postMeasurement
 */
 $app->post('/postMeasurement', function() use ($app){
 	require('Location.php');
@@ -494,51 +485,6 @@ $app->post('/postMeasurement', function() use ($app){
 		$parsed = explode(";", $data);
 		
 		if((sizeof($parsed) % 9)==0){
-<<<<<<< HEAD
-			for ($i=0;$i<sizeof($parsed);$i=$i+9){
-			$deviceId = $parsed[$i];
-			$timestamp = gmdate("Y-m-d H:i:s ",$parsed[$i+1]);
-			$cellId = hexToStr($parsed[$i+2]);
-			$mcc = $parsed[$i+3];
-			$mnc = $parsed[$i+4];
-			$lac = hexToStr($parsed[$i+5]);
-			$temperature = $parsed[$i+6];
-			$humidity = $parsed[$i+7];
-			$battery = $parsed[$i+8];
-			
-			$parcel_process = null;
-			$result = query('select * from current_parcel_processes where mobile_device_id = '.$deviceId.' limit 1');
-			if(pg_num_rows($result) > 0){
-				while($row = pg_fetch_assoc($result)){
-					$parcel_process = $row['parcel_process_id'];
-				}
-			}
-			
-			
-			if($parcel_process != null){
-				//Convert Cell-ID to LatLon
-				//$mcc, $mnc, $cellId, $lac
-				
-				//$location = getLocationFromCell(262,02,753,270);
-				$lat = 0;
-				$lon = 0;
-				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
-				$location = json_decode($location, true);
-				$lat = $location['coordinate']['latitude'];
-				$lon = $location['coordinate']['longitude'];
-				
-				if($lat != 0 && $lon !=0){
-				//Insert into database
-					query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), '.$temperature.', '.$humidity.', \''.$timestamp.'\')');
-				}else{
-					echo 'No location information available';
-				}
-				//echo $lat.'  '.$lon;
-		
-			}else{
-				echo 'No parcel process';
-			}	}
-=======
 			$oldLac = null;
 			$oldMnc = null;
 			$oldMcc = null;
@@ -555,8 +501,8 @@ $app->post('/postMeasurement', function() use ($app){
 				$lac = hexToStr($parsed[$i+5]);
 				$temperature = $parsed[$i+6];
 				$humidity = $parsed[$i+7];
-				//$battery = 75;
-				$battery = str_replace("\\r", '',$parsed[$i+8]);
+				$battery = (double)str_replace("\\r", '',$parsed[$i+8]);
+				if($battery < 0 || $battery > 100) {$battery = 0;}
 				
 				$parcel_process = null;
 				$result = query('select * from current_parcel_processes where mobile_device_id = '.$deviceId.' limit 1');
@@ -573,26 +519,41 @@ $app->post('/postMeasurement', function() use ($app){
 					
 					//$location = getLocationFromCell(262,02,753,270);
 					if(isset($mcc) && isset($mnc) && isset($cellId) && isset($lac)){
-					
-						if($mcc != $oldMcc or $mnc != $oldMnc or $lac != $oldLac or $oldCellId != $cellId){
-							$oldLac = $lac;
-							$oldMnc = $mnc;
-							$oldMcc = $mcc;
-							$oldCellId = $cellId;
+						
+						if($mcc == 0 && $mnc ==0){
+							$previousLoc = query('select st_x(geom) as lat, st_y(geom) as lon from measurements where parcel_process = '.$parcel_process.' order by time_of_measurement desc limit 1');
+							while($row = pg_fetch_assoc($previousLoc)){
+								$lat = $row['lat'];
+								$lon = $row['lon'];		
+								error_log("no cell => previous location");
+							}
 							
-							$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
-							$location = json_decode($location, true);
-							$lat = $location['coordinate']['latitude'];
-							$lon = $location['coordinate']['longitude'];
-							error_log("new location",0);
 						}else{
-						error_log("old location",0);
+							if($mcc != $oldMcc or $mnc != $oldMnc or $lac != $oldLac or $oldCellId != $cellId){
+								$oldLac = $lac;
+								$oldMnc = $mnc;
+								$oldMcc = $mcc;
+								$oldCellId = $cellId;
+								
+								$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
+								$location = json_decode($location, true);
+								$lat = $location['coordinate']['latitude'];
+								$lon = $location['coordinate']['longitude'];
+								error_log("new location",0);
+							}else{
+							error_log("old location",0);
+							}
 						}
+					}else{
+						error_log("cellid missing",0);
 					}
 					
 					if(isset($lat) && isset($lon)){
 					//Insert into database
 						query('insert into measurements(parcel_process, geom, temp, humidity, battery, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), '.$temperature.', '.$humidity.', '.$battery.', \''.$timestamp.'\')');
+						
+						$notificationArray = array("id" => $deviceId, "sensors" => array("humidity" => $humidity, "temperature" => $temperature));
+						checkNotifications($parcel_process,$notificationArray);
 					}else{
 						echo 'No location information available';
 						error_log("Post no location information",0);
@@ -604,7 +565,6 @@ $app->post('/postMeasurement', function() use ($app){
 					error_log("No parcel process",0);
 				}	
 			}
->>>>>>> Server Changes - final?
 		}else{
 			echo 'Incomplete data';
 			error_log("Incomplete data",0);
@@ -625,6 +585,7 @@ curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;0
 */
 $app->post('/postLight', function() use ($app){
 	require('Location.php');
+	require('notifications.php');
 	
 	$data = $app -> request()->post('data');
 	error_log("Post Light Data: ".$data,0);
@@ -642,6 +603,7 @@ $app->post('/postLight', function() use ($app){
 			$mnc = $parsed[$i+4];
 			$lac = hexToStr($parsed[$i+5]);
 			$light = $parsed[$i+6];
+			$light = ((2500/((5/1024) * $light)) - 500)/4.7;
 			
 			
 			$parcel_process = null;
@@ -653,30 +615,6 @@ $app->post('/postLight', function() use ($app){
 			}
 			if($parcel_process != null){
 				//Convert Cell-ID to LatLon
-<<<<<<< HEAD
-				$lat = 0;
-				$lon = 0;
-				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
-				$location = json_decode($location, true);
-				$lat = $location['coordinate']['latitude'];
-				$lon = $location['coordinate']['longitude'];
-				
-				if($lat != 0 && $lon !=0){				
-					//Insert into database
-					//query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
-					$event =  query('insert into events(parcel_process, geom, time_of_event) values('.$parcel_process.',ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',1.0), 4326), to_timestamp('.$timestamp.')) returning events_id');
-					
-					$event_id = pg_fetch_assoc($event);
-					
-					query('insert into light_events(event_id_ref,light) values ('.$event_id['events_id'].','.$light.')');
-				}else{
-					echo 'No location information available';
-				}
-		
-			}else{
-				echo 'No parcel process';
-			}	}
-=======
 				if(isset($mcc) && isset($mnc) && isset($cellId) && isset($lac)){
 					$lat = 0;
 					$lon = 0;
@@ -693,6 +631,9 @@ $app->post('/postLight', function() use ($app){
 						$event_id = pg_fetch_assoc($event);
 						
 						query('insert into light_events(event_id_ref,light) values ('.$event_id['events_id'].','.$light.')');
+						
+						$notificationArray = array("id" => $deviceId, "sensors" => array("light" => $light));
+						checkNotifications($parcel_process,$notificationArray);
 					}else{
 						echo 'No location information available';
 					}
@@ -704,7 +645,6 @@ $app->post('/postLight', function() use ($app){
 				error_log("no parcel process",0);
 			}
 			}
->>>>>>> Server Changes - final?
 		}else{
 			echo 'Incomplete data';
 			error_log("incomplete data",0);
@@ -721,6 +661,7 @@ curl -i -H "Accept: application/json" -X POST -d 'data=123;1357660358;02F1;262;0
 */
 $app->post('/postShock', function() use ($app){
 	require('Location.php');
+	require('notifications.php');
 	
 	$data = $app -> request()->post('data');
 	error_log("Post Shock Data: ".$data,0);
@@ -749,10 +690,7 @@ $app->post('/postShock', function() use ($app){
 			}
 			if($parcel_process != null){
 				//Convert Cell-ID to LatLon
-<<<<<<< HEAD
-=======
 				if(isset($mcc) && isset($mnc) && isset($cellId) && isset($lac)){
->>>>>>> Server Changes - final?
 				$lat = 0;
 				$lon = 0;
 				$location = getLocationFromCell($mcc, $mnc, $cellId, $lac);
@@ -769,17 +707,17 @@ $app->post('/postShock', function() use ($app){
 					$event_id = pg_fetch_assoc($event);
 					
 					query('insert into acceleration_events(event_id_ref,acceleration) values ('.$event_id['events_id'].','.$shock.')');
+					
+					$notificationArray = array("id" => $deviceId, "sensors" => array("acceleration" => $shock));
+					checkNotifications($parcel_process,$notificationArray);
+					
 				}else{
 					echo 'No location information available';
 				}
-<<<<<<< HEAD
-		
-=======
 			}else{
 				echo 'no cell id';
 			
 			}
->>>>>>> Server Changes - final?
 			}else{
 				echo 'No parcel process';
 			}	}

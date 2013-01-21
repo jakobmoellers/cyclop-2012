@@ -93,14 +93,10 @@ $parcel_id = $_GET['pid'];
    
     <div class="container">
 
-<<<<<<< HEAD
-	  <div id="chart" style="height:400px;width:800px; "></div>
-=======
 		<div id="chart" style="height: 400px; width: 1000px;"></div>
 		<br />
 		<a class="btn" href="#" onclick="resetZoom(); return false;">Reset Zoom</a>
 		<br /><br /><br />
->>>>>>> Server Changes - final?
 	  
       <!-- FOOTER -->
       <footer>

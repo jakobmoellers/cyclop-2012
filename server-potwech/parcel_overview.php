@@ -127,7 +127,6 @@ $parcel_id = $_GET['pid'];
 						//var geojsonMarker = L.geoJson(json.features[0],{pointToLayer: callback}).addTo(map);
 						var geojsonMarker = L.geoJson(json.features[json.features.length-1]).addTo(map);
 						map.setView([json.features[json.features.length-1].geometry.coordinates[1],json.features[json.features.length-1].geometry.coordinates[0]], 10);
-						
 						setParcelOverview(json.features[json.features.length-1]);
 						
 						geojsonMarker.bindPopup("Measurement ID: "+json.features[json.features.length-1].properties.measurement_id+"<br>Time: "+json.features[json.features.length-1].properties.time);
@@ -172,7 +171,6 @@ $parcel_id = $_GET['pid'];
 			
             function loadAllParcels() {
                 $.getJSON("../rest/index.php/current_parcels/", function (json) {
-                    console.log(json.parcels[0].parcel_process);
                 });
             }
 
@@ -185,12 +183,20 @@ $parcel_id = $_GET['pid'];
 			
 			//Displays the last measurements (humidity, temperature) and Events (Light, Shock) as overviews
 			function setParcelOverview(feature){
-				$('#tempHumForm').text(feature.properties.temperature+' °C / '+feature.properties.humidity+' %');
-				$('#batteryForm').text("  "+feature.properties.battery+' %');
-				
+		
+				$.getJSON("../rest/index.php/latest_parcel/"+$_GET(['pid']), function (json) {
+				console.log("bla: "+json);
+					if(json.features != null){
+						$('#tempHumForm').text(json.features[0].properties.temperature+' °C / '+json.features[0].properties.humidity+' %');
+						$('#batteryForm').text("  "+json.features[0].properties.battery+' %');
+					}else{
+
+					}
+                });
+		
 				$.getJSON("../rest/index.php/maxValue/"+$_GET(['pid'])+"/light", function (json) {
 					if(json.properties != null){
-						$('#lightForm').text('Opening detected!');
+						$('#lightForm').text(' Opening detected!');
 					}else{
 						$('#light_button').addClass("disabled");
 						$('#light_button').click(function(Event) {
@@ -302,7 +308,6 @@ $parcel_id = $_GET['pid'];
    		<!-- Morin: COPYRIGHT-HINWEISE BITTE NICHT ENTFERNEN !-->
    		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Temperature</a> designed by <a href="http://thenounproject.com/asher84" target="_blank">Ashley Reinke</a> from The Noun Project</p>
    		<p><a href="http://thenounproject.com/noun/temperature/#icon-No7810" target="_blank">Shock</a> designed by <a href="http://www.unocha.org/" target="_blank">http://www.unocha.org/</a> from The Noun Project</p>		
-   		<p><a href="http://thenounproject.com/noun/sun/#icon-No2660" target="_blank">Sun</a> designed by <a href="http://thenounproject.com/adamwhitcroft" target="_blank">Adam Whitcroft</a> from The Noun Project</p>
          </footer>
       </div>
 

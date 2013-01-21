@@ -154,7 +154,8 @@ $parcel_id = $_GET['pid'];
 						for (var i=0;i<json.features.length;i++){
 							//console.log(json.features[i].properties.light);
 							//console.log(json.features[i].geometry.coordinates[0]);
-							var timestamp = new Date(json.features[i].properties.time);
+							dateString = (json.features[i]["properties"]["time"].substring(0, json.features[i]["properties"]["time"].indexOf("+"))).replace(/-/g, "/");
+							var timestamp = new Date(dateString);
 							//Ugly indexing...
 							res=res+'<tr>'+'<td>'+(i+1)+'</td>'+'<td>'+timestamp.toGMTString()+'</td>'+'<td>'+json.features[i].properties.acceleration+'</td>'+'</tr>';
 							var marker = L.marker([json.features[i].geometry.coordinates[1], json.features[i].geometry.coordinates[0]]).addTo(map);
@@ -223,7 +224,7 @@ $parcel_id = $_GET['pid'];
 				  features = data["features"];
 			  
 				  for (var feature in features) {
-					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("."))).replace(/-/g, "/");
+					  dateString = (features[feature]["properties"]["time"].substring(0, features[feature]["properties"]["time"].indexOf("+"))).replace(/-/g, "/");
 					  date = Date.parse(dateString);
 					  for (var sensor in options["sensors"]) {
 						  ret[sensor].push([date, parseInt(features[feature]["properties"][options["sensors"][sensor]])]);

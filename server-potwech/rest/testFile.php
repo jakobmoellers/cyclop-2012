@@ -1,18 +1,12 @@
 <?
 
-echo hexToStr('02F1');
-echo '  '.hexdec('02F1');
+$light = 1024- 675;
 
-function hexToStr($hex)
-{
-    $string='';
-    for ($i=0; $i < strlen($hex)-1; $i+=2)
-    {
-        $string .= chr(hexdec($hex[$i].$hex[$i+1]));
-    }
-    return $string;
-}
+$light = ((2500/((5/1024) * $light)) - 500)/4.7;
 
+echo $light.'<br>';
+
+echo hexdec(0);
 
 
 ?>
