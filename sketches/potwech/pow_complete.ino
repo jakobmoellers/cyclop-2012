@@ -1,9 +1,9 @@
 /*
-1. Value sampling: 10sec (? maybe faster) -> check sensor constants
-2. Averaging not less than all 10 mins. Time for getting location parameters is ~3sec
-3. Saving to SD
-4. Tcp send to server ~ 18sec
- 
+should acceleration and accelerometer also be averaged? -> no
+
+TODO: Sensing strategy?
+TODO: Replace SoftwareSerial with hardware serial.
+TODO: Set device id dynamicaly
 */
 
 #include <SD.h>
@@ -13,35 +13,25 @@
 #include <LSM303.h>
 #include <SoftwareSerial.h>
 
+#define DHTTYPE DHT22 // Sensortype = DHT 22
+#define DHTPIN 2 // DHT22 connected to digital 2
+
+DHT dht(DHTPIN, DHTTYPE);
 SoftwareSerial mySerial(10, 11); //Initialize GPRS-Shield
+LSM303 accelerometer;
+RTC_DS1307 RTC;
+File dataFile;
+
+int deviceId = 123;
+
 // Network Variables needed for Position Information 
 String mcc; //Mobile Country Code
 String mnc; //Mobile Network Code
 String lac; //Location Area Code
 String cid; //Cell ID
-
-int batteryPin = A4;
 String connectionStatus;
 
-LSM303 accelerometer;
-
-#define DHTPIN 2 // what pin we're connected to
-
-RTC_DS1307 RTC;
-// Uncomment whatever type you're using!
-//#define DHTTYPE DHT11 // DHT 11
-#define DHTTYPE DHT22 // DHT 22
-//#define DHTTYPE DHT21 // DHT 21 (AM2301)
-
-// Connect pin 1 (on the left) of the sensor to +5V
-// Connect pin 2 of the sensor to whatever your DHTPIN is
-// Connect pin 4 (on the right) of the sensor to GROUND
-// Connect a 10K resistor from pin 2 (data) to pin 1 (power) of the sensor
-
-DHT dht(DHTPIN, DHTTYPE);
-
-File dataFile;
-
+int batteryPin = A4;
 int batteryValue = 0;
 // intervalls in seconds:
 long sampleInterval = 5; // intervall for sampling raw data
@@ -52,15 +42,18 @@ int time; //unixtime
 DateTime timeOld = 0; // last Sampling was made
 DateTime lastMeasurement; // last Measurement was made
 DateTime lastUpload; // last Upload was made
-DateTime crashTime;
+DateTime crashTime; 
 DateTime measureTime;
 DateTime openTime;
 
 //sensor sample variables:
 float temperature = 0; // current temperaure value
 float humidity = 0; // current humidity value
-int light = 0; // current light value
+int light = 0; // current light value. Calculation to LUX is done on server.
 double accData[3];
+double g; //Acceleration
+double go=2000; //Min value for executing event (2g)
+
 boolean opened= true;
 boolean crashed = false;
 boolean connectOk;
@@ -74,18 +67,11 @@ int avgTemp = 0;
 int avgHum = 0;
 int loopCounter = 0; // number of measurements for computing the averages
 
-//should acceleration and accelerometer also be averaged? -> no
-//or maybe different kind of sample handling for event sensors. -> yes
-
-//Accelerometerstuff
-double g;
-double go=2000;
-
 void setup()
 {
-  mySerial.begin(19200);  
-  Serial.begin(19200);
-  delay(500);  
+  mySerial.begin(19200);//Instanciate Software Serial communication.
+  Serial.begin(19200);//Instanciate serial monitor. Just for debugging..
+  delay(500);
   dht.begin();
   Wire.begin();
   RTC.begin();
@@ -93,11 +79,9 @@ void setup()
   accelerometer.enableDefault();
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
-     // following line sets the RTC to the date & time this sketch was compiled
-     //RTC.adjust(DateTime(__DATE__, __TIME__));
+     //RTC.adjust(DateTime(__DATE__, __TIME__)); //uncomment this line if RTC runs for first time
      Serial.println("RTC needs to be adjusted.");
   }
-  Serial.print("Let's start");
   pinMode(53, OUTPUT);
   if (!SD.begin(53)) {
     Serial.println("initialization SD CARD failed!");
@@ -107,18 +91,16 @@ void setup()
   Serial.println("Removing existing files.");
   if (SD.exists("logfile.txt"))
     SD.remove("logfile.txt");
-  //if (SD.exists("opened.txt"))
-    //SD.remove("opened.txt");
-  //if (SD.exists("crashed.txt")) 
-    //SD.remove("crashed.txt");
+  if (SD.exists("opened.txt"))
+    SD.remove("opened.txt");
+  if (SD.exists("crashed.txt")) 
+    SD.remove("crashed.txt");
   Serial.println("Powering on GPRS Shield.");  
   RestartShield();
   delay(5000); // Waiting for GSM Signal
-  //TODO: Test if signal is availible
   Serial.println("Connecting to GSM Network."); 
   Reconnect();
-  //ConnectToGSM();
-  delay(5000);
+  delay(5000); // Waiting for service
   timeOld = RTC.now();
   lastMeasurement = RTC.now();
   lastUpload = RTC.now();
@@ -126,22 +108,22 @@ void setup()
 
 void loop()
 {
-  // reading event-triggering sensordata:
+  // reading event-triggering sensordata
   light = analogRead(A3);
+  
   accelerometer.read();
   accData[0] = (double) accelerometer.a.x;
   accData[1] = (double) accelerometer.a.y;
   accData[2] = (double) accelerometer.a.z;
   
-  //now running on millis; should run with RTC time
+  //sampling time based on millis; RTC time should be used instead
   DateTime time = RTC.now();
-  // Lightvalue Threshold reached? / parcel opened?
+  //Event-trigger: Lightvalue Threshold reached? / parcel opened?
   if ((light > 200) && (!opened)) {
     openTime = RTC.now();
     opened = true;
     Serial.println("EVENT OCCURED: Parcel opened!");
-    // TODO: SD CARD Schreiben
-    String blub = "123"; // TODO: Change device_id
+    String blub = String(deviceId);
     blub += ";";
     blub += openTime.unixtime();
     blub += ";";
@@ -156,18 +138,15 @@ void loop()
     blub += String(light);
     blub += ";";
     printlnSD(blub, 2);
-    
+    //Save light event string to SD
     File tempFile = SD.open("logtemp.txt", FILE_WRITE);
     if(tempFile){
       tempFile.println(blub);
       tempFile.close();
     }
-  
   }
   if ((opened) && (light<160))
-  {
     opened = false;
-  }
   // Acceleration Threshold reached? / parcel crashed?
   g = sqrt(accData[0]*accData[0]+accData[1]*accData[1]+accData[2]*accData[2])/1000;
   if ((go!=g) && (g>2.5) && (!crashed))
@@ -176,7 +155,7 @@ void loop()
     crashed = true;
     go=g;
     Serial.println("EVENT OCCURED: Parcel crashed!");
-    String blub = "123"; // TODO: Change device_id
+    String blub = String(deviceId);
     blub += ";";
     blub += crashTime.unixtime();
     blub += ";";
@@ -240,7 +219,7 @@ void loop()
       
       measureTime = RTC.now();
       
-      String blub = "123"; // TODO: Change device_id
+      String blub = String(deviceId);
       blub += ";";
       blub += measureTime.unixtime();
       blub += ";";
@@ -274,14 +253,17 @@ void loop()
             Serial.println("Attached and connected.");
             if (SD.exists("logfile.txt")){
               delay(2000);
+              Serial.println("Trying to send measurments.");
               TcpPost(1);
             }
             if (SD.exists("opened.txt")){
               delay(2000);  
+              Serial.println("Trying to send open events.");
               TcpPost(2);
             }
             if (SD.exists("crashed.txt")){
               delay(2000);
+              Serial.println("Trying to send crash events.");
               TcpPost(3);
             }
         }
@@ -550,7 +532,7 @@ void TcpPost(int postOption){
   while (!serverResponded){
   delay(100);
     if(retry==300){ 
-      Serial.println("Server did not respond after 20 seconds.");
+      Serial.println("Server did not respond after 30 seconds.");
       mySerial.println("AT+CIPCLOSE");//close the TCP connection
       delay(2000);
       ShowSerialData();            
