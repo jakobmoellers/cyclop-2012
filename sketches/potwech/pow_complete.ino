@@ -5,7 +5,6 @@ TODO: Sensing strategy?
 TODO: Replace SoftwareSerial with hardware serial.
 TODO: Set device id dynamicaly
 */
-
 #include <SD.h>
 #include <DHT.h>
 #include <Wire.h>
@@ -86,7 +85,6 @@ void setup()
   if (!SD.begin(53)) {
     Serial.println("initialization SD CARD failed!");
   }
-  Serial.println(":");
   delay(500);  
   Serial.println("Removing existing files.");
   if (SD.exists("logfile.txt"))
@@ -153,7 +151,8 @@ void loop()
   {
     crashTime = RTC.now();
     crashed = true;
-    go=g;
+    go = g;
+    g *= 10;
     Serial.println("EVENT OCCURED: Parcel crashed!");
     String blub = String(deviceId);
     blub += ";";
@@ -167,7 +166,6 @@ void loop()
     blub += ";";
     blub += lac; 
     blub += ";";
-    g = g * 10;
     blub += String((int)g);
     blub += ";";
     printlnSD(blub, 3);
@@ -178,7 +176,7 @@ void loop()
     }
   }
   
-  if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //sampling every 1 seconds (according to intervall variable)
+  if (DiffBiggerOrEqual(time,timeOld,sampleInterval)) //Sampling intervall (according to intervall variable)
   {
     loopCounter++;
     crashed = false; // is that correct ?
@@ -210,9 +208,7 @@ void loop()
       sumHumi = 0;
       
       batteryValue=analogRead(batteryPin);
-      //Serial.println(batteryValue);
-      int mapVal = map(batteryValue, 1, 1024, 1, 100)-2;//2% measurement inaccuracy
-      mapVal = map(mapVal,1, 100, 1, 500);//convert to voltage
+      int mapVal = map(batteryValue, 0, 1023, 1, 500);//Convert to Voltage
       int batVal = map(mapVal, 300, 400, 1, 100)-2;//assuming that full charged battery is at 4V and minimum 3V
       if(batVal<1)batVal = 0;
       else if(batVal>100)batVal = 100;
@@ -272,7 +268,7 @@ void loop()
            RestartShield();
         }
         else if(!IsIpAvailable() || getSignalStatus()=="detached"){
-          Serial.println("Detached from GPRS or not connected.");
+          Serial.println("Detached from GPRS or not connected...reconnecting.");
           Reconnect();
         }     
         lastUpload = RTC.now(); // update time for last Upload
@@ -318,12 +314,6 @@ void ShowSerialData()
 }
 
 void ConnectToGSM(){
-//  mySerial.println("AT+CGATT?");
-//  //Query network Status
-//  delay(1000);
-//  ShowSerialData();
-  Serial.println();
-
   mySerial.println("AT+CSTT=\"data.access.de\"");
   //setting the SAPBR, the connection type is using gprs
   delay(500);
@@ -424,8 +414,6 @@ void TcpPost(int postOption){
   delay(500);
   
   mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
-  //start up connection
-  delay(1000);
   //wait for the correct response "CONNECT OK"; return after 20 retries
   while (!connectOk){
     delay(100);
@@ -439,19 +427,6 @@ void TcpPost(int postOption){
     WaitForConnectOk();
     retry++;
   }
-//  String test;
-//       while (mySerial.available()!=0){
-//          test += char(mySerial.read());
-//          if(test.endsWith("CONNECT OK")){
-//            Serial.println(test);
-//            connectOk = true;
-//            break;
-//          }
-//       }
-//  if (!connectOk){
-//    Serial.println(test);
-//    return;
-//  }
 
   //Serial.println("Correct answer after retry number " + String(retry));
   delay(2000);
@@ -479,7 +454,7 @@ void TcpPost(int postOption){
   delay(100);
   ShowSerialData();
    
-   //open file and check length
+  //open file and check length
   if(postOption == 1)
     dataFile = SD.open("logfile.txt");
   else if(postOption==2)
@@ -509,7 +484,6 @@ void TcpPost(int postOption){
   //Read SD File and send Data to Serial Port
   while (dataFile.available() && i<dataFile.size()) {   
       in = dataFile.read();
-      //if(in =='\n') in = ';'; // Replace line break in file with ';'
       mySerial.write(in);
       i++;
     }
@@ -527,7 +501,6 @@ void TcpPost(int postOption){
   delay(500);
   mySerial.println((char)26);//sending
   delay(5000);//waitting for reply, important! the time is base on the condition of internet 
-  //mySerial.println();
   retry = 0;
   while (!serverResponded){
   delay(100);
@@ -567,7 +540,7 @@ void TcpPost(int postOption){
 }
 
 //indicates state of GPRS connection
-//returns attached, detached or deactivated;
+//returns "attached", "detached" or "deactivated";
 String getSignalStatus(){
    String signalStatus = "";
    mySerial.println("AT+CGATT?");
