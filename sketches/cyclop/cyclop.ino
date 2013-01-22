@@ -318,7 +318,6 @@ void storeMeasurement(){
    int dustVal;
    */
 
-  //TODO insert all values
   //TODO SD not tested yet
 
     String measurement = String(rain);
