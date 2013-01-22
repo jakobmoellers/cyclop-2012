@@ -242,15 +242,13 @@ void loop(){
 
     storeMeasurement();
 
-    //TODO Upload measurements //Remember to upload secret key
-
-    //TODO Clean SD-Card
-
-    //TODO Display hazards on display
-
-    //TODO If hazard button is touched, create new harzard. Confirm with sound/blink.
-
     checkforHazardButtonPressed();
+
+    //TODO Upload measurements //Remember to upload secret key
+    //TODO Clean SD-Card if post successful
+
+    //TODO Upload Hazards //Remember to upload secret key
+    //TODO Clean SD-Card if post successful
 
 
   }
@@ -367,6 +365,17 @@ void printlnSD(String str, int fileName){
   // if the file isn't open, pop up an error:
   else {
     Serial.println("error opening datalog.txt");
+  }
+}
+
+void cleanSD(int fileName){
+  if(fileName==1){
+    SD.remove("measure.txt");
+    Serial.println("measure.txt removed!");
+  }
+  else if(fileName==2){
+    SD.remove("hazards.txt");
+    Serial.println("hazards.txt removed!");
   }
 }
 
@@ -572,6 +581,7 @@ void checkforHazardButtonPressed(){
     Serial.println("Hazard");
     SeeedOled.clearDisplay();
     SeeedOled.putString("Hazard saved and uploaded!");
+    storeHazard(); //TODO do this function
     delay(2000);
     SeeedOled.clearDisplay();
     SeeedOled.putString("Welcome to Cyclop!");
@@ -680,6 +690,8 @@ String doubleToString(double input,int decimalPlaces){
     return String((int)input);
   }
 }
+
+
 
 
 
