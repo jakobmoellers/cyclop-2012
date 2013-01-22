@@ -182,9 +182,9 @@ void setup(){
   pinMode(alarmPin,INPUT);
   oldTest = digitalRead(alarmPin);
   magnetSensor= oldTest;
-  
+
   //SD
-  
+
   pinMode(SDPin,OUTPUT);
   if (!SD.begin(SDPin)) {
     Serial.println("initialization SD CARD failed!");
@@ -235,10 +235,10 @@ void loop(){
   else {
     //Standard mode
 
-    takeMeasurements();
+      takeMeasurements();
 
     //TODO Store measurements on SD Card
-    
+
     storeMeasurement();
 
     //TODO Upload measurements //Remember to upload secret key
@@ -303,24 +303,24 @@ void takeMeasurements(){
 }
 
 void storeMeasurement(){
-  
+
   /*boolean rain=false;
-  TIME
-double no2_ppm;
-double co_ppm;
-double gValue;
-double lat;
-double lon;
-float temperature;
-float humidity;
-int secretKey=986743;
-int dustVal;
-*/
+   TIME
+   double no2_ppm;
+   double co_ppm;
+   double gValue;
+   double lat;
+   double lon;
+   float temperature;
+   float humidity;
+   int secretKey=986743;
+   int dustVal;
+   */
 
-//TODO insert all values
-//TODO SD not tested yet
+  //TODO insert all values
+  //TODO SD not tested yet
 
-  String measurement = String(rain);
+    String measurement = String(rain);
   measurement +=";";
   measurement +=time.unixtime();
   measurement +=";";
@@ -335,19 +335,19 @@ int dustVal;
   measurement +=doubleToString(lon,8);
   measurement +=";";
   /*measurement += temperature;
-  measurement +=";";
-  measurement += humidity;
-  measurement +=";";*/
+   measurement +=";";
+   measurement += humidity;
+   measurement +=";";*/
   measurement += String(secretKey);
   measurement +=";";
   measurement +=String(dustVal);
   Serial.println(measurement);
   printlnSD(measurement,1);
- 
+
 }
 
 void storeHazard(){
-   //TODO 
+  //TODO 
 }
 
 void printlnSD(String str, int fileName){
@@ -665,19 +665,20 @@ void getDust(){
 String doubleToString(double input,int decimalPlaces){
   String string;
   if(decimalPlaces!=0){
-  string = String((int)(input*pow(10,decimalPlaces)));
-  if(abs(input)<1){
-  if(input>0)
-  string = "0"+string;
-  else if(input<0)
-  string = string.substring(0,1)+"0"+string.substring(1);
-  }
-  return string.substring(0,string.length()-decimalPlaces)+"."+string.substring(string.length()-decimalPlaces);
+    string = String((int)(input*pow(10,decimalPlaces)));
+    if(abs(input)<1){
+      if(input>0)
+        string = "0"+string;
+      else if(input<0)
+        string = string.substring(0,1)+"0"+string.substring(1);
+    }
+    return string.substring(0,string.length()-decimalPlaces)+"."+string.substring(string.length()-decimalPlaces);
   }
   else {
-  return String((int)input);
+    return String((int)input);
   }
 }
+
 
 
 
