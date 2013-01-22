@@ -11,6 +11,7 @@ This is the main cyclop application
 #include <SeeedOLED.h>
 #include <SD.h>
 //#include <stdlib.h>
+#include <floatToString.h>
 
 
 //PINs
@@ -334,10 +335,12 @@ void storeMeasurement(){
   measurement +=";";
   measurement +=doubleToString(lon,8);
   measurement +=";";
-  /*measurement += temperature;
-   measurement +=";";
-   measurement += humidity;
-   measurement +=";";*/
+  char tmpBuffer1[10];
+  measurement += floatToString(tmpBuffer1,temperature,2);
+  measurement +=";";
+  char tmpBuffer2[10];
+  measurement += floatToString(tmpBuffer2,humidity,2);
+  measurement +=";";
   measurement += String(secretKey);
   measurement +=";";
   measurement +=String(dustVal);
@@ -678,6 +681,7 @@ String doubleToString(double input,int decimalPlaces){
     return String((int)input);
   }
 }
+
 
 
 
