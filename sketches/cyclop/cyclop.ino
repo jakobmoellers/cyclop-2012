@@ -9,6 +9,8 @@ This is the main cyclop application
 #include <RTClib.h> 
 #include <Wire.h>
 #include <SeeedOLED.h>
+#include <SD.h>
+//#include <stdlib.h>
 
 
 //PINs
@@ -35,6 +37,7 @@ const byte speakerOut = 44; //Speaker
 const char microphone = A10; //Microphone
 char dustPin=A15; //Dust Sensor
 int ledPowerPin=48;
+int SDPin = 53;
 
 
 //Variables
@@ -84,6 +87,7 @@ int delayTime2=40;
 float offTime=9680;
 int oldTest;
 int magnetSensor;
+File dataFile; //SD
 
 //Measurements
 boolean rain=false;
@@ -178,6 +182,19 @@ void setup(){
   pinMode(alarmPin,INPUT);
   oldTest = digitalRead(alarmPin);
   magnetSensor= oldTest;
+  
+  //SD
+  
+  pinMode(SDPin,OUTPUT);
+  if (!SD.begin(SDPin)) {
+    Serial.println("initialization SD CARD failed!");
+  }
+  delay(500);  
+  Serial.println("Removing existing files.");
+  if (SD.exists("measure.txt"))
+    SD.remove("measure.txt");
+  if (SD.exists("hazards.txt"))
+    SD.remove("hazards.txt");
 
 }
 
@@ -218,9 +235,11 @@ void loop(){
   else {
     //Standard mode
 
-      takeMeasurements();
+    takeMeasurements();
 
     //TODO Store measurements on SD Card
+    
+    storeMeasurement();
 
     //TODO Upload measurements //Remember to upload secret key
 
@@ -281,6 +300,72 @@ void takeMeasurements(){
 
   Serial.println("");
 
+}
+
+void storeMeasurement(){
+  
+  /*boolean rain=false;
+  TIME
+double no2_ppm;
+double co_ppm;
+double gValue;
+double lat;
+double lon;
+float temperature;
+float humidity;
+int secretKey=986743;
+int dustVal;
+*/
+
+//TODO insert all values
+//TODO SD not tested yet
+
+  String measurement = String(rain);
+  measurement +=";";
+  measurement +=time.unixtime();
+  measurement +=";";
+  measurement +=doubleToString(no2_ppm,2);
+  measurement +=";";
+  measurement +=doubleToString(co_ppm,2);
+  measurement +=";";
+  measurement +=doubleToString(gValue,2);
+  measurement +=";";
+  measurement +=doubleToString(lat,8);
+  measurement +=";";
+  measurement +=doubleToString(lon,8);
+  measurement +=";";
+  /*measurement += temperature;
+  measurement +=";";
+  measurement += humidity;
+  measurement +=";";*/
+  measurement += String(secretKey);
+  measurement +=";";
+  measurement +=String(dustVal);
+  Serial.println(measurement);
+  printlnSD(measurement,1);
+ 
+}
+
+void storeHazard(){
+   //TODO 
+}
+
+void printlnSD(String str, int fileName){
+  if (fileName == 1){
+    dataFile = SD.open("measure.txt", FILE_WRITE);
+  }
+  else if (fileName == 2){
+    dataFile = SD.open("hazards.txt", FILE_WRITE);
+  }
+  // if the file is available, write to it:
+  if (dataFile) {
+    dataFile.print(str);
+    dataFile.close();
+  }
+  // if the file isn't open, pop up an error:
+  else {
+    Serial.println("error opening datalog.txt");
+  }
 }
 
 void determineAlertMode(){
@@ -574,6 +659,24 @@ void getDust(){
   delayMicroseconds(delayTime2);
   digitalWrite(ledPowerPin,HIGH); // turn the LED off
   delayMicroseconds(offTime);
+}
+
+//Rounds down (via intermediary integer conversion truncation)
+String doubleToString(double input,int decimalPlaces){
+  String string;
+  if(decimalPlaces!=0){
+  string = String((int)(input*pow(10,decimalPlaces)));
+  if(abs(input)<1){
+  if(input>0)
+  string = "0"+string;
+  else if(input<0)
+  string = string.substring(0,1)+"0"+string.substring(1);
+  }
+  return string.substring(0,string.length()-decimalPlaces)+"."+string.substring(string.length()-decimalPlaces);
+  }
+  else {
+  return String((int)input);
+  }
 }
 
 
