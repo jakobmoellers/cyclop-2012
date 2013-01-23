@@ -196,6 +196,10 @@ void setup(){
     SD.remove("measure.txt");
   if (SD.exists("hazards.txt"))
     SD.remove("hazards.txt");
+    
+  //GSM
+  
+  //Reconnect();
 
 }
 
@@ -226,7 +230,7 @@ void loop(){
 
     if (gValue!=1.0){
 
-      //TODO Send theft alert to server
+      //TODO Send thefts to server
       Serial.println("Theft detected");     
     }
 
@@ -245,6 +249,7 @@ void loop(){
     checkforHazardButtonPressed();
 
     //TODO Upload measurements //Remember to upload secret key
+    uploadMeasurements();
     //TODO Clean SD-Card if post successful
 
     //TODO Upload Hazards //Remember to upload secret key
@@ -343,11 +348,28 @@ void storeMeasurement(){
   measurement +=String(dustVal);
   Serial.println(measurement);
   printlnSD(measurement,1);
+  
+  //Backup
+  File tempFile = SD.open("logtempm.txt", FILE_WRITE);
+    if(tempFile){
+      tempFile.println(measurement);
+      tempFile.close();
+   }
 
 }
 
 void storeHazard(){
-  //TODO 
+  
+  String hazard = String("Hazard");
+  
+  //TODO
+  
+  //Backup
+  File tempFile = SD.open("logtemph.txt", FILE_WRITE);
+    if(tempFile){
+      tempFile.println(hazard);
+      tempFile.close();
+   }
 }
 
 void printlnSD(String str, int fileName){
@@ -366,6 +388,11 @@ void printlnSD(String str, int fileName){
   else {
     Serial.println("error opening datalog.txt");
   }
+}
+
+void uploadMeasurements(){
+  
+  
 }
 
 void cleanSD(int fileName){
