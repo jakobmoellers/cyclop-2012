@@ -207,8 +207,12 @@ void setup(){
     SD.remove("hazards.txt");
     
   //GSM
-  
+  Serial.println("Powering on GPRS Shield.");  
+  RestartShield();
+  delay(5000); // Waiting for GSM Signal
+  Serial.println("Connecting to GSM Network."); 
   Reconnect();
+  delay(5000); // Waiting for service
 
 }
 
@@ -470,6 +474,49 @@ void ConnectToGSM(){
   /*GetMccMncCid();
   delay(1000);
   GetLac();*/
+}
+
+void RestartShield(){
+    if(getConnectionStatus()=="error" && getSignalStatus()=="deactivated"){
+      PowerOnOff();
+    }
+    else{
+      PowerOnOff();
+      delay(1000);
+      PowerOnOff();
+    }
+}
+
+void PowerOnOff()
+{
+  
+  //TODO: Change the PIN of this function!!!!
+  
+  pinMode(9, OUTPUT); 
+  digitalWrite(9,LOW);
+  delay(1000);
+  digitalWrite(9,HIGH);
+  delay(2000);
+  digitalWrite(9,LOW);
+  delay(3000);
+}
+
+String getConnectionStatus(){
+  String cs = "error";
+  byte in;
+  mySerial.println("AT+CIPSTATUS");
+   delay(500);
+   while(mySerial.available()!=0){
+     if(char(mySerial.read())==':'){
+       mySerial.read();
+       while(mySerial.available()!=0){
+         in = mySerial.read();
+         if(char(in)!='\n')
+           cs += char(in);
+       }
+       return cs;
+     }
+   }
 }
 
 
