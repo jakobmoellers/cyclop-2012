@@ -263,6 +263,7 @@ void loop(){
     //Standard mode
 
       takeMeasurements();
+      //TODO Include Noise measurement from microphone
 
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
       storeMeasurement(); //TODO: average and measure interval
