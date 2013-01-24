@@ -65,7 +65,9 @@ DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
 DateTime currentTime;
 DateTime lastUpload;
+DateTime lastStore;
 long uploadInterval = 40;
+long storeInterval = 5;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
@@ -149,6 +151,7 @@ void setup(){
   }
   currentTime = RTC.now();
   lastUpload = RTC.now();
+  lastStore = RTC.now();
 
 
 
@@ -261,14 +264,11 @@ void loop(){
 
       takeMeasurements();
 
-    //TODO Store measurements on SD Card
-
-    storeMeasurement(); //TODO: average and measure interval
+    if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
+      storeMeasurement(); //TODO: average and measure interval
+    }
 
     checkforHazardButtonPressed();
-
-    //TODO Upload measurements 
-    //TODO for certain time interval
 
     if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
       uploadMeasurements();
@@ -1053,6 +1053,7 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
   long c = a.unixtime() - b.unixtime();
   return (c >= timeDiff);
 }
+
 
 
 
