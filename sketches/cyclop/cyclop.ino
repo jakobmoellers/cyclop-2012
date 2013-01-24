@@ -63,7 +63,9 @@ int indices[13];
 #define DHTTYPE DHT11 // DHT 11
 DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
-DateTime time;
+DateTime currentTime;
+DateTime lastUpload;
+long uploadInterval = 40;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
@@ -145,7 +147,8 @@ void setup(){
     //set the RTC to the date & time this sketch was compiled
     RTC.adjust(DateTime(__DATE__, __TIME__));
   }
-  time = RTC.now();
+  currentTime = RTC.now();
+  lastUpload = RTC.now();
 
 
 
@@ -253,22 +256,26 @@ void loop(){
 
   } 
   else {
+
     //Standard mode
 
       takeMeasurements();
 
     //TODO Store measurements on SD Card
 
-    storeMeasurement();
+    storeMeasurement(); //TODO: average and measure interval
 
     checkforHazardButtonPressed();
 
     //TODO Upload measurements 
     //TODO for certain time interval
-    uploadMeasurements();
-    
+
+    if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
+      uploadMeasurements();
+    }
+
     uploadHazards();
-    
+
   }
 }
 
@@ -336,7 +343,7 @@ void storeMeasurement(){
 
     String measurement = String(rain);
   measurement +=";";
-  measurement +=time.unixtime();
+  measurement +=currentTime.unixtime();
   measurement +=";";
   measurement +=doubleToString(no2_ppm,2);
   measurement +=";";
@@ -1038,6 +1045,12 @@ String doubleToString(double input,int decimalPlaces){
   else {
     return String((int)input);
   }
+}
+
+
+boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
+  long c = a.unixtime() - b.unixtime();
+  return (c >= timeDiff);
 }
 
 
