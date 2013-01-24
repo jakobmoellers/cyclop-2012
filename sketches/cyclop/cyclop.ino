@@ -42,7 +42,7 @@ int ledPowerPin=48;
 int SDPin = 53;
 int GPRSPin1 = 10; //GPRS
 int GPRSPin2 = 11;
-
+int GPRSPinPower = 9;
 
 //Variables
 boolean alarm=false; //True if alarm is armed
@@ -489,15 +489,12 @@ void RestartShield(){
 
 void PowerOnOff()
 {
-
-  //TODO: Change the PIN of this function!!!!
-
-  pinMode(9, OUTPUT); 
-  digitalWrite(9,LOW);
+  pinMode(GPRSPinPower, OUTPUT); 
+  digitalWrite(GPRSPinPower,LOW);
   delay(1000);
-  digitalWrite(9,HIGH);
+  digitalWrite(GPRSPinPower,HIGH);
   delay(2000);
-  digitalWrite(9,LOW);
+  digitalWrite(GPRSPinPower,LOW);
   delay(3000);
 }
 
