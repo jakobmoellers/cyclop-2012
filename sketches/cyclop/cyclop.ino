@@ -266,16 +266,10 @@ void loop(){
     //TODO Upload measurements 
     //TODO for certain time interval
     uploadMeasurements();
-
-
-    //TODO Upload Hazards if one was created
+    
     uploadHazards();
-
-
-
+    
   }
-
-
 }
 
 /*
