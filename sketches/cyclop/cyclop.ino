@@ -270,7 +270,7 @@ void loop(){
 
     //TODO Upload Hazards if one was created
     uploadHazards();
-    
+
 
 
   }
@@ -429,24 +429,25 @@ void uploadMeasurements(){
 }
 
 void uploadHazards(){
-  Serial.println("U P L O A D  H A Z A R D S");
-  if(getSignalStatus()=="attached" && IsIpAvailable()){
-    Serial.println("Attached and connected.");
-    if (SD.exists("hazards.txt")){
-      delay(2000);  
-      Serial.println("Trying to send open events.");
-      TcpPost(2);
+  if (SD.exists("hazards.txt")){
+    Serial.println("U P L O A D  H A Z A R D S");
+    if(getSignalStatus()=="attached" && IsIpAvailable()){
+      Serial.println("Attached and connected.");
+      if (SD.exists("hazards.txt")){
+        delay(2000);  
+        Serial.println("Trying to send open events.");
+        TcpPost(2);
+      }
     }
+    else if(getSignalStatus()=="deactivated"){
+      Serial.println("GPRS Shield is offline...restarting.");
+      RestartShield();
+    }
+    else if(!IsIpAvailable() || getSignalStatus()=="detached"){
+      Serial.println("Detached from GPRS or not connected...reconnecting.");
+      Reconnect();
+    } 
   }
-  else if(getSignalStatus()=="deactivated"){
-    Serial.println("GPRS Shield is offline...restarting.");
-    RestartShield();
-  }
-  else if(!IsIpAvailable() || getSignalStatus()=="detached"){
-    Serial.println("Detached from GPRS or not connected...reconnecting.");
-    Reconnect();
-  } 
-
 }
 
 void TcpPost(int postOption){
@@ -502,7 +503,7 @@ void TcpPost(int postOption){
     dataFile = SD.open("measure.txt");
   else if(postOption==2)
     dataFile = SD.open("hazards.txt");
-  
+
   mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
   delay(100);
   ShowSerialData();   
@@ -1044,6 +1045,7 @@ String doubleToString(double input,int decimalPlaces){
     return String((int)input);
   }
 }
+
 
 
 
