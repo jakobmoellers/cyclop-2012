@@ -269,6 +269,7 @@ void loop(){
 
 
     //TODO Upload Hazards if one was created
+    uploadHazards();
     
 
 
@@ -407,7 +408,7 @@ void printlnSD(String str, int fileName){
 }
 
 void uploadMeasurements(){
-  Serial.println("U P L O A D  D A T A");
+  Serial.println("U P L O A D  M E A S U R E");
   if(getSignalStatus()=="attached" && IsIpAvailable()){
     Serial.println("Attached and connected.");
     if (SD.exists("measure.txt")){
@@ -415,6 +416,22 @@ void uploadMeasurements(){
       Serial.println("Trying to send measurments.");
       TcpPost(1);
     }
+  }
+  else if(getSignalStatus()=="deactivated"){
+    Serial.println("GPRS Shield is offline...restarting.");
+    RestartShield();
+  }
+  else if(!IsIpAvailable() || getSignalStatus()=="detached"){
+    Serial.println("Detached from GPRS or not connected...reconnecting.");
+    Reconnect();
+  } 
+
+}
+
+void uploadHazards(){
+  Serial.println("U P L O A D  H A Z A R D S");
+  if(getSignalStatus()=="attached" && IsIpAvailable()){
+    Serial.println("Attached and connected.");
     if (SD.exists("hazards.txt")){
       delay(2000);  
       Serial.println("Trying to send open events.");
