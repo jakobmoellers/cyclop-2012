@@ -111,11 +111,11 @@ Main methods
  */
 
 void setup(){
-  
-   Serial.begin(19200);
-   mySerial.begin(19200);
-   
-   
+
+  Serial.begin(19200);
+  mySerial.begin(19200);
+
+
   //Water sensor
   pinMode(WaterPin, INPUT);
 
@@ -145,7 +145,7 @@ void setup(){
   }
   time = RTC.now();
 
- 
+
 
   //Display
   Wire.begin();
@@ -205,7 +205,7 @@ void setup(){
     SD.remove("measure.txt");
   if (SD.exists("hazards.txt"))
     SD.remove("hazards.txt");
-    
+
   //GSM
   Serial.println("Powering on GPRS Shield.");  
   RestartShield();
@@ -361,28 +361,28 @@ void storeMeasurement(){
   measurement +=String(dustVal);
   Serial.println(measurement);
   printlnSD(measurement,1);
-  
+
   //Backup
   File tempFile = SD.open("logtempm.txt", FILE_WRITE);
-    if(tempFile){
-      tempFile.println(measurement);
-      tempFile.close();
-   }
+  if(tempFile){
+    tempFile.println(measurement);
+    tempFile.close();
+  }
 
 }
 
 void storeHazard(){
-  
+
   String hazard = String("Hazard");
-  
+
   //TODO
-  
+
   //Backup
   File tempFile = SD.open("logtemph.txt", FILE_WRITE);
-    if(tempFile){
-      tempFile.println(hazard);
-      tempFile.close();
-   }
+  if(tempFile){
+    tempFile.println(hazard);
+    tempFile.close();
+  }
 }
 
 void printlnSD(String str, int fileName){
@@ -404,8 +404,8 @@ void printlnSD(String str, int fileName){
 }
 
 void uploadMeasurements(){
-  
-  
+
+
 }
 
 void Reconnect(){
@@ -427,27 +427,27 @@ void Reconnect(){
 }
 
 String getSignalStatus(){
-   String signalStatus = "";
-   mySerial.println("AT+CGATT?");
-   delay(100);
-   while(mySerial.available()!=0){
-     if(char(mySerial.read())==':'){
-       mySerial.read();
-       signalStatus += char(mySerial.read());
-     }
-   }
-   if(signalStatus=="1")signalStatus = "attached"; //ready to connect to APN
-   else if(signalStatus=="0")signalStatus = "detached";//no signal
-   else signalStatus = "deactivated";//shield deactivated
-   return signalStatus;
+  String signalStatus = "";
+  mySerial.println("AT+CGATT?");
+  delay(100);
+  while(mySerial.available()!=0){
+    if(char(mySerial.read())==':'){
+      mySerial.read();
+      signalStatus += char(mySerial.read());
+    }
+  }
+  if(signalStatus=="1")signalStatus = "attached"; //ready to connect to APN
+  else if(signalStatus=="0")signalStatus = "detached";//no signal
+  else signalStatus = "deactivated";//shield deactivated
+  return signalStatus;
 }
 
 void ShowSerialData()
 {
   while(mySerial.available()!=0)
     Serial.write(mySerial.read());
-    delay(500);
-    Serial.println("------");
+  delay(500);
+  Serial.println("------");
 }
 
 void ConnectToGSM(){
@@ -460,38 +460,38 @@ void ConnectToGSM(){
   //bring up wireless connection to GPRS (or CSD)
   delay(2000);
   ShowSerialData(); 
- 
+
   mySerial.println("AT+CIFSR");
   //get local IP adress (as response)
   delay(5000);
   ShowSerialData();
-  
+
   mySerial.println("AT+CENG=1");
   delay(1000);
   ShowSerialData();
-  
+
   delay(1000);
   /*GetMccMncCid();
-  delay(1000);
-  GetLac();*/
+   delay(1000);
+   GetLac();*/
 }
 
 void RestartShield(){
-    if(getConnectionStatus()=="error" && getSignalStatus()=="deactivated"){
-      PowerOnOff();
-    }
-    else{
-      PowerOnOff();
-      delay(1000);
-      PowerOnOff();
-    }
+  if(getConnectionStatus()=="error" && getSignalStatus()=="deactivated"){
+    PowerOnOff();
+  }
+  else{
+    PowerOnOff();
+    delay(1000);
+    PowerOnOff();
+  }
 }
 
 void PowerOnOff()
 {
-  
+
   //TODO: Change the PIN of this function!!!!
-  
+
   pinMode(9, OUTPUT); 
   digitalWrite(9,LOW);
   delay(1000);
@@ -505,18 +505,18 @@ String getConnectionStatus(){
   String cs = "error";
   byte in;
   mySerial.println("AT+CIPSTATUS");
-   delay(500);
-   while(mySerial.available()!=0){
-     if(char(mySerial.read())==':'){
-       mySerial.read();
-       while(mySerial.available()!=0){
-         in = mySerial.read();
-         if(char(in)!='\n')
-           cs += char(in);
-       }
-       return cs;
-     }
-   }
+  delay(500);
+  while(mySerial.available()!=0){
+    if(char(mySerial.read())==':'){
+      mySerial.read();
+      while(mySerial.available()!=0){
+        in = mySerial.read();
+        if(char(in)!='\n')
+          cs += char(in);
+      }
+      return cs;
+    }
+  }
 }
 
 
@@ -842,6 +842,7 @@ String doubleToString(double input,int decimalPlaces){
     return String((int)input);
   }
 }
+
 
 
 
