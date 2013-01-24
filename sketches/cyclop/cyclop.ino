@@ -206,7 +206,7 @@ void setup(){
   if (SD.exists("hazards.txt"))
     SD.remove("hazards.txt");
 
-  //GSM
+  //GPRS
   Serial.println("Powering on GPRS Shield.");  
   RestartShield();
   delay(5000); // Waiting for GSM Signal
