@@ -12,6 +12,7 @@ This is the main cyclop application
 #include <SD.h>
 //#include <stdlib.h>
 #include <floatToString.h>
+#include <SoftwareSerial.h>
 
 
 //PINs
@@ -39,6 +40,8 @@ const char microphone = A10; //Microphone
 char dustPin=A15; //Dust Sensor
 int ledPowerPin=48;
 int SDPin = 53;
+int GPRSPin1 = 10; //GPRS
+int GPRSPin2 = 11;
 
 
 //Variables
@@ -89,6 +92,7 @@ float offTime=9680;
 int oldTest;
 int magnetSensor;
 File dataFile; //SD
+SoftwareSerial mySerial(GPRSPin1, GPRSPin2); //GPRS
 
 //Measurements
 boolean rain=false;
@@ -107,6 +111,11 @@ Main methods
  */
 
 void setup(){
+  
+   Serial.begin(19200);
+   mySerial.begin(19200);
+   
+   
   //Water sensor
   pinMode(WaterPin, INPUT);
 
@@ -136,7 +145,7 @@ void setup(){
   }
   time = RTC.now();
 
-  Serial.begin(9600);
+ 
 
   //Display
   Wire.begin();
@@ -199,7 +208,7 @@ void setup(){
     
   //GSM
   
-  //Reconnect();
+  Reconnect();
 
 }
 
@@ -394,6 +403,75 @@ void uploadMeasurements(){
   
   
 }
+
+void Reconnect(){
+  int retries = 0;
+  String sStatus = getSignalStatus();
+  while(sStatus=="detached"){
+    Serial.println("No Signal. Retrying..");
+    if(retries>20)return;
+    retries++;    
+    delay(1000);
+    sStatus = getSignalStatus();
+  }
+  mySerial.println("AT+CIPSHUT");//close the connection
+  delay(200);
+  ShowSerialData();   
+  delay(3000);
+  ConnectToGSM();
+  Serial.println("..done.");  
+}
+
+String getSignalStatus(){
+   String signalStatus = "";
+   mySerial.println("AT+CGATT?");
+   delay(100);
+   while(mySerial.available()!=0){
+     if(char(mySerial.read())==':'){
+       mySerial.read();
+       signalStatus += char(mySerial.read());
+     }
+   }
+   if(signalStatus=="1")signalStatus = "attached"; //ready to connect to APN
+   else if(signalStatus=="0")signalStatus = "detached";//no signal
+   else signalStatus = "deactivated";//shield deactivated
+   return signalStatus;
+}
+
+void ShowSerialData()
+{
+  while(mySerial.available()!=0)
+    Serial.write(mySerial.read());
+    delay(500);
+    Serial.println("------");
+}
+
+void ConnectToGSM(){
+  mySerial.println("AT+CSTT=\"data.access.de\"");
+  //setting the SAPBR, the connection type is using gprs
+  delay(500);
+  ShowSerialData();
+
+  mySerial.println("AT+CIICR");
+  //bring up wireless connection to GPRS (or CSD)
+  delay(2000);
+  ShowSerialData(); 
+ 
+  mySerial.println("AT+CIFSR");
+  //get local IP adress (as response)
+  delay(5000);
+  ShowSerialData();
+  
+  mySerial.println("AT+CENG=1");
+  delay(1000);
+  ShowSerialData();
+  
+  delay(1000);
+  /*GetMccMncCid();
+  delay(1000);
+  GetLac();*/
+}
+
 
 void cleanSD(int fileName){
   if(fileName==1){
