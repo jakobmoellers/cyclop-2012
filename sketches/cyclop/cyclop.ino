@@ -416,6 +416,7 @@ void uploadMeasurements(){
       delay(2000);
       Serial.println("Trying to send measurments.");
       TcpPost(1);
+      lastUpload=RTC.now();
     }
   }
   else if(getSignalStatus()=="deactivated"){
