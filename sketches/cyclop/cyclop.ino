@@ -16,29 +16,30 @@ This is the main cyclop application
 
 
 //PINs
-int ledPin = 13;
+#define DHTPIN 40 //DHT
+#define DHTTYPE DHT11 // DHT 11
+//int ledPin = 13;
 const int WaterPin=42; //Water sensor
-int xPin = 25; //MMA7361L Three Axis Accelerometer
-int yPin = 23;
-int zPin = 22; 
-int selPin = 27;
-int sleepPin = 26;
+int xPin = 38; //MMA7361L Three Axis Accelerometer
+int yPin = 37;
+int zPin = 36; 
+int selPin = 12;
+int sleepPin = 13;
 int rxPin = 0; //GPS
 int txPin = 1;  
-#define DHTPIN 24 //DHT
-int vibration1=46; //Vibration
-int vibration2=47;
-int LEDpin=38; //Button
-int p51=39;
-int p52=41;
-int p53=40;
-int no_pin=13;
-int co_pin=14;
-int alarmPin=49;
-const byte speakerOut = 44; //Speaker
-const char microphone = A10; //Microphone
-char dustPin=A15; //Dust Sensor
-int ledPowerPin=48;
+int vibration1 = 42; //Vibration
+int vibration2 = 43;
+int LEDpin = 48; //Button
+int p51 = 49;
+int p52 = 46;
+int p53 = 47;
+int no_pin = A0;
+int co_pin = A1;
+int alarmPin = 44;
+const byte speakerOut = 39; //Speaker
+const char microphone = A5; //Microphone
+char dustPin = A4; //Dust Sensor
+int ledPowerPin = 2;
 int SDPin = 53;
 int GPRSPin1 = 10; //GPRS
 int GPRSPin2 = 11;
@@ -60,7 +61,6 @@ int cont=0;
 int bien=0;
 int conta=0;
 int indices[13]; 
-#define DHTTYPE DHT11 // DHT 11
 DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
 DateTime currentTime;
@@ -76,7 +76,7 @@ const byte BPM = 200;
 const char song[]={
   64,8,64,8,64,4};
 /*
-const char song[] = {	
+const char song[] = {  
  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
  60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
  64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
@@ -141,6 +141,16 @@ void setup(){
   //DHT
   dht.begin();
 
+  //Display
+  Wire.begin();
+  SeeedOled.init();  //initialze SEEED OLED display
+  DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
+  PORTB |= 0x21;
+  SeeedOled.clearDisplay();          //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
+  SeeedOled.setHorizontalMode();  
+  SeeedOled.putString("Welcome to Cyclop!"); //Print the String
+
   //RTC
   RTC.begin();
   Serial.println("Initializing RTC...");  
@@ -152,18 +162,6 @@ void setup(){
   currentTime = RTC.now();
   lastUpload = RTC.now();
   lastStore = RTC.now();
-
-
-
-  //Display
-  Wire.begin();
-  SeeedOled.init();  //initialze SEEED OLED display
-  DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
-  PORTB |= 0x21;
-  SeeedOled.clearDisplay();          //clear the screen and set start position to top left corner
-  SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
-  SeeedOled.setHorizontalMode();  
-  SeeedOled.putString("Welcome to Cyclop!"); //Print the String
 
     //Vibration
   pinMode(vibration1,OUTPUT);
@@ -184,7 +182,7 @@ void setup(){
   pinMode(alarmPin,INPUT);
 
   //Speaker
-  pinMode(ledPin, OUTPUT); 
+  //pinMode(ledPin, OUTPUT); 
   pinMode(speakerOut, OUTPUT);
   for (j = 128; j--;)
     timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
@@ -272,7 +270,7 @@ void loop(){
     checkforHazardButtonPressed();
 
     if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
-      uploadMeasurements();
+      //uploadMeasurements();
     }
 
     uploadHazards();
@@ -989,7 +987,7 @@ void playSong(){
   digitalWrite(speakerOut, LOW);     
   for (beat = 0; beat < MAXCOUNT; beat++) {
     statePin = !statePin;
-    digitalWrite(ledPin, statePin);
+    //digitalWrite(ledPin, statePin);
 
     j = song[beat * 2];
     timeUp = (j < 0) ? 0 : timeUpDown[j];
@@ -1054,16 +1052,3 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
   long c = a.unixtime() - b.unixtime();
   return (c >= timeDiff);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
