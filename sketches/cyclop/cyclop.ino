@@ -1052,3 +1052,52 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
   long c = a.unixtime() - b.unixtime();
   return (c >= timeDiff);
 }
+
+void GetRequest()
+{
+//TODO: Check if attached to GPRS
+ 
+//Bearer settings (used for http as IP based application) 
+  mySerial.println("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");//the connection type: GPRS
+  delay(1000);
+  ShowSerialData();
+ 
+  mySerial.println("AT+SAPBR=3,1,\"APN\",\"data.access.de\"");//Set access point name
+  delay(4000);
+  ShowSerialData();
+ 
+  mySerial.println("AT+SAPBR=1,1");//open bearer for IP connection
+  delay(2000);
+  ShowSerialData();
+ 
+  mySerial.println("AT+HTTPINIT"); //initialize HTTP request
+  delay(2000); 
+  ShowSerialData();
+ 
+  //set the website over HTTPPARA
+  mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
+  delay(1000);
+  ShowSerialData();
+ 
+  mySerial.println("AT+HTTPACTION=0");//submit request
+  delay(10000);
+  //if returned data is very large, more time required
+  //TODO: dynamicaly change delay time
+  ShowSerialData();
+ 
+  mySerial.println("AT+HTTPREAD");// read data from accessed website
+  delay(300);
+  //returned data stored into string.
+  //TODO: check length of returned data and compare to string length
+  String dat ="";
+  byte in;
+  while(mySerial.available()!=0){
+     in=mySerial.read();
+     dat += char(in);
+     }
+ 
+  mySerial.println(dat);
+  delay(100);
+  
+  //TODO: check if HTTP service has to be terminated
+}
