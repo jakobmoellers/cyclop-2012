@@ -356,25 +356,25 @@ void storeMeasurement(){
   measurement +=";";
   measurement +=currentTime.unixtime();
   measurement +=";";
-  measurement +=doubleToString(no2_ppm,2);
+  measurement +=doubleToString((no2_ppm/averageCounter),2);
   measurement +=";";
-  measurement +=doubleToString(co_ppm,2);
+  measurement +=doubleToString((co_ppm/averageCounter),2);
   measurement +=";";
-  measurement +=doubleToString(gValue,2);
+  measurement +=doubleToString((gValue/averageCounter),2);
   measurement +=";";
   measurement +=doubleToString(lat,8);
   measurement +=";";
   measurement +=doubleToString(lon,8);
   measurement +=";";
   char tmpBuffer1[10];
-  measurement += floatToString(tmpBuffer1,temperature,2);
+  measurement += floatToString(tmpBuffer1,(temperature/averageCounter),2);
   measurement +=";";
   char tmpBuffer2[10];
-  measurement += floatToString(tmpBuffer2,humidity,2);
+  measurement += floatToString(tmpBuffer2,(humidity/averageCounter),2);
   measurement +=";";
   measurement += String(secretKey);
   measurement +=";";
-  measurement +=String(dustVal);
+  measurement +=doubleToString((dustVal/averageCounter),2);
   Serial.println(measurement);
   printlnSD(measurement,1);
 
@@ -396,7 +396,7 @@ void storeHazard(){
   //Backup
   File tempFile = SD.open("logtemph.txt", FILE_WRITE);
   if(tempFile){
-    tempFile.println(hazard);
+    tempFile.println(hazard);    
     tempFile.close();
   }
 }
@@ -1117,5 +1117,6 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
