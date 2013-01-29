@@ -10,10 +10,11 @@ $app = new \Slim\Slim();
 
 $app->get('/hazards(/:bikeId)', function ($bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"hazardId\", timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from hazards where \"mobile_dev_ref\" = ".$bikeId);
+		$result = query("select \"hazardId\", timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards where \"mobile_dev_ref\" = ".$bikeId);
 	}else{
-		$result = query("select \"hazardId\",timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from hazards");
+		$result = query("select \"hazardId\",timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards");
 	}
+	error_log("GET hazards: ",0);
 
 	$json = array();
 	$json['type'] = 'FeatureCollection';
@@ -25,6 +26,7 @@ $app->get('/hazards(/:bikeId)', function ($bikeId=null) {
 			$point['properties'] = array();
 			$point['properties']['hazardId'] = $row['hazardId'];
 			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['properties']['description']=$row['description'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
 			$point['geometry']['coordinates'] = array();
@@ -35,6 +37,23 @@ $app->get('/hazards(/:bikeId)', function ($bikeId=null) {
 		}	
 	header('Content-Type: application/json');
 	echo json_encode($json);
+});
+
+$app->get('/hazards_csv(/:bikeId)', function ($bikeId=null) {
+	if($bikeId != null){
+		$result = query("select \"hazardId\", timestamp, distinct ST_X(geom) as lat, distinct ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards where \"mobile_dev_ref\" = ".$bikeId);
+	}else{
+		$result = query("select \"hazardId\",timestamp, ST_X(geom) as lat,ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards");
+	}
+	
+	$returnString = "";
+			
+		while($row = pg_fetch_assoc($result)){
+			$returnString .= $row['lat'].','.$row['lon'].';';	
+			//echo($row['lat'].','.$row['lon'].'<br>');	
+		}	
+	//header('Content-Type: application/json');
+	echo substr($returnString, 0, strlen($returnString)-1);
 });
 
 
@@ -198,7 +217,8 @@ $app->get('/last_position/:bikeId', function ($bikeId) {
 $app->get('/mobile_devices/:userId', function ($userId) {
 	
 	//order by reingebaut, damit die ids immer in der gleichen reihenfolge ausgegeben werden (ger)
-	$result = query("select \"deviceId\",devicename from mobile_devices where owner = ".$userId." order by \"deviceId\"");
+	//theft_monitoring_enabled eingebaut
+	$result = query("select \"deviceId\",devicename,theft_monitoring_enabled from mobile_devices where owner = ".$userId." order by \"deviceId\"");
 	
 	$json = array();
 	$json['devices'] = array();
@@ -207,6 +227,7 @@ $app->get('/mobile_devices/:userId', function ($userId) {
 			$id = array();
 			$id['id'] = $row['deviceId'];
 			$id['devicename'] = $row['devicename'];
+			$id['theft_monitoring'] = ($row['theft_monitoring_enabled']=='1' ? true : false);
 			array_push($json['devices'],$id); 	
 		}	
 	header('Content-Type: application/json');
@@ -258,6 +279,35 @@ $app->get('/boundingbox/hazards/:lat1/:lon1/:lat2/:lon2', function ($lat1,$lon1,
 			$point['properties'] = array();
 			$point['properties']['hazardId'] = $row['hazardId'];
 			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['geometry'] = array();
+			$point['geometry']['type'] = 'Point';
+			$point['geometry']['coordinates'] = array();
+			array_push($point['geometry']['coordinates'],floatval($row['lon']));
+			array_push($point['geometry']['coordinates'],floatval($row['lat']));
+			array_push($point['geometry']['coordinates'],floatval($row['height']));
+			array_push($json['features'],$point); 	
+		}	
+	header('Content-Type: application/json');
+	echo json_encode($json);
+	
+});
+
+$app->get('/hazards_within/:lat/:lon/:distance', function ($lat, $lon, $distance) {
+	$distance = $distance * 0.009;
+	
+	$result = query('select "hazardId", timestamp, description, st_x(geom) as lat, st_y(geom) as lon, st_z(geom) as height from hazards where ST_Dwithin(geom, ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326), '.$distance.')');
+
+	$json = array();
+	$json['type'] = 'FeatureCollection';
+	$json['features'] = array();
+		
+		while($row = pg_fetch_assoc($result)){
+			$point = array();
+			$point['type'] = 'Feature';
+			$point['properties'] = array();
+			$point['properties']['hazardId'] = $row['hazardId'];
+			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['properties']['description'] = $row['description'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
 			$point['geometry']['coordinates'] = array();
@@ -360,9 +410,7 @@ $app->post('/add_new_device', function () use ($app) {
 });
 
 
-//Dreisterweise von Gerald hier rein gecodet! ha!
-
-//Leider darf euer user nicht die tabelle mobile_devices updaten.. :(
+//<Dreisterweise von Gerald hier rein gecodet! ha!>
 
 /*
 	curl -i -H "Accept: application/json" -X POST -d 'mobile_device=2&secret_key=5647' http://cyclop.uni-muenster.de/rest/index.php/unregister_device
@@ -380,34 +428,126 @@ $app->post('/unregister_device', function () use ($app) {
 	}
 });
 
-//Dreister code Ende
+$app->get('/get(/bike)', function ($bikeId=null) {
+	echo '&nbsp;&nbsp;&nbsp;o<br>'.PHP_EOL;
+	echo '(<=.<br>'.PHP_EOL;
+	echo '()&nbsp;\'&nbsp;()<br>'.PHP_EOL;
+});
 
-/*TODOs: 
--Hazard-Infos im Post response body
--Posts für hazards*/
+//get thefts for bike id 
+
+$app->get('/theft_events/:bikeId', function ($bikeId) {
+	
+	$sql = 'SELECT to_char(timestamp, \'MM-DD-IYYY HH24:MI:SS\') as timestamp,mobile_dev_ref,ST_X(geom) as lat, ST_Y(geom) as lon FROM theft_alerts WHERE mobile_dev_ref = '.$bikeId.' ORDER BY timestamp desc';
+	/*
+	 *
+	 * Introduce a 'theft not valid' column in the table?
+	 * Or mark as returned
+	 *
+	 *
+	 */
+
+	$result = query($sql);
+	header('Content-Type: application/json');
+	
+	if(pg_num_rows($result) == 0){
+		echo json_encode(array('thefts' => 'no_thefts'));
+	}else{
+	
+		$json = array();
+		$json['thefts']['device_id'] = $bikeId;
+		//device_id is the 
+		
+		$locations['type'] = 'FeatureCollection';
+		$locations['features'] = array();
+		
+			while($row = pg_fetch_assoc($result)){
+				$point = array();
+				$point['type'] = 'Feature';
+				$point['properties'] = array();
+				$point['properties']['timestamp'] = $row['timestamp'];	
+				$point['geometry'] = array();
+				$point['geometry']['type'] = 'Point';
+				$point['geometry']['coordinates'] = array();
+				array_push($point['geometry']['coordinates'],floatval($row['lon']));
+				array_push($point['geometry']['coordinates'],floatval($row['lat']));
+				array_push($locations['features'],$point);
+				//array_push($json['thefts'],$theft); 	
+			}	
+		$json['thefts']['locations'] = $locations;
+		echo json_encode($json);
+	}
+	
+});
+
+//post for deletion of thefts
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'mobile_device=3&secret_key=5647' http://cyclop.uni-muenster.de/rest/index.php/delete_theft_alerts
+*/
+
+$app->post('/delete_theft_alerts', function () use ($app) {
+	$secret_key = utf8_encode($app->request()->post('secret_key'));
+	$device_id = utf8_encode($app->request()->post('mobile_device'));
+	
+	if($device_id && $secret_key){
+		$query = "DELETE FROM theft_alerts WHERE mobile_dev_ref = (SELECT \"deviceId\" FROM mobile_devices WHERE (\"secretKey\" = '$secret_key' AND \"deviceId\" = $device_id))";
+		//echo $query;
+		query($query);
+	}else{
+		echo 'missing data';
+	}
+});
+
+
+//enable/disable theft monitoring
+/*
+	curl -i -H "Accept: application/json" -X POST -d 'mobile_device=3&state=true' http://cyclop.uni-muenster.de/rest/index.php/set_theft_monitoring
+*/
+$app->post('/set_theft_monitoring', function () use ($app) {
+	$device_id = utf8_encode($app->request()->post('mobile_device'));
+	$theft_enabled = (utf8_encode($app->request()->post('state'))=='true' ? '1' : '0');
+
+						//wtf php is weird!
+	if($device_id && ($theft_enabled || $theft_enabled == '0')){
+		$query = "update mobile_devices set theft_monitoring_enabled = $theft_enabled where (\"deviceId\"=$device_id)";
+		query($query);
+	}else{
+		echo 'missing data '.$theft_enabled;
+	}
+});
+
+//</Dreister code Ende>
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=1;2012-01-01;51.1;7.9;5.0;30;50;8;10;1234' http://giv-cyclop.uni-muenster.de/rest/index.php/postMeasurement
+curl -i -H "Accept: application/json" -X POST -d 'data=true;1357734361;238;345;3;52;7;25;50;1337;100;43;5;true;1357734361;238;345;3;52;7;25;50;1337;100;43;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postMeasurement 
 */
+
+// rain, timestamp, no2, co, g, lat, lon, temperature, humidity, secretKey, dust, noise, deviceID
 $app->post('/postMeasurement', function() use ($app){
 	$data = $app -> request()->post('data');
 	error_log("Post Data: ".$data,0);
-	echo 'Stuff: '.$data;
+	//echo 'Stuff: '.$data;
 	if($data){
-		// deviceId, timestamp, lat, lon, height, temperature, humidity, light, noise, secretkey
 		$parsed = explode(";", $data);
 		
-		if(sizeof($parsed) == 10){
-			$deviceId = $parsed[0];
-			$timestamp = $parsed[1];
-			$lat = $parsed[2];
-			$lon = $parsed[3];
-			$height = $parsed[4];
-			$temperature = $parsed[5];
-			$humidity = $parsed[6];
-			$light = $parsed[7];
-			$noise = $parsed[8];
-			$key = $parsed[9];
+		$max = 13;
+		if((sizeof($parsed) % $max)==0){
+		for ($i=0;$i<sizeof($parsed);$i=$i+13){
+			$rain = $parsed[$i+0];
+			$timestamp = $parsed[$i+1];
+			$no2 = $parsed[$i+2];
+			$co = $parsed[$i+3];
+			$g = $parsed[$i+4];
+			$lat = $parsed[$i+5];
+			$lon = $parsed[$i+6];
+			$temperature = $parsed[$i+7];
+			$humidity = $parsed[$i+8];
+			$key = $parsed[$i+9];
+			$dust = $parsed[$i+10];
+			$noise = $parsed[$i+11];
+			$deviceId = $parsed[$i+12];
+
+			
 			
 			$db_key = null;
 			$result = query('select * from mobile_devices where mobile_devices."deviceId" = '.$deviceId.' limit 1');
@@ -417,88 +557,80 @@ $app->post('/postMeasurement', function() use ($app){
 				}
 			}
 			if($key==$db_key){
-				//Convert Cell-ID to LatLon
-				/*$xml = simplexml_load_file('http://www.opencellid.org/cell/get?mnc='.$mnc.'&mcc='.$mcc.'&cellid='.$cellId);
+
+				//Insert into database   // rain, timestamp, no2, co, g, lat, lon, temperature, humidity, secretKey, dust, noise, deviceID
+					query('insert into measurements(timestamp, geom, "deviceId", temperature, humidity, noise, rain, no2, co, g, dust) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.','.$temperature.','.$humidity.','.$noise.','.$rain.','.$no2.','.$co.','.$g.','.$dust.')');
 				
-				$lat = 0;
-				$lon = 0;
-				$lat = $xml->cell['lat'];
-				$lon = $xml->cell['lon'];*/
-				
-				//Insert into database
-				query('insert into measurements(timestamp, geom, "deviceId", temperature, humidity, light, noise) values(\''.$timestamp.'\'::timestamp,ST_SetSRID(ST_MakePoint('.$lat.','.$lon.','.$height.'), 4326),'.$deviceId.','.$temperature.','.$humidity.','.$light.','.$noise.')');
-				
-				//echo $lat.'  '.$lon;
-		
+				if($i == $max){
+					$hazards = query('select st_x(geom) as lat, st_y(geom) as lon from hazards where ST_Dwithin(geom, ST_SetSRID(ST_MakePoint('.$lat.','.$lon.'), 4326), 0.02)');
+					
+					$hazardReturn = "";
+					while($row = pg_fetch_assoc($hazards)){
+						$hazardReturn .= $row['lat'].','.$row['lon'].';';
+					}
+					echo substr($hazardReturn, 0, strlen($hazardReturn)-1);
+				}
 			}else{
-				echo 'Keys did not match';
+				echo 'failure: wrong key';
+				} 
 			}	
 		}else{
-			echo 'Incomplete data';
-		}
-		
+			echo 'failure: wrong size';
+		}	
 	}else{
-		echo 'Missing data';
+		echo 'failure: no data';
 	}
 	
 
 });
 
-/*$app->post('/post_measurements', function () use ($app) {
+/*
+curl -i -H "Accept: application/json" -X POST -d 'data=hazard;1357734361;51.1;7.9;1337;5;hazard;1357734361;51.1;7.9;1337;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postHazard 
+*/
 
-	require('notifications.php');
-	
-	$data = $app->request()->post('data');
-	error_log("POST", 0);
+//unsinn,timestamp, lat, lon, secretkey, devideId
+$app->post('/postHazard', function() use ($app){
+	$data = $app -> request()->post('data');
+	error_log("Post Hazard Data: ".$data,0);
+	//echo 'Stuff: '.$data;
 	if($data){
-		$json = json_decode($data, true);
+		$parsed = explode(";", $data);
 		
-		error_log("ErrorLog: ".$data, 0);
-	   
-	   $device_id = $json['device_id'];
-	   $parcel_process = null;
-	   $result = query('select * from current_parcel_processes where mobile_device_id = '.$device_id.' limit 1');
-		if(pg_num_rows($result) > 0){
-			while($row = pg_fetch_assoc($result)){
-				$parcel_process = $row['parcel_process_id'];
-			}
-		}
-		if($parcel_process != null){
-	   
-		
-		   foreach($json['measurements'] as $measurement){
-				$timestamp = $measurement['timestamp'];
-				//in postgres:  to_timestamp(1195374767);
-			   $cellid = $measurement['cellid'];
-			   $mcc = $measurement['mcc'];
-			   $mnc = $measurement['mnc'];
-			   $temperature = $measurement['temperature'];
-			   $humidity = $measurement['humidity'];
-			   $light = $measurement['light'];  
-			   $acceleration_x = $measurement['acceleration']['x'];
-			   $acceleration_y = $measurement['acceleration']['y'];
-			   $acceleration_z = $measurement['acceleration']['z'];
-			   $compass_x = $measurement['compass']['x'];
-			   $compass_y = $measurement['compass']['y'];
-			   $compass_z = $measurement['compass']['z'];   
-			   $battery = $measurement['battery'];
-
-				query('insert into measurements(parcel_process, geom, temp, humidity, time_of_measurement) values('.$parcel_process.',ST_SetSRID(ST_MakePoint(51.96,7.96,1.0), 4326), '.$temperature.', '.$humidity.', now())');
-				
-				$notificationArray = array("id" => "123", "sensors" => array("temperature" => $temperature, "humidity" => $humidity, "acceleration" => "1.5"));
-				checkNotifications($parcel_process,$notificationArray);
+		$max = 6;
+		if((sizeof($parsed) % $max)==0){
+		for ($i=0;$i<sizeof($parsed);$i=$i+6){
+			$unsinn = $parsed[$i+0];
+			$timestamp = $parsed[$i+1];
+			$lat = $parsed[$i+2];
+			$lon = $parsed[$i+3];
+			$key = $parsed[$i+4];
+			$deviceId = $parsed[$i+5];
 			
+			$db_key = null;
+			$result = query('select * from mobile_devices where mobile_devices."deviceId" = '.$deviceId.' limit 1');
+			if(pg_num_rows($result) > 0){
+				while($row = pg_fetch_assoc($result)){
+					$db_key = $row['secretKey'];
+				}
 			}
+			if($key==$db_key){
+
+				//Insert into database
+					query('insert into hazards(timestamp, geom, mobile_dev_ref) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.')');
+				
+			}else{
+				echo 'failure';
+			} 
+		}	
 		}else{
-			echo 'No registered parcel process';
-		}
-   }else{
-	echo 'missing data';
-   }
-   
-   
-   
-});*/
+			echo 'failure';
+		}	
+	}else{
+		echo 'failure';
+	}
+	
+
+});
 
 $app->run();
 
