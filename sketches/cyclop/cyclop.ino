@@ -231,13 +231,6 @@ void loop(){
 
   getPosition();
 
-  //TODO GPS does not work
-
-  Serial.print("lat: ");
-  Serial.print(lat);
-  Serial.print(" lon: ");
-  Serial.print(lon);
-
   determineAlertMode();
 
   if(alarm==true){
@@ -262,7 +255,7 @@ void loop(){
     //TODO Include Noise measurement from microphone
 
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
-      storeMeasurement(); //TODO: average and measure interval (not included for dust yet)
+      storeMeasurement();
       resetVariablesForAveraging();
     }
 
@@ -389,9 +382,18 @@ void storeMeasurement(){
 
 void storeHazard(){
 
-  String hazard = String("Hazard");
-
-  //TODO
+  String hazard = "Hazard";
+  hazard+=";";
+  hazard+=currentTime.unixtime();
+  hazard+=";";
+  hazard+=doubleToString(lat,8);
+  hazard+=";";
+  hazard+=doubleToString(lon,8);
+  hazard+=";";
+  hazard+= String(secretKey);
+  
+  Serial.println(hazard);
+  printlnSD(hazard,2);
 
   //Backup
   File tempFile = SD.open("logtemph.txt", FILE_WRITE);
@@ -952,7 +954,7 @@ void checkforHazardButtonPressed(){
     Serial.println("Hazard");
     SeeedOled.clearDisplay();
     SeeedOled.putString("Hazard saved and uploaded!");
-    storeHazard(); //TODO do this function
+    storeHazard();
     delay(2000);
     SeeedOled.clearDisplay();
     SeeedOled.putString("Welcome to Cyclop!");
