@@ -190,7 +190,7 @@ void setup(){
   for (j = 128; j--;)
     timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
   playSong();
-  
+
   //Mic
   //TODO do i have to declare the PIN mode here?
   pinMode(microphone,INPUT);
@@ -223,14 +223,14 @@ void setup(){
   Serial.println("Connecting to GSM Network."); 
   Reconnect();
   delay(5000); // Waiting for service
-  
+
   resetVariablesForAveraging();
 
 }
 
 void loop(){
-  
-  
+
+
 
   //TODO Download new hazards in a time interval of 1 minute
 
@@ -247,8 +247,10 @@ void loop(){
 
     if (gValue!=1.0){
 
-      //TODO Send thefts to server
-      Serial.println("Theft detected");     
+      Serial.println("Theft detected");
+      storeTheft(); 
+      Serial.println("Theft stored. Try upload");
+      uploadTheft(); 
     }
 
 
@@ -331,7 +333,7 @@ void takeMeasurements(){
   temperature = temperature + dht.readTemperature();
   Serial.print(" temp: ");
   Serial.print(temperature);
-  
+
   //Mic
   getNoise();
   Serial.print(" noise: ");
@@ -343,7 +345,7 @@ void takeMeasurements(){
 
 void storeMeasurement(){
 
-    String measurement = String(rain);
+  String measurement = String(rain);
   measurement +=";";
   measurement +=currentTime.unixtime();
   measurement +=";";
@@ -396,7 +398,7 @@ void storeHazard(){
   hazard+= String(secretKey);
   hazard+=";";
   hazard+=String(deviceId);
-  
+
   Serial.println(hazard);
   printlnSD(hazard,2);
 
@@ -408,12 +410,40 @@ void storeHazard(){
   }
 }
 
+void storeTheft(){
+
+  String theft = "Theft";
+  theft+=";";
+  theft+=currentTime.unixtime();
+  theft+=";";
+  theft+=doubleToString(lat,8);
+  theft+=";";
+  theft+=doubleToString(lon,8);
+  theft+=";";
+  theft+= String(secretKey);
+  theft+=";";
+  theft+=String(deviceId);
+
+  Serial.println(theft);
+  printlnSD(theft,3);
+
+  File tempFile = SD.open("logtempt.txt", FILE_WRITE);
+  if(tempFile){
+    tempFile.println(theft);    
+    tempFile.close();
+  }
+
+}
+
 void printlnSD(String str, int fileName){
   if (fileName == 1){
     dataFile = SD.open("measure.txt", FILE_WRITE);
   }
   else if (fileName == 2){
     dataFile = SD.open("hazards.txt", FILE_WRITE);
+  }
+  else if (fileName == 3){
+    dataFile = SD.open("thefts.txt", FILE_WRITE);
   }
   // if the file is available, write to it:
   if (dataFile) {
@@ -470,6 +500,28 @@ void uploadHazards(){
   }
 }
 
+void uploadTheft(){
+  if (SD.exists("thefts.txt")){
+    Serial.println("U P L O A D  T H E F T S");
+    if(getSignalStatus()=="attached" && IsIpAvailable()){
+      Serial.println("Attached and connected.");
+      if (SD.exists("thefts.txt")){
+        delay(2000);  
+        Serial.println("Trying to send open events.");
+        TcpPost(3);
+      }
+    }
+    else if(getSignalStatus()=="deactivated"){
+      Serial.println("GPRS Shield is offline...restarting.");
+      RestartShield();
+    }
+    else if(!IsIpAvailable() || getSignalStatus()=="detached"){
+      Serial.println("Detached from GPRS or not connected...reconnecting.");
+      Reconnect();
+    } 
+  }
+}
+
 void TcpPost(int postOption){
 
   String serverResponse = "";
@@ -507,6 +559,8 @@ void TcpPost(int postOption){
     mySerial.println("POST /rest/index.php/postMeasurement HTTP/1.1 ");
   else if(postOption==2)
     mySerial.println("POST /rest/index.php/postHazard HTTP/1.1 ");
+  else if(postOption==3)
+    mySerial.println("POST /rest/index.php/postTheft HTTP/1.1 ");
   delay(100);
   ShowSerialData();
 
@@ -523,6 +577,8 @@ void TcpPost(int postOption){
     dataFile = SD.open("measure.txt");
   else if(postOption==2)
     dataFile = SD.open("hazards.txt");
+  else if(postOption==3)
+    dataFile = SD.open("thefts.txt");
 
   mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
   delay(100);
@@ -581,11 +637,15 @@ void TcpPost(int postOption){
 
   if(postOption==1){
     SD.remove("measure.txt");
-    Serial.println("logfile.txt removed!");
+    Serial.println("measure.txt removed!");
   }
   else if(postOption==2){
     SD.remove("hazards.txt");
-    Serial.println("opened.txt removed!");
+    Serial.println("hazards.txt removed!");
+  }
+  else if(postOption==3){
+    SD.remove("thefts.txt");
+    Serial.println("thefts.txt removed!");
   }
 
   delay(1000);
@@ -1121,6 +1181,8 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
