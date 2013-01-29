@@ -99,6 +99,7 @@ File dataFile; //SD
 SoftwareSerial mySerial(GPRSPin1, GPRSPin2); //GPRS
 boolean connectOk;
 boolean serverResponded;
+int averageCounter=0;
 
 //Measurements
 boolean rain=false;
@@ -110,7 +111,7 @@ double lon;
 float temperature;
 float humidity;
 int secretKey=986743;
-int dustVal;
+double dustVal;
 
 /*
 Main methods
@@ -151,7 +152,7 @@ void setup(){
   SeeedOled.setHorizontalMode();  
   SeeedOled.putString("Welcome to Cyclop!"); //Print the String
 
-  //RTC
+    //RTC
   RTC.begin();
   Serial.println("Initializing RTC...");  
   if (! RTC.isrunning()) {
@@ -163,7 +164,7 @@ void setup(){
   lastUpload = RTC.now();
   lastStore = RTC.now();
 
-    //Vibration
+  //Vibration
   pinMode(vibration1,OUTPUT);
   pinMode(vibration2,OUTPUT);
   vibrate(1);
@@ -224,14 +225,11 @@ void setup(){
 
 void loop(){
 
-  //Reset variables
-  rain=false;
-
   //TODO Download new hazards in a time interval of 1 minute
 
-    //TODO What about the measurement process? Also every minute? Should be included here
+  //TODO What about the measurement process? Also every minute? Should be included here
 
-    getPosition();
+  getPosition();
 
   //TODO GPS does not work
 
@@ -261,10 +259,11 @@ void loop(){
     //Standard mode
 
       takeMeasurements();
-      //TODO Include Noise measurement from microphone
+    //TODO Include Noise measurement from microphone
 
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
-      storeMeasurement(); //TODO: average and measure interval
+      storeMeasurement(); //TODO: average and measure interval (not included for dust yet)
+      resetVariablesForAveraging();
     }
 
     checkforHazardButtonPressed();
@@ -282,7 +281,20 @@ void loop(){
 Help Methods
  */
 
+void resetVariablesForAveraging(){
+  averageCounter=0;
+  temperature=0;
+  humidity=0;
+  gValue=0;
+  no2_ppm=0;
+  co_ppm=0; 
+  rain=false; 
+}
+
+
 void takeMeasurements(){
+
+  averageCounter=averageCounter+1;
 
   //Watersensor  
   int waterSensorValue = digitalRead(WaterPin);
@@ -312,10 +324,10 @@ void takeMeasurements(){
   Serial.print(dustVal);
 
   //DHT
-  humidity = dht.readHumidity();
+  humidity = humidity + dht.readHumidity();
   Serial.print(" hum: ");
   Serial.print(humidity);
-  temperature = dht.readTemperature();
+  temperature = temperature + dht.readTemperature();
   Serial.print(" temp: ");
   Serial.print(temperature);
 
@@ -765,7 +777,8 @@ void getAcc(){
   float gxValue = constrain((xValue/scalePoints-1.65-calValues[0])/0.8,-1,1);
   float gyValue = constrain((yValue/scalePoints-1.65-calValues[1])/0.8,-1,1);
   float gzValue = constrain((zValue/scalePoints-1.65-calValues[2])/0.8,-1,1);
-  gValue = sqrt(gxValue*gxValue+gyValue*gyValue+gzValue*gzValue);
+  double tmpValue = sqrt(gxValue*gxValue+gyValue*gyValue+gzValue*gzValue);
+  gValue=gValue+tmpValue;
 }
 
 void getCalValues() {
@@ -901,7 +914,8 @@ void getNO2(){
   double rs_no=(22000/((5-sensorValueNo)*sensorValueNo));
   double rs_r0_no = rs_no / 1000;
   //Estimate ppm
-  no2_ppm=0.013043*rs_r0_no+0.0086956;
+  double tmpNO2 =0.013043*rs_r0_no+0.0086956;
+  no2_ppm=no2_ppm+tmpNO2;
 }
 
 //CO
@@ -913,7 +927,8 @@ void getCO(){
   double rs_co=(100000/((5-sensorValueCo)))*sensorValueCo;
   double rs_r0_co = rs_co / 100000; 
   //Estimate ppm
-  co_ppm=-25*rs_r0_co+20.6;
+  double tmpCO=-25*rs_r0_co+20.6;
+  co_ppm=co_ppm+tmpCO;
 }
 
 //Vibration
@@ -1023,7 +1038,8 @@ void testMic(){
 void getDust(){
   digitalWrite(ledPowerPin,LOW); // power on the LED
   delayMicroseconds(delayTime);
-  dustVal=analogRead(dustPin); // read the dust value via pin 5 on the sensor
+  double tmpDustVal=double(analogRead(dustPin)); // read the dust value via pin 5 on the sensor
+  dustVal=dustVal+tmpDustVal;
   delayMicroseconds(delayTime2);
   digitalWrite(ledPowerPin,HIGH); // turn the LED off
   delayMicroseconds(offTime);
@@ -1055,36 +1071,36 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
 
 void GetRequest()
 {
-//TODO: Check if attached to GPRS
- 
-//Bearer settings (used for http as IP based application) 
+  //TODO: Check if attached to GPRS
+
+  //Bearer settings (used for http as IP based application) 
   mySerial.println("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");//the connection type: GPRS
   delay(1000);
   ShowSerialData();
- 
+
   mySerial.println("AT+SAPBR=3,1,\"APN\",\"data.access.de\"");//Set access point name
   delay(4000);
   ShowSerialData();
- 
+
   mySerial.println("AT+SAPBR=1,1");//open bearer for IP connection
   delay(2000);
   ShowSerialData();
- 
+
   mySerial.println("AT+HTTPINIT"); //initialize HTTP request
   delay(2000); 
   ShowSerialData();
- 
+
   //set the website over HTTPPARA
   mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
   delay(1000);
   ShowSerialData();
- 
+
   mySerial.println("AT+HTTPACTION=0");//submit request
   delay(10000);
   //if returned data is very large, more time required
   //TODO: dynamicaly change delay time
   ShowSerialData();
- 
+
   mySerial.println("AT+HTTPREAD");// read data from accessed website
   delay(300);
   //returned data stored into string.
@@ -1092,12 +1108,14 @@ void GetRequest()
   String dat ="";
   byte in;
   while(mySerial.available()!=0){
-     in=mySerial.read();
-     dat += char(in);
-     }
- 
+    in=mySerial.read();
+    dat += char(in);
+  }
+
   mySerial.println(dat);
   delay(100);
-  
+
   //TODO: check if HTTP service has to be terminated
 }
+
+
