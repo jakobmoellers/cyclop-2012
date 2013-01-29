@@ -110,7 +110,8 @@ double lat;
 double lon;
 float temperature;
 float humidity;
-int secretKey=986743;
+int secretKey=1337;
+int deviceId=5;
 double dustVal;
 float noise;
 
@@ -368,6 +369,8 @@ void storeMeasurement(){
   measurement +=";";
   char tmpBuffer3[10];
   measurement +=floatToString(tmpBuffer3,(noise/averageCounter),2);
+  measurement +=";";
+  measurement +=String(deviceId);
   Serial.println(measurement);
   printlnSD(measurement,1);
 
@@ -391,6 +394,8 @@ void storeHazard(){
   hazard+=doubleToString(lon,8);
   hazard+=";";
   hazard+= String(secretKey);
+  hazard+=";";
+  hazard+=String(deviceId);
   
   Serial.println(hazard);
   printlnSD(hazard,2);
