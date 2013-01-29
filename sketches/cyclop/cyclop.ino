@@ -230,11 +230,11 @@ void setup(){
 
 void loop(){
 
-
+  //TODO: Make Display announcements to ease debugging.
 
   //TODO Download new hazards in a time interval of 1 minute
 
-  //TODO What about the measurement process? Also every minute? Should be included here
+  //TODO What about the measurement process? Also every minute? Should be included here. I think this comment is obsolete because the measurements are averaged
 
   getPosition(); //TODO set coordinate values to lat/lon variables!
 
@@ -261,7 +261,6 @@ void loop(){
     //Standard mode
 
       takeMeasurements();
-    //TODO Include Noise measurement from microphone
 
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
       storeMeasurement();
