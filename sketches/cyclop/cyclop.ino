@@ -112,6 +112,7 @@ float temperature;
 float humidity;
 int secretKey=986743;
 double dustVal;
+float noise;
 
 /*
 Main methods
@@ -188,9 +189,10 @@ void setup(){
   for (j = 128; j--;)
     timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
   playSong();
-
-  //Microphone
-  testMic();
+  
+  //Mic
+  //TODO do i have to declare the PIN mode here?
+  pinMode(microphone,INPUT);
 
   //Dust Sensor
   pinMode(ledPowerPin,OUTPUT);
@@ -220,16 +222,20 @@ void setup(){
   Serial.println("Connecting to GSM Network."); 
   Reconnect();
   delay(5000); // Waiting for service
+  
+  resetVariablesForAveraging();
 
 }
 
 void loop(){
+  
+  
 
   //TODO Download new hazards in a time interval of 1 minute
 
   //TODO What about the measurement process? Also every minute? Should be included here
 
-  getPosition();
+  getPosition(); //TODO set coordinate values to lat/lon variables!
 
   determineAlertMode();
 
@@ -281,6 +287,7 @@ void resetVariablesForAveraging(){
   gValue=0;
   no2_ppm=0;
   co_ppm=0; 
+  noise=0;
   rain=false; 
 }
 
@@ -323,27 +330,17 @@ void takeMeasurements(){
   temperature = temperature + dht.readTemperature();
   Serial.print(" temp: ");
   Serial.print(temperature);
+  
+  //Mic
+  getNoise();
+  Serial.print(" noise: ");
+  Serial.print(noise);
 
   Serial.println("");
 
 }
 
 void storeMeasurement(){
-
-  /*boolean rain=false;
-   TIME
-   double no2_ppm;
-   double co_ppm;
-   double gValue;
-   double lat;
-   double lon;
-   float temperature;
-   float humidity;
-   int secretKey=986743;
-   int dustVal;
-   */
-
-  //TODO SD not tested yet
 
     String measurement = String(rain);
   measurement +=";";
@@ -368,6 +365,9 @@ void storeMeasurement(){
   measurement += String(secretKey);
   measurement +=";";
   measurement +=doubleToString((dustVal/averageCounter),2);
+  measurement +=";";
+  char tmpBuffer3[10];
+  measurement +=floatToString(tmpBuffer3,(noise/averageCounter),2);
   Serial.println(measurement);
   printlnSD(measurement,1);
 
@@ -1026,15 +1026,12 @@ void playSong(){
 
 }
 
-void testMic(){
-
+void getNoise(){
   // read the input on analog pin 0:
   int micro = analogRead(microphone);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   float voltage = micro * (5.0 / 1023.0);
-  // print out the value you read:
-  Serial.println(voltage);
-
+  noise=noise+voltage;
 }
 
 void getDust(){
