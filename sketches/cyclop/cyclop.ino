@@ -20,13 +20,13 @@ This is the main cyclop application
 #define DHTTYPE DHT11 // DHT 11
 //int ledPin = 13;
 const int WaterPin=45; //Water sensor
-int xPin = 36; //MMA7361L Three Axis Accelerometer
-int yPin = 37;
-int zPin = 38; 
+char xPin = A15; //MMA7361L Three Axis Accelerometer
+char yPin = A14;
+char zPin = A13; 
 int selPin = 12;
 int sleepPin = 13;
-int rxPin = 0; //GPS
-int txPin = 1;  
+int rxPin = 19; //GPS
+int txPin = 18;  
 int vibration1 = 42; //Vibration
 int vibration2 = 43;
 int LEDpin = 48; //Button
@@ -220,12 +220,12 @@ void setup(){
     SD.remove("hazards.txt");
 
   //GPRS
-  Serial.println("Powering on GPRS Shield.");  
+  /*Serial.println("Powering on GPRS Shield.");  
   RestartShield();
   delay(5000); // Waiting for GSM Signal
   Serial.println("Connecting to GSM Network."); 
   Reconnect();
-  delay(5000); // Waiting for service
+  delay(5000); // Waiting for service */ 
 
   resetVariablesForAveraging();
 
@@ -255,10 +255,10 @@ void loop(){
 
     getAcc();
 
-    Serial.println(gValue);
+    //Serial.println(gValue);
 
-    if (gValue>1.01||gValue<0.99){
-      Serial.println(gValue);
+    if (gValue>1.02||gValue<0.98){
+      //Serial.println(gValue);
       Serial.println("Theft detected");
       storeTheft(); 
       Serial.println("Theft stored. Try upload");
@@ -860,13 +860,13 @@ void determineAlertMode(){
 //Accelerometer
 void getAcc(){
   xValue = analogRead(xPin);
-  Serial.print(xValue);
+  //Serial.print(xValue);
   yValue = analogRead(yPin);
-  Serial.print(" ");
-  Serial.print(yValue);
+  //Serial.print(" ");
+  //Serial.print(yValue);
   zValue = analogRead(zPin);
-  Serial.print(" ");
-  Serial.println(zValue);
+  //Serial.print(" ");
+  //Serial.println(zValue);
   gxValue = constrain((xValue/scalePoints-1.65-calValues[0])/0.8,-1,1);
   gyValue = constrain((yValue/scalePoints-1.65-calValues[1])/0.8,-1,1);
   gzValue = constrain((zValue/scalePoints-1.65-calValues[2])/0.8,-1,1);
