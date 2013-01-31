@@ -19,10 +19,10 @@ This is the main cyclop application
 #define DHTPIN 40 //DHT
 #define DHTTYPE DHT11 // DHT 11
 //int ledPin = 13;
-const int WaterPin=42; //Water sensor
-int xPin = 38; //MMA7361L Three Axis Accelerometer
+const int WaterPin=45; //Water sensor
+int xPin = 36; //MMA7361L Three Axis Accelerometer
 int yPin = 37;
-int zPin = 36; 
+int zPin = 38; 
 int selPin = 12;
 int sleepPin = 13;
 int rxPin = 0; //GPS
@@ -40,7 +40,7 @@ const byte speakerOut = 39; //Speaker
 const char microphone = A5; //Microphone
 char dustPin = A4; //Dust Sensor
 int ledPowerPin = 2;
-int SDPin = 53;
+int SDPin = 53; //SD
 int GPRSPin1 = 10; //GPRS
 int GPRSPin2 = 11;
 int GPRSPinPower = 9;
@@ -48,6 +48,9 @@ int GPRSPinPower = 9;
 //Variables
 boolean alarm=false; //True if alarm is armed
 const float scalePoints = 1023/5; //Accelerometer
+float xValue, yValue, zValue;
+float gxValue, gyValue, gzValue;
+float degxValue, degyValue, degzValue;
 float calValues[3] = {
   0,0,0};
 int numReadings = 0;
@@ -67,7 +70,7 @@ DateTime currentTime;
 DateTime lastUpload;
 DateTime lastStore;
 long uploadInterval = 40;
-long storeInterval = 5;
+long storeInterval = 20;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
@@ -226,15 +229,21 @@ void setup(){
 
   resetVariablesForAveraging();
 
+  Serial.println("initialization complete");
+
 }
 
 void loop(){
+
+  currentTime=RTC.now();
 
   //TODO: Make Display announcements to ease debugging.
 
   //TODO Download new hazards in a time interval of 1 minute
 
-  //TODO What about the measurement process? Also every minute? Should be included here. I think this comment is obsolete because the measurements are averaged
+  //TODO What about the measurement process? Also every minute? 
+  //Should be included here. I think this comment is obsolete because the m
+  //asurements are averaged
 
   getPosition(); //TODO set coordinate values to lat/lon variables!
 
@@ -242,15 +251,18 @@ void loop(){
 
   if(alarm==true){
     //Alarm mode
+    resetVariablesForAveraging();
 
-      getAcc();
+    getAcc();
 
-    if (gValue!=1.0){
+    Serial.println(gValue);
 
+    if (gValue>1.01||gValue<0.99){
+      Serial.println(gValue);
       Serial.println("Theft detected");
       storeTheft(); 
       Serial.println("Theft stored. Try upload");
-      uploadTheft(); 
+      //uploadTheft(); 
     }
 
 
@@ -262,9 +274,13 @@ void loop(){
 
       takeMeasurements();
 
+    Serial.println(currentTime.unixtime());
+    Serial.println(lastStore.unixtime());
+
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
       storeMeasurement();
       resetVariablesForAveraging();
+      Serial.println("Storing and averaging complete");
     }
 
     checkforHazardButtonPressed();
@@ -273,7 +289,7 @@ void loop(){
       //uploadMeasurements();
     }
 
-    uploadHazards();
+    //uploadHazards();
 
   }
 }
@@ -372,6 +388,7 @@ void storeMeasurement(){
   measurement +=floatToString(tmpBuffer3,(noise/averageCounter),2);
   measurement +=";";
   measurement +=String(deviceId);
+  measurement +=";";
   Serial.println(measurement);
   printlnSD(measurement,1);
 
@@ -381,6 +398,8 @@ void storeMeasurement(){
     tempFile.println(measurement);
     tempFile.close();
   }
+
+  lastStore=RTC.now();
 
 }
 
@@ -397,6 +416,7 @@ void storeHazard(){
   hazard+= String(secretKey);
   hazard+=";";
   hazard+=String(deviceId);
+  hazard+=";";
 
   Serial.println(hazard);
   printlnSD(hazard,2);
@@ -407,6 +427,7 @@ void storeHazard(){
     tempFile.println(hazard);    
     tempFile.close();
   }
+
 }
 
 void storeTheft(){
@@ -422,6 +443,7 @@ void storeTheft(){
   theft+= String(secretKey);
   theft+=";";
   theft+=String(deviceId);
+  theft+=";";
 
   Serial.println(theft);
   printlnSD(theft,3);
@@ -837,13 +859,20 @@ void determineAlertMode(){
 
 //Accelerometer
 void getAcc(){
-  float xValue = analogRead(xPin);
-  float yValue = analogRead(yPin);
-  float zValue = analogRead(zPin);
-  float gxValue = constrain((xValue/scalePoints-1.65-calValues[0])/0.8,-1,1);
-  float gyValue = constrain((yValue/scalePoints-1.65-calValues[1])/0.8,-1,1);
-  float gzValue = constrain((zValue/scalePoints-1.65-calValues[2])/0.8,-1,1);
+  xValue = analogRead(xPin);
+  Serial.print(xValue);
+  yValue = analogRead(yPin);
+  Serial.print(" ");
+  Serial.print(yValue);
+  zValue = analogRead(zPin);
+  Serial.print(" ");
+  Serial.println(zValue);
+  gxValue = constrain((xValue/scalePoints-1.65-calValues[0])/0.8,-1,1);
+  gyValue = constrain((yValue/scalePoints-1.65-calValues[1])/0.8,-1,1);
+  gzValue = constrain((zValue/scalePoints-1.65-calValues[2])/0.8,-1,1);
   double tmpValue = sqrt(gxValue*gxValue+gyValue*gyValue+gzValue*gzValue);
+  Serial.print("acc: ");
+  Serial.println(tmpValue);
   gValue=gValue+tmpValue;
 }
 
@@ -1180,6 +1209,8 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
