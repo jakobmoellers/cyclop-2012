@@ -231,6 +231,8 @@ void setup(){
     SD.remove("measure.txt");
   if (SD.exists("hazards.txt"))
     SD.remove("hazards.txt");
+  if (SD.exists("thefts.txt"))
+    SD.remove("thefts.txt");
 
   //GPRS
   /*Serial.println("Powering on GPRS Shield.");
@@ -270,7 +272,7 @@ void loop(){
 
     //Serial.println(gValue);
 
-    if (gValue>1.02||gValue<0.98){
+    if (gValue>1.05||gValue<0.95){
       //Serial.println(gValue);
       Serial.println("Theft detected");
       storeTheft();
@@ -1156,7 +1158,7 @@ void getDust(){
   digitalWrite(ledPowerPin,LOW); // power on the LED
   delayMicroseconds(delayTime);
   double tmpDustVal = double(analogRead(dustPin)); // read the dust value via pin 5 on the sensor
-  dustVal = tmpDustVal;
+  dustVal = abs(tmpDustVal);
   dustSum += dustVal;
   delayMicroseconds(delayTime2);
   digitalWrite(ledPowerPin,HIGH); // turn the LED off
