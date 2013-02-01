@@ -1,12 +1,12 @@
 /*
 This is the main cyclop application
- */
+*/
 
 //Libraries
 #include <string.h>
 #include <ctype.h>
 #include "DHT.h"
-#include <RTClib.h> 
+#include <RTClib.h>
 #include <Wire.h>
 #include <SeeedOLED.h>
 #include <SD.h>
@@ -22,11 +22,11 @@ This is the main cyclop application
 const int WaterPin=45; //Water sensor
 char xPin = A15; //MMA7361L Three Axis Accelerometer
 char yPin = A14;
-char zPin = A13; 
+char zPin = A13;
 int selPin = 12;
 int sleepPin = 13;
 int rxPin = 19; //GPS
-int txPin = 18;  
+int txPin = 18;
 int vibration1 = 42; //Vibration
 int vibration2 = 43;
 int LEDpin = 48; //Button
@@ -63,7 +63,7 @@ char comandoGPR[7] = "$GPRMC";
 int cont=0;
 int bien=0;
 int conta=0;
-int indices[13]; 
+int indices[13];
 DHT dht(DHTPIN, DHTTYPE);
 RTC_DS1307 RTC; //RTC
 DateTime currentTime;
@@ -79,19 +79,19 @@ const byte BPM = 200;
 const char song[]={
   64,8,64,8,64,4};
 /*
-const char song[] = {  
- 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
- 60,4,60,4,62,4,64,4,		64,-4,62,8,62,2,
- 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
- 60,4,60,4,62,4,64,4,		62,-4,60,8,60,2,
- 62,4,62,4,64,4,60,4,		62,4,64,8,65,8,64,4,60,4,
- 62,4,64,8,65,8,64,4,62,4,	60,4,62,4,55,2,
- 64,4,64,4,65,4,67,4,		67,4,65,4,64,4,62,4,
- 60,4,60,4,62,4,64,4,		62,-4,60,8,60,2};*/
+const char song[] = {
+64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+60,4,60,4,62,4,64,4, 64,-4,62,8,62,2,
+64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+60,4,60,4,62,4,64,4, 62,-4,60,8,60,2,
+62,4,62,4,64,4,60,4, 62,4,64,8,65,8,64,4,60,4,
+62,4,64,8,65,8,64,4,62,4, 60,4,62,4,55,2,
+64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+60,4,60,4,62,4,64,4, 62,-4,60,8,60,2};*/
 int period, j;
 unsigned int timeUp, beat;
 byte statePin = LOW;
-const float TEMPO_SECONDS = 60.0 / BPM; 
+const float TEMPO_SECONDS = 60.0 / BPM;
 const unsigned int MAXCOUNT = sizeof(song) / 2;
 int delayTime=280;
 int delayTime2=40;
@@ -118,9 +118,18 @@ int deviceId=5;
 double dustVal;
 float noise;
 
+//Sum
+double no2Sum;
+double coSum;
+double gValueSum;
+float tempSum;
+float humiSum;
+double dustSum;
+float noiseSum;
+
 /*
 Main methods
- */
+*/
 
 void setup(){
 
@@ -133,14 +142,14 @@ void setup(){
 
   //Acc
   digitalWrite(sleepPin,HIGH);
-  digitalWrite(selPin,HIGH); 
+  digitalWrite(selPin,HIGH);
   getCalValues();
 
   //GPS
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   for (int i=0;i<300;i++)
-  {       // Initialize a buffer for received data
+  { // Initialize a buffer for received data
     linea[i]=' ';
   }
 
@@ -149,22 +158,24 @@ void setup(){
 
   //Display
   Wire.begin();
-  SeeedOled.init();  //initialze SEEED OLED display
-  DDRB|=0x21;        //digital pin 8, LED glow indicates Film properly Connected .
+  SeeedOled.init(); //initialze SEEED OLED display
+  DDRB|=0x21; //digital pin 8, LED glow indicates Film properly Connected .
   PORTB |= 0x21;
-  SeeedOled.clearDisplay();          //clear the screen and set start position to top left corner
-  SeeedOled.setNormalDisplay();      //Set display to normal mode (i.e non-inverse mode)
-  SeeedOled.setHorizontalMode();  
+  SeeedOled.clearDisplay(); //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay(); //Set display to normal mode (i.e non-inverse mode)
+  SeeedOled.setHorizontalMode();
   SeeedOled.putString("Welcome to Cyclop!"); //Print the String
 
     //RTC
   RTC.begin();
-  Serial.println("Initializing RTC...");  
+  Serial.print("Initializing RTC...");
   if (! RTC.isrunning()) {
     Serial.println("RTC is NOT running!");
     //set the RTC to the date & time this sketch was compiled
     RTC.adjust(DateTime(__DATE__, __TIME__));
   }
+  else Serial.println("done.");
+  
   currentTime = RTC.now();
   lastUpload = RTC.now();
   lastStore = RTC.now();
@@ -175,20 +186,20 @@ void setup(){
   vibrate(1);
 
   //Button
-  pinMode(LEDpin, OUTPUT);
-  pinMode(p51, INPUT);
-  pinMode(p53, INPUT);
-  pinMode(p52, INPUT);
-  digitalWrite(p51, HIGH);
-  digitalWrite(p52, HIGH);
-  digitalWrite(p53, HIGH);
-  analogWrite(LEDpin, 0);
+//  pinMode(LEDpin, OUTPUT);
+//  pinMode(p51, INPUT);
+//  pinMode(p53, INPUT);
+//  pinMode(p52, INPUT);
+//  digitalWrite(p51, HIGH);
+//  digitalWrite(p52, HIGH);
+//  digitalWrite(p53, HIGH);
+//  analogWrite(LEDpin, 0);
 
   //Alarm
   pinMode(alarmPin,INPUT);
 
   //Speaker
-  //pinMode(ledPin, OUTPUT); 
+  //pinMode(ledPin, OUTPUT);
   pinMode(speakerOut, OUTPUT);
   for (j = 128; j--;)
     timeUpDown[j] = 1000000 / (pow(2, (j - 69) / 12.0) * 880);
@@ -207,12 +218,14 @@ void setup(){
   magnetSensor= oldTest;
 
   //SD
-
+  Serial.print("Initializing SD card...");
   pinMode(SDPin,OUTPUT);
   if (!SD.begin(SDPin)) {
-    Serial.println("initialization SD CARD failed!");
+    Serial.println("failed!");
   }
-  delay(500);  
+  else Serial.println("done.");
+  
+  delay(500);
   Serial.println("Removing existing files.");
   if (SD.exists("measure.txt"))
     SD.remove("measure.txt");
@@ -220,12 +233,12 @@ void setup(){
     SD.remove("hazards.txt");
 
   //GPRS
-  /*Serial.println("Powering on GPRS Shield.");  
-  RestartShield();
-  delay(5000); // Waiting for GSM Signal
-  Serial.println("Connecting to GSM Network."); 
-  Reconnect();
-  delay(5000); // Waiting for service */ 
+  /*Serial.println("Powering on GPRS Shield.");
+RestartShield();
+delay(5000); // Waiting for GSM Signal
+Serial.println("Connecting to GSM Network.");
+Reconnect();
+delay(5000); // Waiting for service */
 
   resetVariablesForAveraging();
 
@@ -241,7 +254,7 @@ void loop(){
 
   //TODO Download new hazards in a time interval of 1 minute
 
-  //TODO What about the measurement process? Also every minute? 
+  //TODO What about the measurement process? Also every minute?
   //Should be included here. I think this comment is obsolete because the m
   //asurements are averaged
 
@@ -260,14 +273,14 @@ void loop(){
     if (gValue>1.02||gValue<0.98){
       //Serial.println(gValue);
       Serial.println("Theft detected");
-      storeTheft(); 
+      storeTheft();
       Serial.println("Theft stored. Try upload");
-      //uploadTheft(); 
+      //uploadTheft();
     }
 
 
 
-  } 
+  }
   else {
 
     //Standard mode
@@ -296,17 +309,17 @@ void loop(){
 
 /*
 Help Methods
- */
+*/
 
 void resetVariablesForAveraging(){
   averageCounter=0;
-  temperature=0;
-  humidity=0;
-  gValue=0;
-  no2_ppm=0;
-  co_ppm=0; 
-  noise=0;
-  rain=false; 
+  tempSum = 0;
+  humiSum = 0;
+  gValueSum = 0;
+  no2Sum = 0;
+  coSum = 0;
+  noiseSum = 0;
+  rain=false;
 }
 
 
@@ -314,7 +327,7 @@ void takeMeasurements(){
 
   averageCounter=averageCounter+1;
 
-  //Watersensor  
+  //Watersensor
   int waterSensorValue = digitalRead(WaterPin);
   if(waterSensorValue==0){
     rain=true;
@@ -332,6 +345,7 @@ void takeMeasurements(){
   Serial.print(co_ppm);
 
   //Acc
+  //
   getAcc();
   Serial.print(" g: ");
   Serial.print(gValue);
@@ -342,10 +356,12 @@ void takeMeasurements(){
   Serial.print(dustVal);
 
   //DHT
-  humidity = humidity + dht.readHumidity();
+  humidity = dht.readHumidity();
+  humiSum += humidity;
   Serial.print(" hum: ");
   Serial.print(humidity);
-  temperature = temperature + dht.readTemperature();
+  temperature = dht.readTemperature();
+  tempSum += temperature;
   Serial.print(" temp: ");
   Serial.print(temperature);
 
@@ -364,28 +380,28 @@ void storeMeasurement(){
   measurement +=";";
   measurement +=currentTime.unixtime();
   measurement +=";";
-  measurement +=doubleToString((no2_ppm/averageCounter),2);
+  measurement +=doubleToString((no2Sum/averageCounter),2);
   measurement +=";";
-  measurement +=doubleToString((co_ppm/averageCounter),2);
+  measurement +=doubleToString((coSum/averageCounter),2);
   measurement +=";";
-  measurement +=doubleToString((gValue/averageCounter),2);
+  measurement +=doubleToString((gValueSum/averageCounter),2);
   measurement +=";";
   measurement +=doubleToString(lat,8);
   measurement +=";";
   measurement +=doubleToString(lon,8);
   measurement +=";";
   char tmpBuffer1[10];
-  measurement += floatToString(tmpBuffer1,(temperature/averageCounter),2);
+  measurement += floatToString(tmpBuffer1,(tempSum/averageCounter),2);
   measurement +=";";
   char tmpBuffer2[10];
-  measurement += floatToString(tmpBuffer2,(humidity/averageCounter),2);
+  measurement += floatToString(tmpBuffer2,(humiSum/averageCounter),2);
   measurement +=";";
   measurement += String(secretKey);
   measurement +=";";
-  measurement +=doubleToString((dustVal/averageCounter),2);
+  measurement +=doubleToString((dustSum/averageCounter),2);
   measurement +=";";
   char tmpBuffer3[10];
-  measurement +=floatToString(tmpBuffer3,(noise/averageCounter),2);
+  measurement +=floatToString(tmpBuffer3,(noiseSum/averageCounter),2);
   measurement +=";";
   measurement +=String(deviceId);
   measurement +=";";
@@ -397,7 +413,9 @@ void storeMeasurement(){
   if(tempFile){
     tempFile.println(measurement);
     tempFile.close();
+    Serial.println("Measurement saved to logtempm.txt");
   }
+  else Serial.println("Error opening logtempm.txt.");
 
   lastStore=RTC.now();
 
@@ -424,8 +442,9 @@ void storeHazard(){
   //Backup
   File tempFile = SD.open("logtemph.txt", FILE_WRITE);
   if(tempFile){
-    tempFile.println(hazard);    
+    tempFile.println(hazard);
     tempFile.close();
+    Serial.println("Hazard saved to logtemph.txt.");
   }
 
 }
@@ -450,8 +469,9 @@ void storeTheft(){
 
   File tempFile = SD.open("logtempt.txt", FILE_WRITE);
   if(tempFile){
-    tempFile.println(theft);    
+    tempFile.println(theft);
     tempFile.close();
+    Serial.println("Theft saved to logtempt.txt.");
   }
 
 }
@@ -470,6 +490,7 @@ void printlnSD(String str, int fileName){
   if (dataFile) {
     dataFile.print(str);
     dataFile.close();
+    Serial.println("Saved to SD!");
   }
   // if the file isn't open, pop up an error:
   else {
@@ -478,7 +499,7 @@ void printlnSD(String str, int fileName){
 }
 
 void uploadMeasurements(){
-  Serial.println("U P L O A D  M E A S U R E");
+  Serial.println("U P L O A D M E A S U R E");
   if(getSignalStatus()=="attached" && IsIpAvailable()){
     Serial.println("Attached and connected.");
     if (SD.exists("measure.txt")){
@@ -495,7 +516,7 @@ void uploadMeasurements(){
   else if(!IsIpAvailable() || getSignalStatus()=="detached"){
     Serial.println("Detached from GPRS or not connected...reconnecting.");
     Reconnect();
-  } 
+  }
 
 }
 
@@ -505,7 +526,7 @@ void uploadHazards(){
     if(getSignalStatus()=="attached" && IsIpAvailable()){
       Serial.println("Attached and connected.");
       if (SD.exists("hazards.txt")){
-        delay(2000);  
+        delay(2000);
         Serial.println("Trying to send open events.");
         TcpPost(2);
       }
@@ -517,7 +538,7 @@ void uploadHazards(){
     else if(!IsIpAvailable() || getSignalStatus()=="detached"){
       Serial.println("Detached from GPRS or not connected...reconnecting.");
       Reconnect();
-    } 
+    }
   }
 }
 
@@ -527,7 +548,7 @@ void uploadTheft(){
     if(getSignalStatus()=="attached" && IsIpAvailable()){
       Serial.println("Attached and connected.");
       if (SD.exists("thefts.txt")){
-        delay(2000);  
+        delay(2000);
         Serial.println("Trying to send open events.");
         TcpPost(3);
       }
@@ -539,7 +560,7 @@ void uploadTheft(){
     else if(!IsIpAvailable() || getSignalStatus()=="detached"){
       Serial.println("Detached from GPRS or not connected...reconnecting.");
       Reconnect();
-    } 
+    }
   }
 }
 
@@ -556,11 +577,11 @@ void TcpPost(int postOption){
   //wait for the correct response "CONNECT OK"; return after 20 retries
   while (!connectOk){
     delay(100);
-    if(retry==200){ 
+    if(retry==200){
       Serial.println("Upload canceled after 20 seconds.");
       mySerial.println("AT+CIPCLOSE");//close the TCP connection
       delay(2000);
-      ShowSerialData();            
+      ShowSerialData();
       return;
     }
     WaitForConnectOk();
@@ -570,7 +591,7 @@ void TcpPost(int postOption){
   //Serial.println("Correct answer after retry number " + String(retry));
   delay(2000);
 
-  mySerial.println("AT+CIPSEND");//wait for '>' 
+  mySerial.println("AT+CIPSEND");//wait for '>'
   delay(4000);
   ShowSerialData();
   delay(2000);
@@ -601,9 +622,9 @@ void TcpPost(int postOption){
   else if(postOption==3)
     dataFile = SD.open("thefts.txt");
 
-  mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';' 
+  mySerial.println("Content-Length:" + String(dataFile.size()+4)); // Size of SD file + 'data=' - ';'
   delay(100);
-  ShowSerialData();   
+  ShowSerialData();
 
   mySerial.println("Content-Type: application/x-www-form-urlencoded");
   delay(100);
@@ -618,10 +639,10 @@ void TcpPost(int postOption){
   ShowSerialData();
 
   if (dataFile) {
-    int i = 1;  
+    int i = 1;
     char in;
     //Read SD File and send Data to Serial Port
-    while (dataFile.available() && i<dataFile.size()) {   
+    while (dataFile.available() && i<dataFile.size()) {
       in = dataFile.read();
       mySerial.write(in);
       i++;
@@ -629,10 +650,10 @@ void TcpPost(int postOption){
     delay(500);
     ShowSerialData();
 
-    dataFile.close();            
+    dataFile.close();
     Serial.println("Ready.");
     //Serial.println(" finished!");
-  } 
+  }
   else {
     // if the file didn't open, print an error:
     Serial.println("error opening ");
@@ -640,15 +661,15 @@ void TcpPost(int postOption){
 
   delay(500);
   mySerial.println((char)26);//sending
-  delay(5000);//waitting for reply, important! the time is base on the condition of internet 
+  delay(5000);//waitting for reply, important! the time is base on the condition of internet
   retry = 0;
   while (!serverResponded){
     delay(100);
-    if(retry==300){ 
+    if(retry==300){
       Serial.println("Server did not respond after 30 seconds.");
       mySerial.println("AT+CIPCLOSE");//close the TCP connection
       delay(2000);
-      ShowSerialData();            
+      ShowSerialData();
       return;
     }
     WaitForServerResponse();
@@ -674,13 +695,13 @@ void TcpPost(int postOption){
   mySerial.println("AT+CIPCLOSE");//close the TCP connection
   delay(2000);
   ShowSerialData();
-  delay(500); 
+  delay(500);
 
   Serial.println("Upload Complete!");
 }
 
 void WaitForConnectOk(){
-  String conTest = ""; 
+  String conTest = "";
   while (mySerial.available()!=0){
     conTest += char(mySerial.read());
     if(conTest.endsWith("CONNECT OK")){
@@ -692,7 +713,7 @@ void WaitForConnectOk(){
 }
 
 void WaitForServerResponse(){
-  String response = ""; 
+  String response = "";
   while (mySerial.available()!=0){
     response += char(mySerial.read());
     if(response.endsWith("200 OK")){
@@ -721,16 +742,16 @@ void Reconnect(){
   while(sStatus=="detached"){
     Serial.println("No Signal. Retrying..");
     if(retries>20)return;
-    retries++;    
+    retries++;
     delay(1000);
     sStatus = getSignalStatus();
   }
   mySerial.println("AT+CIPSHUT");//close the connection
   delay(200);
-  ShowSerialData();   
+  ShowSerialData();
   delay(3000);
   ConnectToGSM();
-  Serial.println("..done.");  
+  Serial.println("..done.");
 }
 
 String getSignalStatus(){
@@ -766,7 +787,7 @@ void ConnectToGSM(){
   mySerial.println("AT+CIICR");
   //bring up wireless connection to GPRS (or CSD)
   delay(2000);
-  ShowSerialData(); 
+  ShowSerialData();
 
   mySerial.println("AT+CIFSR");
   //get local IP adress (as response)
@@ -779,8 +800,8 @@ void ConnectToGSM(){
 
   delay(1000);
   /*GetMccMncCid();
-   delay(1000);
-   GetLac();*/
+delay(1000);
+GetLac();*/
 }
 
 void RestartShield(){
@@ -796,7 +817,7 @@ void RestartShield(){
 
 void PowerOnOff()
 {
-  pinMode(GPRSPinPower, OUTPUT); 
+  pinMode(GPRSPinPower, OUTPUT);
   digitalWrite(GPRSPinPower,LOW);
   delay(1000);
   digitalWrite(GPRSPinPower,HIGH);
@@ -838,14 +859,14 @@ void cleanSD(int fileName){
 void determineAlertMode(){
 
   int magnetSensor = digitalRead(alarmPin);
-  if (magnetSensor!=oldTest){
+  if (magnetSensor != oldTest){
     Serial.println("Alarm mode changed");
-    oldTest=magnetSensor;
+    oldTest = magnetSensor;
     alarm = !alarm;
     if (alarm==true){
       SeeedOled.clearDisplay();
       SeeedOled.putString("Alarm ON");
-    } 
+    }
     else {
       SeeedOled.clearDisplay();
       SeeedOled.putString("Alarm OFF");
@@ -871,9 +892,10 @@ void getAcc(){
   gyValue = constrain((yValue/scalePoints-1.65-calValues[1])/0.8,-1,1);
   gzValue = constrain((zValue/scalePoints-1.65-calValues[2])/0.8,-1,1);
   double tmpValue = sqrt(gxValue*gxValue+gyValue*gyValue+gzValue*gzValue);
-  Serial.print("acc: ");
-  Serial.println(tmpValue);
-  gValue=gValue+tmpValue;
+  //Serial.print(" Acc: ");
+  //Serial.println(tmpValue);
+  gValue = tmpValue;
+  gValueSum += gValue; 
 }
 
 void getCalValues() {
@@ -897,45 +919,45 @@ String return_gps_pos(){
 }
 
 void getPosition(){
-  byteGPS=Serial.read();         // Read a byte of the serial port
-  if (byteGPS == -1) 
-  {           // See if the port is empty yet
+  byteGPS=Serial1.read(); // Read a byte of the serial port
+  if (byteGPS == -1)
+  { // See if the port is empty yet
     delay(100);
-    //Serial.println("here"); 
-  } 
-  else 
+    //Serial.println("here");
+  }
+  else
   {
     //delay(1000);
-    linea[conta]=byteGPS;        // If there is serial port data, it is put in the buffer
-    conta++;                      
-    //Serial.write(byteGPS); 
+    linea[conta]=byteGPS; // If there is serial port data, it is put in the buffer
+    conta++;
+    //Serial.write(byteGPS);
     if (byteGPS==13)
-    {            // If the received byte is = to 13, end of transmission
-      //digitalWrite(ledPin, LOW); 
+    { // If the received byte is = to 13, end of transmission
+      //digitalWrite(ledPin, LOW);
       cont=0;
       bien=0;
       for (int i=1;i<7;i++)
-      {     // Verifies if the received command starts with $GPR
+      { // Verifies if the received command starts with $GPR
         if (linea[i]==comandoGPR[i-1]){
           bien++;
         }
       }
       if(bien==6)
-      {               // If yes, continue and process the data
+      { // If yes, continue and process the data
         for (int i=0;i<300;i++)
         {
           if (linea[i]==',')
-          {    // check for the position of the  "," separator
+          { // check for the position of the "," separator
             indices[cont]=i;
             cont++;
           }
           if (linea[i]=='*')
-          {    // ... and the "*"
+          { // ... and the "*"
             indices[12]=i;
             cont++;
           }
         }
-        Serial.println("");      // ... and write to the serial port
+        Serial.println(""); // ... and write to the serial port
         Serial.println("");
         Serial.println("---------------");
         for (int i=0;i<12;i++)
@@ -984,17 +1006,17 @@ void getPosition(){
           }
           for (int j=indices[i];j<(indices[i+1]-1);j++)
           {
-            Serial.print(linea[j+1]); 
+            Serial.print(linea[j+1]);
           }
           Serial.println("");
         }
         Serial.println("---------------");
       }
-      conta=0;                    // Reset the buffer
+      conta=0; // Reset the buffer
       for (int i=0;i<300;i++)
-      {    //  
-        linea[i]=' ';             
-      }                 
+      { //
+        linea[i]=' ';
+      }
     }
   }
 }
@@ -1004,26 +1026,28 @@ void getPosition(){
 void getNO2(){
   //Read values and calculate rs/ro
   double reading0 = analogRead(no_pin);
-  double sensorValueNo= map(reading0,0,1024,0,500);
-  sensorValueNo= sensorValueNo/100;
-  double rs_no=(22000/((5-sensorValueNo)*sensorValueNo));
+  double sensorValueNo = map(reading0,0,1024,0,500);
+  sensorValueNo = sensorValueNo / 100;
+  double rs_no = (22000 / ((5-sensorValueNo) * sensorValueNo));
   double rs_r0_no = rs_no / 1000;
   //Estimate ppm
-  double tmpNO2 =0.013043*rs_r0_no+0.0086956;
-  no2_ppm=no2_ppm+tmpNO2;
+  double tmpNO2 = 0.013043 * rs_r0_no + 0.0086956;
+  no2_ppm = tmpNO2;
+  no2Sum += no2_ppm;
 }
 
 //CO
 void getCO(){
   //Read values and calculate rs/ro
   double reading1 = analogRead(co_pin);
-  double sensorValueCo=map(reading1,0,1024,0,500);
-  sensorValueCo=sensorValueCo/100;
-  double rs_co=(100000/((5-sensorValueCo)))*sensorValueCo;
-  double rs_r0_co = rs_co / 100000; 
+  double sensorValueCo = map(reading1,0,1024,0,500);
+  sensorValueCo = sensorValueCo/100;
+  double rs_co = (100000 / ((5-sensorValueCo))) * sensorValueCo;
+  double rs_r0_co = rs_co / 100000;
   //Estimate ppm
-  double tmpCO=-25*rs_r0_co+20.6;
-  co_ppm=co_ppm+tmpCO;
+  double tmpCO = -25 * rs_r0_co + 20.6;
+  co_ppm = abs(tmpCO);
+  coSum += co_ppm;
 }
 
 //Vibration
@@ -1039,10 +1063,10 @@ void vibrate(int secs){
 //Button
 
 void checkforHazardButtonPressed(){
-  button = getButtonState();  // Get button status
-  if (button == 0x04)  // FLAME
+  button = getButtonState(); // Get button status
+  if (button == 0x04) // FLAME
   {
-    onstatus = onstatus ^ 1;  // flip on/off status of LED
+    onstatus = onstatus ^ 1; // flip on/off status of LED
     analogWrite(LEDpin, ledLevel);
     Serial.println("Hazard");
     SeeedOled.clearDisplay();
@@ -1051,7 +1075,7 @@ void checkforHazardButtonPressed(){
     delay(2000);
     SeeedOled.clearDisplay();
     SeeedOled.putString("Welcome to Cyclop!");
-    digitalWrite(LEDpin, 0);   
+    digitalWrite(LEDpin, 0);
   }
 }
 
@@ -1067,26 +1091,26 @@ uint8_t getButtonState()
 
   // Read the d/u/flame buttons
   if (!digitalRead(p53))
-    return 0x01;  // Down
+    return 0x01; // Down
   if (!digitalRead(p52))
-    return 0x02;  // Up
+    return 0x02; // Up
   if (!digitalRead(p51))
-    return 0x04;  // Flame
+    return 0x04; // Flame
 
   // Read right button
-  pinMode(p52, OUTPUT);  // set p52 to output, set low
+  pinMode(p52, OUTPUT); // set p52 to output, set low
   digitalWrite(p52, LOW);
   if (!digitalRead(p53))
-    return 0x08;  // Right
-  pinMode(p52, INPUT);  // set p52 back to input and pull-up
+    return 0x08; // Right
+  pinMode(p52, INPUT); // set p52 back to input and pull-up
   digitalWrite(p52, HIGH);
 
   // Read left button
-  pinMode(p51, OUTPUT);  // Set p51 to output and low
+  pinMode(p51, OUTPUT); // Set p51 to output and low
   digitalWrite(p51, LOW);
   if (!digitalRead(p53))
-    return 0x10;  // Left
-  pinMode(p51, INPUT);  // Set p51 back to input and pull-up
+    return 0x10; // Left
+  pinMode(p51, INPUT); // Set p51 back to input and pull-up
   pinMode(p51, HIGH);
 
   return 0;
@@ -1094,7 +1118,7 @@ uint8_t getButtonState()
 
 
 void playSong(){
-  digitalWrite(speakerOut, LOW);     
+  digitalWrite(speakerOut, LOW);
   for (beat = 0; beat < MAXCOUNT; beat++) {
     statePin = !statePin;
     //digitalWrite(ledPin, statePin);
@@ -1124,14 +1148,16 @@ void getNoise(){
   int micro = analogRead(microphone);
   // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 5V):
   float voltage = micro * (5.0 / 1023.0);
-  noise=noise+voltage;
+  noise = voltage;
+  noiseSum += noise;
 }
 
 void getDust(){
   digitalWrite(ledPowerPin,LOW); // power on the LED
   delayMicroseconds(delayTime);
-  double tmpDustVal=double(analogRead(dustPin)); // read the dust value via pin 5 on the sensor
-  dustVal=dustVal+tmpDustVal;
+  double tmpDustVal = double(analogRead(dustPin)); // read the dust value via pin 5 on the sensor
+  dustVal = tmpDustVal;
+  dustSum += dustVal;
   delayMicroseconds(delayTime2);
   digitalWrite(ledPowerPin,HIGH); // turn the LED off
   delayMicroseconds(offTime);
@@ -1165,7 +1191,7 @@ void GetRequest()
 {
   //TODO: Check if attached to GPRS
 
-  //Bearer settings (used for http as IP based application) 
+  //Bearer settings (used for http as IP based application)
   mySerial.println("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");//the connection type: GPRS
   delay(1000);
   ShowSerialData();
@@ -1179,7 +1205,7 @@ void GetRequest()
   ShowSerialData();
 
   mySerial.println("AT+HTTPINIT"); //initialize HTTP request
-  delay(2000); 
+  delay(2000);
   ShowSerialData();
 
   //set the website over HTTPPARA
@@ -1209,10 +1235,3 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
-
-
-
-
-
-
-
