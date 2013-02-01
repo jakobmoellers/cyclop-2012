@@ -1,9 +1,9 @@
 #include <string.h>
 #include <ctype.h>
 
-int ledPin = 13;                  // LED test pin
-int rxPin = 0;                    // RX PIN 
-int txPin = 1;                    // TX TX
+//int ledPin = 13;                  // LED test pin
+int rxPin = 19;                    // RX PIN 
+int txPin = 18;                    // TX TX
 int byteGPS= -1;
 char linea[300] = "";
 char comandoGPR[7] = "$GPRMC";
@@ -15,16 +15,17 @@ int indices[13];
 
 void setup()
 {
-  pinMode(ledPin, OUTPUT);       // Initialize LED pin
+  //pinMode(ledPin, OUTPUT);       // Initialize LED pin
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   Serial.begin(9600);
+  Serial1.begin(9600);
   for (int i=0;i<300;i++)
   {       // Initialize a buffer for received data
     linea[i]=' ';
-  }   
-  
-  delay(5000);
+  } 
+
+  delay(3000);
 
 }
 
@@ -39,13 +40,20 @@ String return_gps_pos()
 
 void loop()
 {
-  
-  digitalWrite(ledPin, HIGH);
-  byteGPS=Serial.read();         // Read a byte of the serial port
+  //if(Serial.available()){
+  //digitalWrite(ledPin, HIGH);
+  byteGPS=Serial1.read();         // Read a byte of the serial port
+  //char test = (char) byteGPS;
+  //Serial.println(test);
+  //delay(100);
+  //Serial.write(byteGPS);
+  /*}else{
+   Serial.println("not available");
+   }*/
   if (byteGPS == -1) 
   {           // See if the port is empty yet
     delay(100);
-   //Serial.println("here"); 
+    Serial.println("here"); 
   } 
   else 
   {
@@ -55,7 +63,7 @@ void loop()
     //Serial.write(byteGPS); 
     if (byteGPS==13)
     {            // If the received byte is = to 13, end of transmission
-      digitalWrite(ledPin, LOW); 
+      //digitalWrite(ledPin, LOW); 
       cont=0;
       bien=0;
       for (int i=1;i<7;i++)
@@ -142,6 +150,10 @@ void loop()
     }
   }
 }
+
+
+
+
 
 
 
