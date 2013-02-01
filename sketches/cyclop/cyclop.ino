@@ -292,8 +292,8 @@ void loop(){
 
       takeMeasurements();
 
-    Serial.println(currentTime.unixtime());
-    Serial.println(lastStore.unixtime());
+    //Serial.println(currentTime.unixtime());
+    //Serial.println(lastStore.unixtime());
 
     if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
       storeMeasurement();
@@ -981,9 +981,7 @@ void getPosition(){
               cont++;
             }
           }
-          Serial.println("");      // ... and write to the serial port
-          Serial.println("");
-          Serial.println("---------------");
+          
           for (int i=0;i<12;i++)
           {
             switch(i)
@@ -1053,9 +1051,9 @@ void getPosition(){
                 lon+=linea[j+1];
               }
             }
-            Serial.println("");
+            //Serial.println("");
           }
-          Serial.println("---------------");
+          //Serial.println("---------------");
         }
         conta=0;                    // Reset the buffer
         for (int i=0;i<300;i++)
