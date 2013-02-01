@@ -109,8 +109,8 @@ boolean rain=false;
 double no2_ppm;
 double co_ppm;
 double gValue;
-double lat;
-double lon;
+String lat;
+String lon;
 float temperature;
 float humidity;
 int secretKey=1337;
@@ -261,7 +261,9 @@ void loop(){
   //Should be included here. I think this comment is obsolete because the m
   //asurements are averaged
 
-  getPosition(); //TODO set coordinate values to lat/lon variables!
+  getPosition();
+  Serial.println(lat);
+  Serial.println(lon);
 
   determineAlertMode();
 
@@ -389,9 +391,11 @@ void storeMeasurement(){
   measurement +=";";
   measurement +=doubleToString((gValueSum/averageCounter),2);
   measurement +=";";
-  measurement +=doubleToString(lat,8);
+  //measurement +=doubleToString(lat,8);
+  measurement+=lat;
   measurement +=";";
-  measurement +=doubleToString(lon,8);
+  //measurement +=doubleToString(lon,8);
+  measurement+=lon;
   measurement +=";";
   char tmpBuffer1[10];
   measurement += floatToString(tmpBuffer1,(tempSum/averageCounter),2);
@@ -430,9 +434,11 @@ void storeHazard(){
   hazard+=";";
   hazard+=currentTime.unixtime();
   hazard+=";";
-  hazard+=doubleToString(lat,8);
+  //hazard+=doubleToString(lat,8);
+  hazard+=lat;
   hazard+=";";
-  hazard+=doubleToString(lon,8);
+  //hazard+=doubleToString(lon,8);
+  hazard+=lon;
   hazard+=";";
   hazard+= String(secretKey);
   hazard+=";";
@@ -458,9 +464,11 @@ void storeTheft(){
   theft+=";";
   theft+=currentTime.unixtime();
   theft+=";";
-  theft+=doubleToString(lat,8);
+  //  theft+=doubleToString(lat,8);
+  theft+=lat;
   theft+=";";
-  theft+=doubleToString(lon,8);
+  //  theft+=doubleToString(lon,8);
+  theft+=lon;
   theft+=";";
   theft+= String(secretKey);
   theft+=";";
@@ -922,6 +930,9 @@ String return_gps_pos(){
 }
 
 void getPosition(){
+  lat="";
+  lon="";
+
   while(true){
     //if(Serial.available()){
     //digitalWrite(ledPin, HIGH);
@@ -977,54 +988,70 @@ void getPosition(){
           {
             switch(i)
             {
-            case 0 :
-              Serial.print("Time in UTC (HhMmSs): ");
-              break;
-            case 1 :
-              Serial.print("Status (A=OK,V=KO): ");
-              break;
-            case 2 :
-              Serial.print("Latitude: ");
-              break;
-            case 3 :
-              Serial.print("Direction (N/S): ");
-              break;
-            case 4 :
-              Serial.print("Longitude: ");
+            case 5 :
+              //Serial.print("Longitude: ");
               for (int i=0;i<300;i++)
               {    //  
                 linea[i]=' ';             
               }  
-              Serial.println("");
+              //Serial.println("");
               return;
-            case 5 :
-              Serial.print("Direction (E/W): ");
-              break;
-            case 6 :
-              Serial.print("Velocity in knots: ");
-              break;
-            case 7 :
-              Serial.print("Heading in degrees: ");
-              break;
-            case 8 :
-              Serial.print("Date UTC (DdMmAa): ");
-              break;
-            case 9 :
-              Serial.print("Magnetic degrees: ");
-              break;
-            case 10 :
-              Serial.print("(E/W): ");
-              break;
-            case 11 :
-              Serial.print("Mode: ");
-              break;
-            case 12 :
-              Serial.print("Checksum: ");
-              break;
+
+              /*case 0 :
+               Serial.print("Time in UTC (HhMmSs): ");
+               break;
+               case 1 :
+               Serial.print("Status (A=OK,V=KO): ");
+               break;
+               case 2 :
+               Serial.print("Latitude: ");
+               break;
+               case 3 :
+               Serial.print("Direction (N/S): ");
+               break;
+               case 4 :
+               Serial.print("Longitude: ");
+               for (int i=0;i<300;i++)
+               {    //  
+               linea[i]=' ';             
+               }  
+               Serial.println("");
+               return;
+               case 5 :
+               Serial.print("Direction (E/W): ");
+               break;
+               case 6 :
+               Serial.print("Velocity in knots: ");
+               break;
+               case 7 :
+               Serial.print("Heading in degrees: ");
+               break;
+               case 8 :
+               Serial.print("Date UTC (DdMmAa): ");
+               break;
+               case 9 :
+               Serial.print("Magnetic degrees: ");
+               break;
+               case 10 :
+               Serial.print("(E/W): ");
+               break;
+               case 11 :
+               Serial.print("Mode: ");
+               break;
+               case 12 :
+               Serial.print("Checksum: ");
+               break;*/
             }
             for (int j=indices[i];j<(indices[i+1]-1);j++)
             {
-              Serial.print(linea[j+1]); 
+              if(i==2){
+                //Serial.print(linea[j+1]); 
+                lat+=linea[j+1];
+              } 
+              if(i==4){
+                //Serial.print(linea[j+1]);
+                lon+=linea[j+1];
+              }
             }
             Serial.println("");
           }
@@ -1256,5 +1283,9 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
+
+
 
 
