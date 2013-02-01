@@ -1,6 +1,6 @@
 /*
 This is the main cyclop application
-*/
+ */
 
 //Libraries
 #include <string.h>
@@ -80,14 +80,14 @@ const char song[]={
   64,8,64,8,64,4};
 /*
 const char song[] = {
-64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
-60,4,60,4,62,4,64,4, 64,-4,62,8,62,2,
-64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
-60,4,60,4,62,4,64,4, 62,-4,60,8,60,2,
-62,4,62,4,64,4,60,4, 62,4,64,8,65,8,64,4,60,4,
-62,4,64,8,65,8,64,4,62,4, 60,4,62,4,55,2,
-64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
-60,4,60,4,62,4,64,4, 62,-4,60,8,60,2};*/
+ 64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4, 64,-4,62,8,62,2,
+ 64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4, 62,-4,60,8,60,2,
+ 62,4,62,4,64,4,60,4, 62,4,64,8,65,8,64,4,60,4,
+ 62,4,64,8,65,8,64,4,62,4, 60,4,62,4,55,2,
+ 64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
+ 60,4,60,4,62,4,64,4, 62,-4,60,8,60,2};*/
 int period, j;
 unsigned int timeUp, beat;
 byte statePin = LOW;
@@ -129,12 +129,12 @@ float noiseSum;
 
 /*
 Main methods
-*/
+ */
 
 void setup(){
 
-  Serial.begin(19200);
-  mySerial.begin(19200);
+  Serial.begin(9600);
+  mySerial.begin(9600);
 
 
   //Water sensor
@@ -146,6 +146,7 @@ void setup(){
   getCalValues();
 
   //GPS
+  Serial1.begin(9600);
   pinMode(rxPin, INPUT);
   pinMode(txPin, OUTPUT);
   for (int i=0;i<300;i++)
@@ -175,7 +176,7 @@ void setup(){
     RTC.adjust(DateTime(__DATE__, __TIME__));
   }
   else Serial.println("done.");
-  
+
   currentTime = RTC.now();
   lastUpload = RTC.now();
   lastStore = RTC.now();
@@ -186,14 +187,14 @@ void setup(){
   vibrate(1);
 
   //Button
-//  pinMode(LEDpin, OUTPUT);
-//  pinMode(p51, INPUT);
-//  pinMode(p53, INPUT);
-//  pinMode(p52, INPUT);
-//  digitalWrite(p51, HIGH);
-//  digitalWrite(p52, HIGH);
-//  digitalWrite(p53, HIGH);
-//  analogWrite(LEDpin, 0);
+  pinMode(LEDpin, OUTPUT);
+  pinMode(p51, INPUT);
+  pinMode(p53, INPUT);
+  pinMode(p52, INPUT);
+  digitalWrite(p51, HIGH);
+  digitalWrite(p52, HIGH);
+  digitalWrite(p53, HIGH);
+  analogWrite(LEDpin, 0);
 
   //Alarm
   pinMode(alarmPin,INPUT);
@@ -224,7 +225,7 @@ void setup(){
     Serial.println("failed!");
   }
   else Serial.println("done.");
-  
+
   delay(500);
   Serial.println("Removing existing files.");
   if (SD.exists("measure.txt"))
@@ -236,11 +237,11 @@ void setup(){
 
   //GPRS
   /*Serial.println("Powering on GPRS Shield.");
-RestartShield();
-delay(5000); // Waiting for GSM Signal
-Serial.println("Connecting to GSM Network.");
-Reconnect();
-delay(5000); // Waiting for service */
+   RestartShield();
+   delay(5000); // Waiting for GSM Signal
+   Serial.println("Connecting to GSM Network.");
+   Reconnect();
+   delay(5000); // Waiting for service */
 
   resetVariablesForAveraging();
 
@@ -311,7 +312,7 @@ void loop(){
 
 /*
 Help Methods
-*/
+ */
 
 void resetVariablesForAveraging(){
   averageCounter=0;
@@ -802,8 +803,8 @@ void ConnectToGSM(){
 
   delay(1000);
   /*GetMccMncCid();
-delay(1000);
-GetLac();*/
+   delay(1000);
+   GetLac();*/
 }
 
 void RestartShield(){
@@ -921,107 +922,125 @@ String return_gps_pos(){
 }
 
 void getPosition(){
-  byteGPS=Serial1.read(); // Read a byte of the serial port
-  if (byteGPS == -1)
-  { // See if the port is empty yet
-    delay(100);
-    //Serial.println("here");
-  }
-  else
-  {
-    //delay(1000);
-    linea[conta]=byteGPS; // If there is serial port data, it is put in the buffer
-    conta++;
+  while(true){
+    //if(Serial.available()){
+    //digitalWrite(ledPin, HIGH);
+    byteGPS=Serial1.read();         // Read a byte of the serial port
+    //char test = (char) byteGPS;
+    //Serial.println(test);
+    //delay(100);
     //Serial.write(byteGPS);
-    if (byteGPS==13)
-    { // If the received byte is = to 13, end of transmission
-      //digitalWrite(ledPin, LOW);
-      cont=0;
-      bien=0;
-      for (int i=1;i<7;i++)
-      { // Verifies if the received command starts with $GPR
-        if (linea[i]==comandoGPR[i-1]){
-          bien++;
+    /*}else{
+     Serial.println("not available");
+     }*/
+    if (byteGPS == -1) 
+    {           // See if the port is empty yet
+      delay(100);
+      //Serial.println("here"); 
+    } 
+    else 
+    {
+      //delay(1000);
+      linea[conta]=byteGPS;        // If there is serial port data, it is put in the buffer
+      conta++;                      
+      //Serial.write(byteGPS); 
+      if (byteGPS==13)
+      {            // If the received byte is = to 13, end of transmission
+        //digitalWrite(ledPin, LOW); 
+        cont=0;
+        bien=0;
+        for (int i=1;i<7;i++)
+        {     // Verifies if the received command starts with $GPR
+          if (linea[i]==comandoGPR[i-1]){
+            bien++;
+          }
         }
-      }
-      if(bien==6)
-      { // If yes, continue and process the data
-        for (int i=0;i<300;i++)
-        {
-          if (linea[i]==',')
-          { // check for the position of the "," separator
-            indices[cont]=i;
-            cont++;
-          }
-          if (linea[i]=='*')
-          { // ... and the "*"
-            indices[12]=i;
-            cont++;
-          }
-        }
-        Serial.println(""); // ... and write to the serial port
-        Serial.println("");
-        Serial.println("---------------");
-        for (int i=0;i<12;i++)
-        {
-          switch(i)
+        if(bien==6)
+        {               // If yes, continue and process the data
+          for (int i=0;i<300;i++)
           {
-          case 0 :
-            Serial.print("Time in UTC (HhMmSs): ");
-            break;
-          case 1 :
-            Serial.print("Status (A=OK,V=KO): ");
-            break;
-          case 2 :
-            Serial.print("Latitude: ");
-            break;
-          case 3 :
-            Serial.print("Direction (N/S): ");
-            break;
-          case 4 :
-            Serial.print("Longitude: ");
-            break;
-          case 5 :
-            Serial.print("Direction (E/W): ");
-            break;
-          case 6 :
-            Serial.print("Velocity in knots: ");
-            break;
-          case 7 :
-            Serial.print("Heading in degrees: ");
-            break;
-          case 8 :
-            Serial.print("Date UTC (DdMmAa): ");
-            break;
-          case 9 :
-            Serial.print("Magnetic degrees: ");
-            break;
-          case 10 :
-            Serial.print("(E/W): ");
-            break;
-          case 11 :
-            Serial.print("Mode: ");
-            break;
-          case 12 :
-            Serial.print("Checksum: ");
-            break;
+            if (linea[i]==',')
+            {    // check for the position of the  "," separator
+              indices[cont]=i;
+              cont++;
+            }
+            if (linea[i]=='*')
+            {    // ... and the "*"
+              indices[12]=i;
+              cont++;
+            }
           }
-          for (int j=indices[i];j<(indices[i+1]-1);j++)
-          {
-            Serial.print(linea[j+1]);
-          }
+          Serial.println("");      // ... and write to the serial port
           Serial.println("");
+          Serial.println("---------------");
+          for (int i=0;i<12;i++)
+          {
+            switch(i)
+            {
+            case 0 :
+              Serial.print("Time in UTC (HhMmSs): ");
+              break;
+            case 1 :
+              Serial.print("Status (A=OK,V=KO): ");
+              break;
+            case 2 :
+              Serial.print("Latitude: ");
+              break;
+            case 3 :
+              Serial.print("Direction (N/S): ");
+              break;
+            case 4 :
+              Serial.print("Longitude: ");
+              for (int i=0;i<300;i++)
+              {    //  
+                linea[i]=' ';             
+              }  
+              Serial.println("");
+              return;
+            case 5 :
+              Serial.print("Direction (E/W): ");
+              break;
+            case 6 :
+              Serial.print("Velocity in knots: ");
+              break;
+            case 7 :
+              Serial.print("Heading in degrees: ");
+              break;
+            case 8 :
+              Serial.print("Date UTC (DdMmAa): ");
+              break;
+            case 9 :
+              Serial.print("Magnetic degrees: ");
+              break;
+            case 10 :
+              Serial.print("(E/W): ");
+              break;
+            case 11 :
+              Serial.print("Mode: ");
+              break;
+            case 12 :
+              Serial.print("Checksum: ");
+              break;
+            }
+            for (int j=indices[i];j<(indices[i+1]-1);j++)
+            {
+              Serial.print(linea[j+1]); 
+            }
+            Serial.println("");
+          }
+          Serial.println("---------------");
         }
-        Serial.println("---------------");
-      }
-      conta=0; // Reset the buffer
-      for (int i=0;i<300;i++)
-      { //
-        linea[i]=' ';
+        conta=0;                    // Reset the buffer
+        for (int i=0;i<300;i++)
+        {    //  
+          linea[i]=' ';             
+        }                 
       }
     }
   }
+
 }
+
 
 //NO2
 
@@ -1237,3 +1256,5 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
