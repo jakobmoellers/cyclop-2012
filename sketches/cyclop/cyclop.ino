@@ -280,7 +280,7 @@ void loop(){
       Serial.println("Theft detected");
       storeTheft();
       Serial.println("Theft stored. Try upload");
-      //uploadTheft();
+      uploadTheft();
     }
 
 
