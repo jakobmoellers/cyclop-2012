@@ -134,7 +134,7 @@ Main methods
 void setup(){
 
   Serial.begin(9600);
-  mySerial.begin(9600);
+  mySerial.begin(19200);
 
 
   //Water sensor
@@ -304,10 +304,10 @@ void loop(){
     checkforHazardButtonPressed();
 
     if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
-      //uploadMeasurements();
+      uploadMeasurements();
     }
 
-    //uploadHazards();
+    uploadHazards();
 
   }
 }
@@ -584,7 +584,7 @@ void TcpPost(int postOption){
 
   delay(500);
 
-  mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.146.214\",\"80\"");//start up the connection
+  mySerial.println("AT+CIPSTART=\"TCP\",\"128.176.147.30\",\"80\"");//start up the connection
   //wait for the correct response "CONNECT OK"; return after 20 retries
   while (!connectOk){
     delay(100);
@@ -617,7 +617,7 @@ void TcpPost(int postOption){
   delay(100);
   ShowSerialData();
 
-  mySerial.println("Host: potwech.uni-muenster.de");
+  mySerial.println("Host: giv-cyclop.uni-muenster.de");
   delay(100);
   ShowSerialData();
 
