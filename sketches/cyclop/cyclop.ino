@@ -253,6 +253,9 @@ void loop(){
 
   currentTime=RTC.now();
 
+  lat="";
+  lon="";
+
   //TODO: Make Display announcements to ease debugging.
 
   //TODO Download new hazards in a time interval of 1 minute
@@ -262,53 +265,61 @@ void loop(){
   //asurements are averaged
 
   getPosition();
-  Serial.println(lat);
-  Serial.println(lon);
+  if ((lat!="")&&(lon!="")){
+    Serial.println(lat);
+    Serial.println(lon);
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("MEASURING");
 
-  determineAlertMode();
+    determineAlertMode();
 
-  if(alarm==true){
-    //Alarm mode
-    resetVariablesForAveraging();
-
-    getAcc();
-
-    //Serial.println(gValue);
-
-    if (gValue>1.05||gValue<0.95){
-      //Serial.println(gValue);
-      Serial.println("Theft detected");
-      storeTheft();
-      Serial.println("Theft stored. Try upload");
-      uploadTheft();
-    }
-
-
-
-  }
-  else {
-
-    //Standard mode
-
-      takeMeasurements();
-
-    //Serial.println(currentTime.unixtime());
-    //Serial.println(lastStore.unixtime());
-
-    if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
-      storeMeasurement();
+    if(alarm==true){
+      //Alarm mode
       resetVariablesForAveraging();
-      Serial.println("Storing and averaging complete");
+
+      getAcc();
+
+      //Serial.println(gValue);
+
+      if (gValue>1.05||gValue<0.95){
+        //Serial.println(gValue);
+        Serial.println("Theft detected");
+        storeTheft();
+        Serial.println("Theft stored. Try upload");
+        uploadTheft();
+      }
+
+
+
     }
+    else {
 
-    checkforHazardButtonPressed();
+      //Standard mode
 
-    if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
-      uploadMeasurements();
+        takeMeasurements();
+
+      //Serial.println(currentTime.unixtime());
+      //Serial.println(lastStore.unixtime());
+
+      if (DiffBiggerOrEqual(currentTime,lastStore,storeInterval)){
+        storeMeasurement();
+        resetVariablesForAveraging();
+        Serial.println("Storing and averaging complete");
+      }
+
+      checkforHazardButtonPressed();
+
+      if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
+        uploadMeasurements();
+      }
+
+      uploadHazards();
+
     }
-
-    uploadHazards();
-
+  } 
+  else {
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("NO GPS");
   }
 }
 
@@ -981,7 +992,7 @@ void getPosition(){
               cont++;
             }
           }
-          
+
           for (int i=0;i<12;i++)
           {
             switch(i)
@@ -1281,6 +1292,8 @@ void GetRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
