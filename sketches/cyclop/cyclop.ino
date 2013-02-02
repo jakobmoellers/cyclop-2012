@@ -69,8 +69,10 @@ RTC_DS1307 RTC; //RTC
 DateTime currentTime;
 DateTime lastUpload;
 DateTime lastStore;
+DateTime lastHazardGet;
 long uploadInterval = 40;
 long storeInterval = 20;
+long hazardInterval = 20;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
@@ -180,6 +182,7 @@ void setup(){
   currentTime = RTC.now();
   lastUpload = RTC.now();
   lastStore = RTC.now();
+  lastHazardGet = RTC.now();
 
   //Vibration
   pinMode(vibration1,OUTPUT);
@@ -241,7 +244,7 @@ void setup(){
    delay(5000); // Waiting for GSM Signal
    Serial.println("Connecting to GSM Network.");
    Reconnect();
-   delay(5000); // Waiting for service */
+   delay(5000); // Waiting for service*/
 
   resetVariablesForAveraging();
 
@@ -259,8 +262,9 @@ void loop(){
   //TODO: Make Display announcements to ease debugging.
 
   //TODO Download new hazards in a time interval of 1 minute
-  
-  getHazards();
+  if (DiffBiggerOrEqual(currentTime,lastHazardGet,hazardInterval)){
+    getHazards();
+  }
 
   //TODO What about the measurement process? Also every minute?
   //Should be included here. I think this comment is obsolete because the m
@@ -594,11 +598,11 @@ void getHazards(){
   if(getSignalStatus()=="attached" && IsIpAvailable()){
     Serial.println("Attached and connected.");
     //if (SD.exists("measure.txt")){
-      delay(2000);
-      Serial.println("Trying to get hazards.");
-      getRequest();
-      //TcpPost(1);
-      //lastUpload=RTC.now();
+    delay(2000);
+    Serial.println("Trying to get hazards.");
+    getRequest();
+    //TcpPost(1);
+    //lastUpload=RTC.now();
     //}
   }
   else if(getSignalStatus()=="deactivated"){
@@ -1294,6 +1298,9 @@ void getRequest()
   //set the website over HTTPPARA
   //mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
   mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
+
+  //TODO: post coordinates here!!!
+
   delay(1000);
   ShowSerialData();
 
@@ -1314,23 +1321,31 @@ void getRequest()
     dat += char(in);
   }
   Serial.print("a");
-  
+
   String getHaz = dat;
   Serial.print(getHaz);
   Serial.println("b");
-  
+
   if (getHaz.indexOf("HTTPREAD:") >=0){
-    //playSong();
+    vibrate(1);
+    delay(200);
+    vibrate(1);
+    playSong();
     Serial.println("Hazards detected");
-    
-  } else {
-   Serial.println("No Hazards"); 
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("HAZARD-ALERT!");
+  } 
+  else {
+    Serial.println("No Hazards"); 
   }
+  lastHazardGet=RTC.now();
   mySerial.println(dat);
   delay(100);
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
