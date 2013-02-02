@@ -259,6 +259,8 @@ void loop(){
   //TODO: Make Display announcements to ease debugging.
 
   //TODO Download new hazards in a time interval of 1 minute
+  
+  getHazards();
 
   //TODO What about the measurement process? Also every minute?
   //Should be included here. I think this comment is obsolete because the m
@@ -336,6 +338,7 @@ void resetVariablesForAveraging(){
   coSum = 0;
   noiseSum = 0;
   rain=false;
+  dustSum=0;
 }
 
 
@@ -584,6 +587,29 @@ void uploadTheft(){
       Reconnect();
     }
   }
+}
+
+void getHazards(){
+  Serial.println("G E T H A Z A R D S");
+  if(getSignalStatus()=="attached" && IsIpAvailable()){
+    Serial.println("Attached and connected.");
+    //if (SD.exists("measure.txt")){
+      delay(2000);
+      Serial.println("Trying to get hazards.");
+      getRequest();
+      //TcpPost(1);
+      //lastUpload=RTC.now();
+    //}
+  }
+  else if(getSignalStatus()=="deactivated"){
+    Serial.println("GPRS Shield is offline...restarting.");
+    RestartShield();
+  }
+  else if(!IsIpAvailable() || getSignalStatus()=="detached"){
+    Serial.println("Detached from GPRS or not connected...reconnecting.");
+    Reconnect();
+  }
+
 }
 
 void TcpPost(int postOption){
@@ -1244,7 +1270,7 @@ boolean DiffBiggerOrEqual(DateTime a, DateTime b, long timeDiff){
   return (c >= timeDiff);
 }
 
-void GetRequest()
+void getRequest()
 {
   //TODO: Check if attached to GPRS
 
@@ -1266,6 +1292,7 @@ void GetRequest()
   ShowSerialData();
 
   //set the website over HTTPPARA
+  //mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
   mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
   delay(1000);
   ShowSerialData();
@@ -1286,7 +1313,19 @@ void GetRequest()
     in=mySerial.read();
     dat += char(in);
   }
-
+  Serial.print("a");
+  
+  String getHaz = dat;
+  Serial.print(getHaz);
+  Serial.println("b");
+  
+  if (getHaz.indexOf("HTTPREAD:") >=0){
+    //playSong();
+    Serial.println("Hazards detected");
+    
+  } else {
+   Serial.println("No Hazards"); 
+  }
   mySerial.println(dat);
   delay(100);
 
