@@ -1296,7 +1296,14 @@ void getRequest()
 
   //set the website over HTTPPARA
   //mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
-  mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
+  
+  String urlnew="AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_CSV_within/";
+  urlnew+=lat;
+  urlnew+="/";
+  urlnew+=lon;
+  urlnew+="/1\"";
+  Serial.println(urlnew);
+  mySerial.println(urlnew);
 
   //TODO: post coordinates here!!!
 
