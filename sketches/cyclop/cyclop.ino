@@ -260,17 +260,19 @@ void loop(){
 
   //TODO: Make Display announcements to ease debugging.
 
-  //TODO Download new hazards in a time interval of 1 minute
-  if (DiffBiggerOrEqual(currentTime,lastHazardGet,hazardInterval)){
-    getHazards();
-  }
-
   //TODO What about the measurement process? Also every minute?
   //Should be included here. I think this comment is obsolete because the m
   //asurements are averaged
 
   getPosition();
   if ((lat!="")&&(lon!="")){
+
+    //TODO Download new hazards in a time interval of 1 minute
+    if (DiffBiggerOrEqual(currentTime,lastHazardGet,hazardInterval)){
+      getHazards();
+    }
+
+
     Serial.println(lat);
     Serial.println(lon);
     SeeedOled.clearDisplay();
@@ -1296,7 +1298,7 @@ void getRequest()
 
   //set the website over HTTPPARA
   //mySerial.println("AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_csv\"");
-  
+
   String urlnew="AT+HTTPPARA=\"URL\",\"giv-cyclop.uni-muenster.de/rest/index.php/hazards_CSV_within/";
   urlnew+=lat;
   urlnew+="/";
@@ -1350,6 +1352,7 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
 
