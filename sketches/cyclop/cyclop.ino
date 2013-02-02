@@ -80,8 +80,7 @@ unsigned int timeUpDown[128]; //Speaker
 const byte BPM = 200;
 const char song[]={
   64,8,64,8,64,4};
-/*
-const char song[] = {
+/*const char song[] = {
  64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
  60,4,60,4,62,4,64,4, 64,-4,62,8,62,2,
  64,4,64,4,65,4,67,4, 67,4,65,4,64,4,62,4,
@@ -239,12 +238,12 @@ void setup(){
     SD.remove("thefts.txt");
 
   //GPRS
-  /*Serial.println("Powering on GPRS Shield.");
-   RestartShield();
-   delay(5000); // Waiting for GSM Signal
-   Serial.println("Connecting to GSM Network.");
-   Reconnect();
-   delay(5000); // Waiting for service*/
+  Serial.println("Powering on GPRS Shield.");
+  RestartShield();
+  delay(5000); // Waiting for GSM Signal
+  Serial.println("Connecting to GSM Network.");
+  Reconnect();
+  delay(5000); // Waiting for service
 
   resetVariablesForAveraging();
 
@@ -1344,6 +1343,7 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
 
