@@ -12,13 +12,13 @@ void setup() {
 void loop() {
   
   
-  getHazard();
+  getHazardEvaluation();
   delay(1000);        // delay in between reads for stability
 }
 
 
 
-boolean getHazard(){
+boolean getHazardEvaluation(){
   String lat = "5158.36879";
   String lon = "00735.75679";
    
