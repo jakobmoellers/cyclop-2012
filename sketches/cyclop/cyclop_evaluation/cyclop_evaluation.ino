@@ -237,12 +237,12 @@ void setup(){
     SD.remove("thefts.txt");
 
   //GPRS
-  Serial.println("Powering on GPRS Shield.");
+  /*Serial.println("Powering on GPRS Shield.");
   RestartShield();
   delay(5000); // Waiting for GSM Signal
   Serial.println("Connecting to GSM Network.");
   Reconnect();
-  delay(5000); // Waiting for service
+  delay(5000); // Waiting for service*/
 
   resetVariablesForAveraging();
 
@@ -382,7 +382,7 @@ void hazardAlert(){
 boolean getHazardEvaluation(){
 
   double latMin = stringToDouble(lat.substring(2,4)+lat.substring(5));
-  double latDeg = 52 + (latMin/60)/100000;
+  double latDeg = 51 + (latMin/60)/100000;
   double lonMin = stringToDouble(lon.substring(3,5)+lon.substring(6));
   double lonDeg = 7 + (lonMin/60)/100000;
 
