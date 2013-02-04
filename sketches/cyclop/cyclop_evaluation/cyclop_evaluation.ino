@@ -238,11 +238,11 @@ void setup(){
 
   //GPRS
   /*Serial.println("Powering on GPRS Shield.");
-  RestartShield();
-  delay(5000); // Waiting for GSM Signal
-  Serial.println("Connecting to GSM Network.");
-  Reconnect();
-  delay(5000); // Waiting for service*/
+   RestartShield();
+   delay(5000); // Waiting for GSM Signal
+   Serial.println("Connecting to GSM Network.");
+   Reconnect();
+   delay(5000); // Waiting for service*/
 
   resetVariablesForAveraging();
 
@@ -379,6 +379,8 @@ void hazardAlert(){
   }
 }
 
+boolean nearhazard=false;
+
 boolean getHazardEvaluation(){
 
   double latMin = stringToDouble(lat.substring(2,4)+lat.substring(5));
@@ -388,10 +390,10 @@ boolean getHazardEvaluation(){
 
   int numberOfHazards = 2;
   //51.941266,
-  double hazardsLat[3] = {
-    51.964518,51.962964                  };
-  double hazardsLon[3] = {
-    7.616261,7.616154                  };
+  double hazardsLat[2] = {
+    51.964518,51.962964                      };
+  double hazardsLon[2] = {
+    7.616261,7.616154                      };
 
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
@@ -403,9 +405,13 @@ boolean getHazardEvaluation(){
     float distance = distance_between(latDeg, lonDeg, hazardsLat[i], hazardsLon[i]);
     Serial.print("Distance: ");
     Serial.println(distance);
-    if(distance < 100){
+    if(distance < 50 && nearhazard==false){
       Serial.println("Hazard!!");
       hazardAlert();
+      nearhazard=true;
+    } 
+    else if (distance > 50 && nearhazard==true){
+      nearhazard=false;
     }
   }
 }
@@ -1469,6 +1475,8 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
