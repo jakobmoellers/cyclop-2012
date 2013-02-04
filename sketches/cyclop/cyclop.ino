@@ -70,9 +70,9 @@ DateTime currentTime;
 DateTime lastUpload;
 DateTime lastStore;
 DateTime lastHazardGet;
-long uploadInterval = 40;
+long uploadInterval = 300;
 long storeInterval = 20;
-long hazardInterval = 20;
+long hazardInterval = 60;
 int button = 0; //Button
 int ledLevel = 255;
 int onstatus = 0;
@@ -134,7 +134,17 @@ Main methods
 
 void setup(){
 
-  Serial.begin(9600);
+  //Display
+  Wire.begin();
+  SeeedOled.init(); //initialze SEEED OLED display
+  DDRB|=0x21; //digital pin 8, LED glow indicates Film properly Connected .
+  PORTB |= 0x21;
+  SeeedOled.clearDisplay(); //clear the screen and set start position to top left corner
+  SeeedOled.setNormalDisplay(); //Set display to normal mode (i.e non-inverse mode)
+  SeeedOled.setHorizontalMode();
+  SeeedOled.putString("Welcome to Cyclop! Starting up..."); //Print the String
+
+    Serial.begin(9600);
   mySerial.begin(19200);
 
 
@@ -158,17 +168,7 @@ void setup(){
   //DHT
   dht.begin();
 
-  //Display
-  Wire.begin();
-  SeeedOled.init(); //initialze SEEED OLED display
-  DDRB|=0x21; //digital pin 8, LED glow indicates Film properly Connected .
-  PORTB |= 0x21;
-  SeeedOled.clearDisplay(); //clear the screen and set start position to top left corner
-  SeeedOled.setNormalDisplay(); //Set display to normal mode (i.e non-inverse mode)
-  SeeedOled.setHorizontalMode();
-  SeeedOled.putString("Welcome to Cyclop!"); //Print the String
-
-    //RTC
+  //RTC
   RTC.begin();
   Serial.print("Initializing RTC...");
   if (! RTC.isrunning()) {
@@ -248,6 +248,8 @@ void setup(){
   resetVariablesForAveraging();
 
   Serial.println("initialization complete");
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("System ready.");
 
 }
 
@@ -275,8 +277,7 @@ void loop(){
 
     Serial.println(lat);
     Serial.println(lon);
-    SeeedOled.clearDisplay();
-    SeeedOled.putString("MEASURING");
+
 
     determineAlertMode();
 
@@ -348,6 +349,9 @@ void resetVariablesForAveraging(){
 
 
 void takeMeasurements(){
+
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("MEASURING");
 
   averageCounter=averageCounter+1;
 
@@ -530,6 +534,8 @@ void printlnSD(String str, int fileName){
 
 void uploadMeasurements(){
   Serial.println("U P L O A D M E A S U R E");
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("Uploading measurements");
   if(getSignalStatus()=="attached" && IsIpAvailable()){
     Serial.println("Attached and connected.");
     if (SD.exists("measure.txt")){
@@ -551,6 +557,8 @@ void uploadMeasurements(){
 }
 
 void uploadHazards(){
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("Uploading hazards");
   if (SD.exists("hazards.txt")){
     Serial.println("U P L O A D  H A Z A R D S");
     if(getSignalStatus()=="attached" && IsIpAvailable()){
@@ -595,6 +603,8 @@ void uploadTheft(){
 }
 
 void getHazards(){
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("Downloading hazards");
   Serial.println("G E T H A Z A R D S");
   if(getSignalStatus()=="attached" && IsIpAvailable()){
     Serial.println("Attached and connected.");
@@ -1352,6 +1362,7 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
 
