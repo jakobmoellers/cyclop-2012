@@ -10,11 +10,10 @@ $app = new \Slim\Slim();
 
 $app->get('/hazards(/:bikeId)', function ($bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"hazardId\", timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards where \"mobile_dev_ref\" = ".$bikeId);
+		$result = query("select \"hazardId\",to_char(timestamp, 'IYYY-MM-DD HH24:MI:SS') as timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards where \"mobile_dev_ref\" = ".$bikeId." ORDER BY timestamp desc");
 	}else{
-		$result = query("select \"hazardId\",timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards");
+		$result = query("select \"hazardId\",to_char(timestamp, 'IYYY-MM-DD HH24:MI:SS') as timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, description from hazards ORDER BY timestamp desc");
 	}
-	error_log("GET hazards: ",0);
 
 	$json = array();
 	$json['type'] = 'FeatureCollection';
@@ -25,7 +24,7 @@ $app->get('/hazards(/:bikeId)', function ($bikeId=null) {
 			$point['type'] = 'Feature';
 			$point['properties'] = array();
 			$point['properties']['hazardId'] = $row['hazardId'];
-			$point['properties']['timestamp'] = $row['timestamp'];
+			$point['properties']['timestamp'] = str_replace(' ','T',$row['timestamp']);
 			$point['properties']['description']=$row['description'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -56,12 +55,34 @@ $app->get('/hazards_csv(/:bikeId)', function ($bikeId=null) {
 	echo substr($returnString, 0, strlen($returnString)-1);
 });
 
+$app->get('/hazards_CSV_within/:lat/:lon/:distance', function ($lat, $lon, $distance) {
+	$distance = $distance * 0.009;
+	
+	$lat = $lat/100;
+	$lon = $lon/100;
+	$lat = floor($lat) + ((($lat-floor($lat))/60)*100);
+	$lon = floor($lon) + ((($lon-floor($lon))/60)*100);
+	
+	$result = query('select "hazardId", timestamp, description, st_x(geom) as lat, st_y(geom) as lon, st_z(geom) as height from hazards where ST_Dwithin(geom, ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326), '.$distance.')');
+
+	$returnString = "";
+			
+		while($row = pg_fetch_assoc($result)){
+			$returnString .= $row['lat'].','.$row['lon'].';';	
+		}	
+
+	echo substr($returnString, 0, strlen($returnString)-1);
+	
+});
+
 
 $app->get('/measurements(/:bikeId)', function ($bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where \"deviceId\" = ".$bikeId);
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where \"deviceId\" = ".$bikeId);
+		//$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where \"deviceId\" = ".$bikeId);
 	}else{
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements");
+		//$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements");
 	}
 
 	$json = array();
@@ -76,7 +97,11 @@ $app->get('/measurements(/:bikeId)', function ($bikeId=null) {
 			$point['properties']['temperature'] = $row['temperature'];
 			$point['properties']['humidity'] = $row['humidity'];
 			$point['properties']['noise'] = $row['noise'];
-			$point['properties']['light'] = $row['light'];
+			$point['properties']['rain'] = $row['rain'];
+			$point['properties']['no2'] = $row['no2'];
+			$point['properties']['co'] = $row['co'];
+			$point['properties']['g'] = $row['g'];
+			$point['properties']['dust'] = $row['dust'];
 			$point['properties']['timestamp'] = $row['timestamp'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -92,9 +117,9 @@ $app->get('/measurements(/:bikeId)', function ($bikeId=null) {
 
 $app->get('/measurements/after/:timeafter(/:bikeId)', function ($timeafter,$bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
 	}else{
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where timestamp>'".$timeafter."'");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where timestamp>'".$timeafter."'");
 	}
 
 	$json = array();
@@ -109,7 +134,11 @@ $app->get('/measurements/after/:timeafter(/:bikeId)', function ($timeafter,$bike
 			$point['properties']['temperature'] = $row['temperature'];
 			$point['properties']['humidity'] = $row['humidity'];
 			$point['properties']['noise'] = $row['noise'];
-			$point['properties']['light'] = $row['light'];
+			$point['properties']['rain'] = $row['rain'];
+			$point['properties']['no2'] = $row['no2'];
+			$point['properties']['co'] = $row['co'];
+			$point['properties']['g'] = $row['g'];
+			$point['properties']['dust'] = $row['dust'];
 			$point['properties']['timestamp'] = $row['timestamp'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -117,7 +146,7 @@ $app->get('/measurements/after/:timeafter(/:bikeId)', function ($timeafter,$bike
 			array_push($point['geometry']['coordinates'],floatval($row['lon']));
 			array_push($point['geometry']['coordinates'],floatval($row['lat']));
 			array_push($point['geometry']['coordinates'],floatval($row['height']));
-			array_push($json['features'],$point); 	
+			array_push($json['features'],$point);	
 		}	
 	header('Content-Type: application/json');
 	echo json_encode($json);
@@ -125,9 +154,9 @@ $app->get('/measurements/after/:timeafter(/:bikeId)', function ($timeafter,$bike
 
 $app->get('/measurements/before/:timebefore(/:bikeId)', function ($timebefore,$bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (\"deviceId\" = ".$bikeId.")");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where (timestamp<'".$timebefore."') AND (\"deviceId\" = ".$bikeId.")");
 	}else{
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where timestamp<'".$timebefore."'");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where timestamp<'".$timebefore."'");
 	}
 
 	$json = array();
@@ -142,7 +171,11 @@ $app->get('/measurements/before/:timebefore(/:bikeId)', function ($timebefore,$b
 			$point['properties']['temperature'] = $row['temperature'];
 			$point['properties']['humidity'] = $row['humidity'];
 			$point['properties']['noise'] = $row['noise'];
-			$point['properties']['light'] = $row['light'];
+			$point['properties']['rain'] = $row['rain'];
+			$point['properties']['no2'] = $row['no2'];
+			$point['properties']['co'] = $row['co'];
+			$point['properties']['g'] = $row['g'];
+			$point['properties']['dust'] = $row['dust'];
 			$point['properties']['timestamp'] = $row['timestamp'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -150,7 +183,7 @@ $app->get('/measurements/before/:timebefore(/:bikeId)', function ($timebefore,$b
 			array_push($point['geometry']['coordinates'],floatval($row['lon']));
 			array_push($point['geometry']['coordinates'],floatval($row['lat']));
 			array_push($point['geometry']['coordinates'],floatval($row['height']));
-			array_push($json['features'],$point); 	
+			array_push($json['features'],$point);	
 		}	
 	header('Content-Type: application/json');
 	echo json_encode($json);
@@ -158,9 +191,9 @@ $app->get('/measurements/before/:timebefore(/:bikeId)', function ($timebefore,$b
 
 $app->get('/measurements/interval/:timeafter/:timebefore(/:bikeId)', function ($timeafter,$timebefore,$bikeId=null) {
 	if($bikeId != null){
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."') AND (\"deviceId\" = ".$bikeId.")");
 	}else{
-		$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."')");
+		$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where (timestamp<'".$timebefore."') AND (timestamp>'".$timeafter."')");
 	}
 
 	$json = array();
@@ -175,7 +208,11 @@ $app->get('/measurements/interval/:timeafter/:timebefore(/:bikeId)', function ($
 			$point['properties']['temperature'] = $row['temperature'];
 			$point['properties']['humidity'] = $row['humidity'];
 			$point['properties']['noise'] = $row['noise'];
-			$point['properties']['light'] = $row['light'];
+			$point['properties']['rain'] = $row['rain'];
+			$point['properties']['no2'] = $row['no2'];
+			$point['properties']['co'] = $row['co'];
+			$point['properties']['g'] = $row['g'];
+			$point['properties']['dust'] = $row['dust'];
 			$point['properties']['timestamp'] = $row['timestamp'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
@@ -202,13 +239,22 @@ $app->get('/last_position/:bikeId', function ($bikeId) {
 			$point['type'] = 'Feature';
 			$point['properties'] = array();
 			$point['properties']['measurementId'] = $row['measurementId'];
+			$point['properties']['temperature'] = $row['temperature'];
+			$point['properties']['humidity'] = $row['humidity'];
+			$point['properties']['noise'] = $row['noise'];
+			$point['properties']['rain'] = $row['rain'];
+			$point['properties']['no2'] = $row['no2'];
+			$point['properties']['co'] = $row['co'];
+			$point['properties']['g'] = $row['g'];
+			$point['properties']['dust'] = $row['dust'];
+			$point['properties']['timestamp'] = $row['timestamp'];
 			$point['geometry'] = array();
 			$point['geometry']['type'] = 'Point';
 			$point['geometry']['coordinates'] = array();
 			array_push($point['geometry']['coordinates'],floatval($row['lon']));
 			array_push($point['geometry']['coordinates'],floatval($row['lat']));
 			array_push($point['geometry']['coordinates'],floatval($row['height']));
-			array_push($json['features'],$point); 	
+			array_push($json['features'],$point);	
 		}	
 	header('Content-Type: application/json');
 	echo json_encode($json);
@@ -236,7 +282,7 @@ $app->get('/mobile_devices/:userId', function ($userId) {
 
 $app->get('/boundingbox/measurements/:lat1/:lon1/:lat2/:lon2', function ($lat1,$lon1,$lat2,$lon2) {
 	
-	$result = query("select \"measurementId\", temperature, humidity, light, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height from measurements where geom && ST_MakeEnvelope(".$lat1.", ".$lon1.", ".$lat2.", ".$lon2.", 4326)");
+	$result = query("select \"measurementId\", temperature, humidity, noise,timestamp, ST_X(geom) as lat, ST_Y(geom) as lon, ST_Z(geom) as height, rain, no2, co, g, dust from measurements where geom && ST_MakeEnvelope(".$lat1.", ".$lon1.", ".$lat2.", ".$lon2.", 4326)");
 
 	$json = array();
 	$json['type'] = 'FeatureCollection';
@@ -519,7 +565,7 @@ $app->post('/set_theft_monitoring', function () use ($app) {
 //</Dreister code Ende>
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=true;1357734361;238;345;3;52;7;25;50;1337;100;43;5;true;1357734361;238;345;3;52;7;25;50;1337;100;43;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postMeasurement 
+curl -i -H "Accept: application/json" -X POST -d 'data=0;1359828862;238;345;3;5158.36879;00735.75679;25;50;1337;100;43;5;1;1359828862;238;345;3;5158.36879;00735.75679;25;50;1337;100;43;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postMeasurement 
 */
 
 // rain, timestamp, no2, co, g, lat, lon, temperature, humidity, secretKey, dust, noise, deviceID
@@ -533,21 +579,26 @@ $app->post('/postMeasurement', function() use ($app){
 		$max = 13;
 		if((sizeof($parsed) % $max)==0){
 		for ($i=0;$i<sizeof($parsed);$i=$i+13){
-			$rain = $parsed[$i+0];
-			$timestamp = $parsed[$i+1];
+			if($parsed[$i+0] == 1){
+				$rain = 't';
+			}else{
+				$rain = 'f';
+			}
+			$timestamp = $parsed[$i+1]-3600;
 			$no2 = $parsed[$i+2];
 			$co = $parsed[$i+3];
 			$g = $parsed[$i+4];
-			$lat = $parsed[$i+5];
-			$lon = $parsed[$i+6];
+			$lat = $parsed[$i+5]/100;
+			$lat = floor($lat) + ((($lat-floor($lat))/60)*100);
+			$lon = $parsed[$i+6]/100;
+			$lon = floor($lon) + ((($lon-floor($lon))/60)*100);
 			$temperature = $parsed[$i+7];
 			$humidity = $parsed[$i+8];
 			$key = $parsed[$i+9];
-			$dust = $parsed[$i+10];
+			$dust = (double)$parsed[$i+10];
 			$noise = $parsed[$i+11];
 			$deviceId = $parsed[$i+12];
-
-			
+		
 			
 			$db_key = null;
 			$result = query('select * from mobile_devices where mobile_devices."deviceId" = '.$deviceId.' limit 1');
@@ -559,7 +610,7 @@ $app->post('/postMeasurement', function() use ($app){
 			if($key==$db_key){
 
 				//Insert into database   // rain, timestamp, no2, co, g, lat, lon, temperature, humidity, secretKey, dust, noise, deviceID
-					query('insert into measurements(timestamp, geom, "deviceId", temperature, humidity, noise, rain, no2, co, g, dust) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.','.$temperature.','.$humidity.','.$noise.','.$rain.','.$no2.','.$co.','.$g.','.$dust.')');
+					query('insert into measurements(timestamp, geom, "deviceId", temperature, humidity, noise, rain, no2, co, g, dust) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.','.$temperature.','.$humidity.','.$noise.',\''.$rain.'\','.$no2.','.$co.','.$g.','.$dust.')');
 				
 				if($i == $max){
 					$hazards = query('select st_x(geom) as lat, st_y(geom) as lon from hazards where ST_Dwithin(geom, ST_SetSRID(ST_MakePoint('.$lat.','.$lon.'), 4326), 0.02)');
@@ -585,7 +636,7 @@ $app->post('/postMeasurement', function() use ($app){
 });
 
 /*
-curl -i -H "Accept: application/json" -X POST -d 'data=hazard;1357734361;51.1;7.9;1337;5;hazard;1357734361;51.1;7.9;1337;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postHazard 
+curl -i -H "Accept: application/json" -X POST -d 'data=hazard;1357734361;51.951248;7.617302;1337;5;hazard;1357734361;51.966481;7.618675;1337;5;hazard;1357734361;51.951247;7.617302;1337;5;hazard;1357734361;51.951249;7.617302;1337;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postHazard 
 */
 
 //unsinn,timestamp, lat, lon, secretkey, devideId
@@ -600,9 +651,11 @@ $app->post('/postHazard', function() use ($app){
 		if((sizeof($parsed) % $max)==0){
 		for ($i=0;$i<sizeof($parsed);$i=$i+6){
 			$unsinn = $parsed[$i+0];
-			$timestamp = $parsed[$i+1];
-			$lat = $parsed[$i+2];
-			$lon = $parsed[$i+3];
+			$timestamp = $parsed[$i+1]-3600;
+			$lat = $parsed[$i+2]/100;
+			$lat = floor($lat) + ((($lat-floor($lat))/60)*100);
+			$lon = $parsed[$i+3]/100;
+			$lon = floor($lon) + ((($lon-floor($lon))/60)*100);
 			$key = $parsed[$i+4];
 			$deviceId = $parsed[$i+5];
 			
@@ -617,6 +670,81 @@ $app->post('/postHazard', function() use ($app){
 
 				//Insert into database
 					query('insert into hazards(timestamp, geom, mobile_dev_ref) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.')');
+				
+			}else{
+				echo 'failure';
+			} 
+		}	
+		}else{
+			echo 'failure';
+		}	
+	}else{
+		echo 'failure';
+	}
+	
+
+});
+
+//<Gerald>
+
+/*
+curl -H "Accept: application/json" -X POST -d 'timestamp=1359749827&lat=51.96349&lon=7.615139&mobile_device=5' http://giv-cyclop.uni-muenster.de/rest/index.php/postSingleHazardFromApp
+*/
+
+//unsinn,timestamp, lat, lon, secretkey, devideId
+$app->post('/postSingleHazardFromApp', function() use ($app){
+	$timestamp = utf8_encode($app->request()->post('timestamp'));
+	$lat = utf8_encode($app->request()->post('lat'));
+	$lon = utf8_encode($app->request()->post('lon'));
+	$deviceId = utf8_encode($app->request()->post('mobile_device'));
+	
+	$validTimestamp = ((string) (int) $timestamp === $timestamp);
+	
+	if(((string) (int) $timestamp === $timestamp) && $lat && $lon && $deviceId){
+		//Insert into database
+		query('insert into hazards(timestamp, geom, mobile_dev_ref) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.')');
+	}else{
+		echo 'failure'.PHP_EOL;
+	}
+});
+
+//</Gerald>
+
+/*
+curl -i -H "Accept: application/json" -X POST -d 'data=hazard;1357734361;51.1;7.9;1337;5;hazard;1357734361;51.1;7.9;1337;5' http://giv-cyclop.uni-muenster.de/rest/index.php/postTheft 
+*/
+
+//unsinn,timestamp, lat, lon, secretkey, devideId
+$app->post('/postTheft', function() use ($app){
+	$data = $app -> request()->post('data');
+	error_log("Post Theft Data: ".$data,0);
+	//echo 'Stuff: '.$data;
+	if($data){
+		$parsed = explode(";", $data);
+		
+		$max = 6;
+		if((sizeof($parsed) % $max)==0){
+		for ($i=0;$i<sizeof($parsed);$i=$i+6){
+			$unsinn = $parsed[$i+0];
+			$timestamp = $parsed[$i+1]-3600;
+			$lat = $parsed[$i+2]/100;
+			$lat = floor($lat) + ((($lat-floor($lat))/60)*100);
+			$lon = $parsed[$i+3]/100;
+			$lon = floor($lon) + ((($lon-floor($lon))/60)*100);
+			$key = $parsed[$i+4];
+			$deviceId = $parsed[$i+5];
+			
+			$db_key = null;
+			$result = query('select * from mobile_devices where mobile_devices."deviceId" = '.$deviceId.' limit 1');
+			if(pg_num_rows($result) > 0){
+				while($row = pg_fetch_assoc($result)){
+					$db_key = $row['secretKey'];
+				}
+			}
+			if($key==$db_key){
+
+				//Insert into database
+					query('insert into theft_alerts(timestamp, geom, mobile_dev_ref) values(to_timestamp('.$timestamp.'),ST_SetSRID(ST_MakePoint('.$lat.','.$lon.',0), 4326),'.$deviceId.')');
 				
 			}else{
 				echo 'failure';
