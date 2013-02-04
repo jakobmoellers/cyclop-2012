@@ -27,9 +27,10 @@ boolean getHazard(){
   double lonMin = stringToDouble(lon.substring(3,5)+lon.substring(6));
   double lonDeg = 7 + (lonMin/60)/100000;
   
-  int numberOfHazards = 2;
-  double hazardsLat[2] = {52,52.9728226535};
-  double hazardsLon[2] = {7.9,7.5959463119};
+  int numberOfHazards = 3;
+  //51.941266,
+  double hazardsLat[3] = {51.941266,51.942403,51.942944};
+  double hazardsLon[3] = {7.61356,7.614486,7.614268};
   
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
@@ -41,7 +42,7 @@ boolean getHazard(){
     float distance = distance_between(latDeg, lonDeg, hazardsLat[i], hazardsLon[i]);
     Serial.print("Distance: ");
     Serial.println(distance);
-    if(distance < 500){
+    if(distance < 100){
       Serial.println("Hazard!!");
     }
   }
