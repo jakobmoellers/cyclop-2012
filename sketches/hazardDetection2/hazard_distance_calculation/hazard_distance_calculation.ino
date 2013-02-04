@@ -27,10 +27,10 @@ boolean getHazard(){
   double lonMin = stringToDouble(lon.substring(3,5)+lon.substring(6));
   double lonDeg = 7 + (lonMin/60)/100000;
   
-  int numberOfHazards = 3;
+  int numberOfHazards = 2;
   //51.941266,
-  double hazardsLat[3] = {51.941266,51.942403,51.942944};
-  double hazardsLon[3] = {7.61356,7.614486,7.614268};
+  double hazardsLat[3] = {51.964518,51.962964};
+  double hazardsLon[3] = {7.616261,7.616154};
   
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
