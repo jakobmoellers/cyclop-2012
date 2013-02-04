@@ -209,7 +209,6 @@ void setup(){
   playSong();
 
   //Mic
-  //TODO do i have to declare the PIN mode here?
   pinMode(microphone,INPUT);
 
   //Dust Sensor
@@ -260,16 +259,9 @@ void loop(){
   lat="";
   lon="";
 
-  //TODO: Make Display announcements to ease debugging.
-
-  //TODO What about the measurement process? Also every minute?
-  //Should be included here. I think this comment is obsolete because the m
-  //asurements are averaged
-
   getPosition();
   if ((lat!="")&&(lon!="")){
 
-    //TODO Download new hazards in a time interval of 1 minute
     if (DiffBiggerOrEqual(currentTime,lastHazardGet,hazardInterval)){
       getHazards();
     }
@@ -1316,8 +1308,6 @@ void getRequest()
   urlnew+="/1\"";
   Serial.println(urlnew);
   mySerial.println(urlnew);
-
-  //TODO: post coordinates here!!!
 
   delay(1000);
   ShowSerialData();
