@@ -285,7 +285,7 @@ void loop(){
 
       //Serial.println(gValue);
 
-      if (gValue>1.05||gValue<0.95){
+      if (gValue>1.5||gValue<0.6){
         //Serial.println(gValue);
         Serial.println("Theft detected");
         storeTheft();
