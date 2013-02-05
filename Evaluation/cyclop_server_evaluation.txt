@@ -1,0 +1,22 @@
+Cyclop Server Evaluation:
+
+insert 3500 measurements directly with sql into the database
+=> 1,08 Seconds
+
+insert 100 measurements directly with sql into the database
+=> 0,05 Seconds
+
+insert 3500 measurements with one curl call for each insert (host outside of wwu network)
+=> 1202 Seconds
+
+insert 3500 measurements with single c# posts (inside wwu network)
+=> 242 Seconds
+
+insert 3500 measurements with single c# posts (outside wwu network)
+=> 371 Seconds
+
+insert 3500 measurements with one curl call for each insert(same host)
+=> 310 Seconds
+
+insert 3500 measurements with 100er curl calls (same host)
+=> 180 Seconds
