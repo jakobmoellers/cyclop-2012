@@ -286,12 +286,11 @@ void loop(){
     //Serial.println(gValue);
 
     if (gValue>1.05||gValue<0.95){
-      //Serial.println(gValue);
-      Serial.println("Theft detected");
-      storeTheft();
-      Serial.println("Theft stored. Try upload");
-      //uploadTheft();
       playSong();
+      SeeedOled.clearDisplay();
+      SeeedOled.putString("HAZARD");
+      delay(1000);
+      SeeedOled.clearDisplay();
     }
 
 
@@ -392,9 +391,9 @@ boolean getHazardEvaluation(){
   int numberOfHazards = 2;
   //51.941266,
   double hazardsLat[2] = {
-    51.964518,51.962964                          };
+    51.964518,51.962964                              };
   double hazardsLon[2] = {
-    7.616261,7.616154                          };
+    7.616261,7.616154                              };
 
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
@@ -1482,6 +1481,8 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
+
 
 
 
