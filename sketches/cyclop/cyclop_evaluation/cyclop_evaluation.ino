@@ -391,9 +391,9 @@ boolean getHazardEvaluation(){
   int numberOfHazards = 2;
   //51.941266,
   double hazardsLat[2] = {
-    51.964518,51.962964                      };
+    51.964518,51.962964                        };
   double hazardsLon[2] = {
-    7.616261,7.616154                      };
+    7.616261,7.616154                        };
 
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
@@ -401,19 +401,25 @@ boolean getHazardEvaluation(){
   Serial.print("Lon: ");
   Serial.println(lonDeg,10);
 
+  boolean inRange=false;
+
   for(int i=0; i < numberOfHazards; i++){
     float distance = distance_between(latDeg, lonDeg, hazardsLat[i], hazardsLon[i]);
     Serial.print("Distance: ");
     Serial.println(distance);
-    if(distance < 50 && nearhazard==false){
-      Serial.println("Hazard!!");
-      hazardAlert();
-      nearhazard=true;
-    } 
-    else if (distance > 50 && nearhazard==true){
-      nearhazard=false;
+    if (distance<50){
+      inRange=true;
     }
   }
+
+  if (nearhazard==false && inRange==true){
+    nearhazard=true;
+    hazardAlert();
+  } 
+  else if (nearhazard==true && inRange==false){
+    nearhazard=false;
+  }
+
 }
 
 double stringToDouble(String str){
@@ -1475,6 +1481,7 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
 
