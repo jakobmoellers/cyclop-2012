@@ -335,49 +335,17 @@ void loop(){
 Help Methods
  */
 
-int hazardCounter=0;
-
 void hazardAlert(){
-  if (hazardCounter==0){
-    SeeedOled.clearDisplay();
-    SeeedOled.putString("HAZARD");
-    delay(1000);
-    SeeedOled.clearDisplay();
-    hazardCounter++;
-  }
-
-  if (hazardCounter==1){
-    SeeedOled.clearDisplay();
-    SeeedOled.putString("HAZARD");
-    playSong();
-    delay(1000);
-    SeeedOled.clearDisplay();
-    hazardCounter++;
-  }
-
-  if (hazardCounter==2){
-    SeeedOled.clearDisplay();
-    SeeedOled.putString("HAZARD");
-    vibrate(2);
-    delay(100);
-    vibrate(2);
-    delay(1000);
-    SeeedOled.clearDisplay();
-    hazardCounter++;
-  }
-
-  if (hazardCounter==3){
-    SeeedOled.clearDisplay();
-    SeeedOled.putString("HAZARD");
-    vibrate(2);
-    delay(100);
-    vibrate(2);
-    playSong();
-    delay(1000);
-    SeeedOled.clearDisplay();
-    hazardCounter=0;
-  }
+  SeeedOled.clearDisplay();
+  SeeedOled.putString("HAZARD");
+  vibrate(2);
+  delay(100);
+  vibrate(2);
+  playSong();
+  delay(1000);
+  SeeedOled.clearDisplay();
 }
+
 
 boolean nearhazard=false;
 
@@ -391,9 +359,9 @@ boolean getHazardEvaluation(){
   int numberOfHazards = 3;
   //51.941266,
   double hazardsLat[3] = {
-    51.941266,51.942403,51.942944  };
+    51.941266,51.942403,51.942944    };
   double hazardsLon[3] = {
-    7.61356,7.614486,7.614268  };
+    7.61356,7.614486,7.614268    };
 
   //double latitude = 52 + (1/(latMin/60));
   Serial.print("Lat: ");
@@ -1481,5 +1449,6 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
+
 
 
