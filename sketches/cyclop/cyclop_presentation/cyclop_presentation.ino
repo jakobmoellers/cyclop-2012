@@ -237,18 +237,20 @@ void setup(){
     SD.remove("thefts.txt");
 
   //GPRS
-  Serial.println("Powering on GPRS Shield.");
-  RestartShield();
-  delay(5000); // Waiting for GSM Signal
-  Serial.println("Connecting to GSM Network.");
-  Reconnect();
-  delay(5000); // Waiting for service
+  /*Serial.println("Powering on GPRS Shield.");
+   RestartShield();
+   delay(5000); // Waiting for GSM Signal
+   Serial.println("Connecting to GSM Network.");
+   Reconnect();
+   delay(5000); // Waiting for service*/
 
   resetVariablesForAveraging();
 
   Serial.println("initialization complete");
   SeeedOled.clearDisplay();
   SeeedOled.putString("System ready.");
+  delay(1000);
+  SeeedOled.clearDisplay();
 
 }
 
@@ -262,8 +264,10 @@ void loop(){
   getPosition();
   if ((lat!="")&&(lon!="")){
 
+    SeeedOled.clearDisplay();
+
     if (DiffBiggerOrEqual(currentTime,lastHazardGet,hazardInterval)){
-      getHazards();
+      //getHazards();
     }
 
 
@@ -298,6 +302,9 @@ void loop(){
 
         takeMeasurements();
 
+      //Evaluation  
+      getHazardEvaluation();
+
       //Serial.println(currentTime.unixtime());
       //Serial.println(lastStore.unixtime());
 
@@ -310,22 +317,144 @@ void loop(){
       checkforHazardButtonPressed();
 
       if (DiffBiggerOrEqual(currentTime,lastUpload,uploadInterval)){
-        uploadMeasurements();
+        //uploadMeasurements();
       }
 
-      uploadHazards();
+      //uploadHazards();
 
     }
   } 
   else {
     SeeedOled.clearDisplay();
     SeeedOled.putString("NO GPS");
+
   }
 }
 
 /*
 Help Methods
  */
+
+int hazardCounter=0;
+
+void hazardAlert(){
+  if (hazardCounter==0){
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("HAZARD");
+    delay(1000);
+    SeeedOled.clearDisplay();
+    hazardCounter++;
+  }
+
+  if (hazardCounter==1){
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("HAZARD");
+    playSong();
+    delay(1000);
+    SeeedOled.clearDisplay();
+    hazardCounter++;
+  }
+
+  if (hazardCounter==2){
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("HAZARD");
+    vibrate(2);
+    delay(100);
+    vibrate(2);
+    delay(1000);
+    SeeedOled.clearDisplay();
+    hazardCounter++;
+  }
+
+  if (hazardCounter==3){
+    SeeedOled.clearDisplay();
+    SeeedOled.putString("HAZARD");
+    vibrate(2);
+    delay(100);
+    vibrate(2);
+    playSong();
+    delay(1000);
+    SeeedOled.clearDisplay();
+    hazardCounter=0;
+  }
+}
+
+boolean nearhazard=false;
+
+boolean getHazardEvaluation(){
+
+  double latMin = stringToDouble(lat.substring(2,4)+lat.substring(5));
+  double latDeg = 51 + (latMin/60)/100000;
+  double lonMin = stringToDouble(lon.substring(3,5)+lon.substring(6));
+  double lonDeg = 7 + (lonMin/60)/100000;
+
+  int numberOfHazards = 3;
+  //51.941266,
+  double hazardsLat[3] = {
+    51.941266,51.942403,51.942944  };
+  double hazardsLon[3] = {
+    7.61356,7.614486,7.614268  };
+
+  //double latitude = 52 + (1/(latMin/60));
+  Serial.print("Lat: ");
+  Serial.println(latDeg,10);
+  Serial.print("Lon: ");
+  Serial.println(lonDeg,10);
+
+  boolean inRange=false;
+
+  for(int i=0; i < numberOfHazards; i++){
+    float distance = distance_between(latDeg, lonDeg, hazardsLat[i], hazardsLon[i]);
+    Serial.print("Distance: ");
+    Serial.println(distance);
+    if (distance<50){
+      inRange=true;
+    }
+  }
+
+  if (nearhazard==false && inRange==true){
+    nearhazard=true;
+    hazardAlert();
+  } 
+  else if (nearhazard==true && inRange==false){
+    nearhazard=false;
+  }
+
+}
+
+double stringToDouble(String str){
+  char bufChar[str.length()+1];
+  str.toCharArray(bufChar, str.length()+1);
+  double d = strtod(bufChar, NULL);  
+  return d;
+}
+
+
+
+/* static */
+float distance_between (float lat1, float long1, float lat2, float long2){
+  // returns distance in meters between two positions, both specified
+  // as signed decimal-degrees latitude and longitude. Uses great-circle
+  // distance computation for hypothetical sphere of radius 6372795 meters.
+  // Because Earth is no exact sphere, rounding errors may be up to  0.5%.
+  // Courtesy of Maarten Lamers
+  float delta = radians(long1-long2);
+  float sdlong = sin(delta);
+  float cdlong = cos(delta);
+  lat1 = radians(lat1);
+  lat2 = radians(lat2);
+  float slat1 = sin(lat1);
+  float clat1 = cos(lat1);
+  float slat2 = sin(lat2);
+  float clat2 = cos(lat2);
+  delta = (clat1 * slat2) - (slat1 * clat2 * cdlong);
+  delta = sq(delta);
+  delta += sq(clat2 * sdlong);
+  delta = sqrt(delta);
+  float denom = (slat1 * slat2) + (clat1 * clat2 * cdlong);
+  delta = atan2(delta, denom);
+  return delta * 6372795;
+}
 
 void resetVariablesForAveraging(){
   averageCounter=0;
@@ -342,8 +471,8 @@ void resetVariablesForAveraging(){
 
 void takeMeasurements(){
 
-  SeeedOled.clearDisplay();
-  SeeedOled.putString("MEASURING");
+  //SeeedOled.clearDisplay();
+  //SeeedOled.putString("MEASURING");
 
   averageCounter=averageCounter+1;
 
@@ -1305,7 +1434,7 @@ void getRequest()
   urlnew+=lat;
   urlnew+="/";
   urlnew+=lon;
-  urlnew+="/0.5\"";
+  urlnew+="/1\"";
   Serial.println(urlnew);
   mySerial.println(urlnew);
 
@@ -1352,16 +1481,5 @@ void getRequest()
 
   //TODO: check if HTTP service has to be terminated
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
